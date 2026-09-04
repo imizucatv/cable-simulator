@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>料金＆初期費用シミュレーター Ver.8</title>
+    <title>料金＆初期費用シミュレーター Ver.9</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -135,7 +135,7 @@
                                         </div>
                                         <div class="text-right">
                                             <span class="font-bold text-emerald-800">+{{ potentialRouterPrice }}円/月</span>
-                                            <span v-if="net==='net1g'&&isKeizokuWari" class="text-red-500 text-[10px] block font-normal">※光1G+継続割価格</span>
+                                            <span v-if="net==='net1g'&&isKeizokuWari" class="text-red-500 text-[10px] block font-normal">※光1G+継続割価格(-550円適用)</span>
                                         </div>
                                     </label>
                                     <label class="flex justify-between items-center cursor-pointer p-2 hover:bg-slate-50 rounded transition-colors">
@@ -338,34 +338,101 @@
                             </button>
                         </div>
                         <div class="space-y-4">
-                            <div class="flex justify-between items-center" v-if="tv !== 'none'">
-                                <div><span class="font-bold text-blue-800 border-l-4 border-blue-500 pl-2">光テレビ</span></div>
-                                <span class="font-bold text-slate-700">{{ tvTotal.toLocaleString() }}円</span>
+                            
+                            <!-- テレビ内訳 -->
+                            <div class="flex justify-between items-start" v-if="tv !== 'none'">
+                                <div class="w-2/3">
+                                    <span class="font-bold text-blue-800 border-l-4 border-blue-500 pl-2 text-base">光テレビ</span>
+                                    <div class="text-xs text-slate-600 mt-1 ml-3 space-y-0.5">
+                                        <div class="flex justify-between"><span>基本料</span><span>{{ tvOptions[tv].toLocaleString() }}円</span></div>
+                                        <div class="flex justify-between" v-if="stbPrice > 0"><span>STB追加料金</span><span>+{{ stbPrice.toLocaleString() }}円</span></div>
+                                        <div class="flex justify-between text-red-600 font-bold" v-if="stbDiscount < 0"><span>4K-STB割</span><span>{{ stbDiscount.toLocaleString() }}円</span></div>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-slate-700 text-lg">{{ tvTotal.toLocaleString() }}円</span>
                             </div>
-                            <div class="flex justify-between items-center" v-if="net !== 'none'">
-                                <div><span class="font-bold text-emerald-800 border-l-4 border-emerald-500 pl-2">光インターネット</span></div>
-                                <span class="font-bold text-slate-700">{{ netTotal.toLocaleString() }}円</span>
+                            
+                            <!-- ネット内訳 -->
+                            <div class="flex justify-between items-start" v-if="net !== 'none'">
+                                <div class="w-2/3">
+                                    <span class="font-bold text-emerald-800 border-l-4 border-emerald-500 pl-2 text-base">光インターネット</span>
+                                    <div class="text-xs text-slate-600 mt-1 ml-3 space-y-0.5">
+                                        <div class="flex justify-between"><span>基本料</span><span>{{ netOptions[net].toLocaleString() }}円</span></div>
+                                        <div class="flex justify-between text-red-600 font-bold" v-if="isKeizokuWari && ['net10g', 'net1g', 'net300m'].includes(net)"><span>継続割</span><span>-1,100円</span></div>
+                                        <div class="flex justify-between" v-if="router">
+                                            <span>iCNメッシュWi-Fi</span>
+                                            <span>+{{ potentialRouterPrice }}円</span>
+                                        </div>
+                                        <div class="flex justify-between text-red-600 text-[10px]" v-if="router && net==='net1g'&&isKeizokuWari"><span class="ml-2">↳ 光1G継続割セット値引</span><span>(-550円適用済)</span></div>
+                                        <div class="flex justify-between" v-if="netOps.jSafe"><span>J-SAFE</span><span>+330円</span></div>
+                                        <div class="flex justify-between" v-if="netOps.spamFilter"><span>迷惑メールフィルタ</span><span>+104円</span></div>
+                                        <div class="flex justify-between" v-if="netOps.addMail"><span>追加メール</span><span>+220円</span></div>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-slate-700 text-lg">{{ netTotal.toLocaleString() }}円</span>
                             </div>
-                            <div class="flex justify-between items-center" v-if="tel">
-                                <div><span class="font-bold text-amber-800 border-l-4 border-amber-500 pl-2">光でんわ</span></div>
-                                <span class="font-bold text-slate-700">{{ telTotal.toLocaleString() }}円</span>
+                            
+                            <!-- 電話内訳 -->
+                            <div class="flex justify-between items-start" v-if="tel">
+                                <div class="w-2/3">
+                                    <span class="font-bold text-amber-800 border-l-4 border-amber-500 pl-2 text-base">光でんわ</span>
+                                    <div class="text-xs text-slate-600 mt-1 ml-3 space-y-0.5">
+                                        <div class="flex justify-between"><span>基本料</span><span>1,639円</span></div>
+                                        <div class="flex justify-between" v-if="telOps.pack"><span>オプションお得パック</span><span>+550円</span></div>
+                                        <template v-else>
+                                            <div class="flex justify-between" v-if="telOps.disp"><span>発信番号表示</span><span>+440円</span></div>
+                                            <div class="flex justify-between" v-if="telOps.req"><span>番号通知リクエスト</span><span>+220円</span></div>
+                                            <div class="flex justify-between" v-if="telOps.catchDisp"><span>割込番号表示</span><span>+110円</span></div>
+                                            <div class="flex justify-between" v-if="telOps.catchCall"><span>割込通話</span><span>+330円</span></div>
+                                        </template>
+                                        <div class="flex justify-between" v-if="telOps.transfer"><span>着信転送</span><span>+550円</span></div>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-slate-700 text-lg">{{ telTotal.toLocaleString() }}円</span>
                             </div>
-                            <div class="flex justify-between items-center" v-if="hasOtt">
-                                <div><span class="font-bold text-indigo-800 border-l-4 border-indigo-500 pl-2">動画配信サービス</span></div>
-                                <span class="font-bold text-slate-700">{{ ottTotal.toLocaleString() }}円</span>
+                            
+                            <!-- 動画パック内訳 -->
+                            <div class="flex justify-between items-start" v-if="hasOtt">
+                                <div class="w-2/3">
+                                    <span class="font-bold text-indigo-800 border-l-4 border-indigo-500 pl-2 text-base">動画配信サービス</span>
+                                    <div class="text-xs text-slate-600 mt-1 ml-3 space-y-0.5">
+                                        <div class="flex justify-between" v-if="ottHulu"><span>Hulu</span><span>+1,026円</span></div>
+                                        <div class="flex justify-between" v-if="ottFod"><span>FOD</span><span>+1,320円</span></div>
+                                        <div class="flex justify-between" v-if="ottUnext"><span>U-NEXT</span><span>+2,189円</span></div>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-slate-700 text-lg">{{ ottTotal.toLocaleString() }}円</span>
                             </div>
-                            <div class="flex justify-between items-center" v-if="mobile !== 'none'">
-                                <div><span class="font-bold text-rose-800 border-l-4 border-rose-500 pl-2">ケーブルスマホ</span></div>
-                                <span class="font-bold text-slate-700">{{ mobileTotal.toLocaleString() }}円</span>
+
+                            <!-- スマホ内訳 -->
+                            <div class="flex justify-between items-start" v-if="mobile !== 'none'">
+                                <div class="w-2/3">
+                                    <span class="font-bold text-rose-800 border-l-4 border-rose-500 pl-2 text-base">ケーブルスマホ</span>
+                                    <div class="text-xs text-slate-600 mt-1 ml-3 space-y-0.5">
+                                        <div class="flex justify-between"><span>基本料</span><span>{{ mobileOptions[mobile].toLocaleString() }}円</span></div>
+                                        <div class="flex justify-between" v-if="mobileOps.call === '10min'"><span>10分定額</span><span>+880円</span></div>
+                                        <div class="flex justify-between" v-if="mobileOps.call === 'unlimited'"><span>かけ放題</span><span>+1,650円</span></div>
+                                        <div class="flex justify-between" v-if="mobileOps.support === 'packA'"><span>安心パックA</span><span>+440円</span></div>
+                                        <div class="flex justify-between" v-if="mobileOps.support === 'packB'"><span>安心パックB</span><span>+660円</span></div>
+                                        <div class="flex justify-between" v-if="mobileOps.support === 'hosho'"><span>端末保証 a/i</span><span>+440円</span></div>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-slate-700 text-lg">{{ mobileTotal.toLocaleString() }}円</span>
                             </div>
-                            <!-- セット割引 -->
+                            
+                            <!-- サービス横断セット割引 -->
                             <div v-if="otherDiscountsTotal < 0" class="border-t border-slate-200 pt-3 mt-2 bg-slate-50 p-3 rounded">
-                                <div class="text-xs font-bold text-slate-600 mb-2">適用中のセット割引</div>
+                                <div class="text-xs font-bold text-slate-600 mb-2">複数サービス適用によるセット割引</div>
                                 <div class="space-y-1">
                                     <div v-for="(d, i) in crossServiceDiscounts" :key="i" class="flex justify-between items-center text-red-600 text-sm">
                                         <span class="font-bold">{{ d.name }}</span><span class="font-bold">{{ d.amount.toLocaleString() }}円</span>
                                     </div>
                                 </div>
+                            </div>
+                            
+                            <!-- サマリー未選択時の表示 -->
+                            <div v-if="tv==='none' && net==='none' && !tel && mobile==='none' && !hasOtt" class="text-center text-slate-400 text-sm py-4">
+                                サービスを選択すると、ここに内訳が表示されます。
                             </div>
                         </div>
                     </div>
@@ -386,7 +453,7 @@
                     <div class="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-3">
                         <div class="w-full sm:w-auto text-xs space-y-1 flex-1 hidden sm:block">
                             <div class="flex flex-wrap items-center gap-1.5">
-                                <span class="text-slate-400 mr-1">適用割引：</span>
+                                <span class="text-slate-400 mr-1">適用中の割引：</span>
                                 <span v-if="allDiscounts.length===0" class="text-slate-500">なし</span>
                                 <span v-for="(d, i) in allDiscounts" :key="i" class="bg-slate-700 text-amber-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap">
                                     {{ d.name }}
@@ -402,7 +469,7 @@
                             </button>
 
                             <button @click="showSummaryDetail = !showSummaryDetail" class="text-[10px] sm:text-xs bg-slate-700 border border-slate-500 px-3 py-1.5 rounded mr-3 whitespace-nowrap hover:bg-slate-600 transition-colors">
-                                {{ showSummaryDetail ? '内訳を閉じる ▼' : '内訳を見る ▲' }}
+                                {{ showSummaryDetail ? '内訳を閉じる ▼' : '明細を見る ▲' }}
                             </button>
                             <div class="text-right">
                                 <span class="text-[10px] sm:text-xs text-slate-400 hidden sm:inline mr-1">月額合計(税込)</span>
@@ -445,93 +512,93 @@
             <h3 class="font-bold text-lg border-l-4 border-black pl-2 mb-3">サービスご契約内容・内訳</h3>
             <table class="w-full text-sm border-collapse border border-gray-300 mb-8">
                 <thead>
-                    <tr class="bg-gray-100 text-left">
-                        <th class="border border-gray-300 p-2 w-1/4">サービス名</th>
-                        <th class="border border-gray-300 p-2 w-1/2">プラン・オプション詳細</th>
-                        <th class="border border-gray-300 p-2 w-1/4 text-right">月額(税込)</th>
+                    <tr class="bg-gray-100 text-left border-b-2 border-gray-400">
+                        <th class="border-l border-r border-gray-300 p-2 w-1/4">サービス名</th>
+                        <th class="border-l border-r border-gray-300 p-2 w-1/2">プラン・オプション詳細</th>
+                        <th class="border-l border-r border-gray-300 p-2 w-1/4 text-right">月額(税込)</th>
                     </tr>
                 </thead>
                 <tbody>
                     <!-- テレビ -->
                     <tr v-if="tv !== 'none'">
-                        <td class="border border-gray-300 p-2 font-bold bg-gray-50">光テレビ</td>
-                        <td class="border border-gray-300 p-2">
-                            {{ labels.tv[tv] }}<br>
-                            <span class="text-xs text-gray-600" v-if="['premium', 'standard'].includes(tv)">STB: {{ stbList[stb].name }}</span>
+                        <td class="border border-gray-300 p-2 font-bold bg-gray-50 align-top">光テレビ</td>
+                        <td class="border border-gray-300 p-2 text-xs">
+                            <div class="flex justify-between font-bold text-sm mb-1"><span>{{ labels.tv[tv] }} (基本料)</span><span>{{ tvOptions[tv].toLocaleString() }}円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="['premium', 'standard'].includes(tv) && stbPrice > 0"><span>STB: {{ stbList[stb].name }}</span><span>+{{ stbPrice.toLocaleString() }}円</span></div>
+                            <div class="flex justify-between text-red-600 font-bold" v-if="stbDiscount < 0"><span>↳ 4K-STB割</span><span>{{ stbDiscount.toLocaleString() }}円</span></div>
                         </td>
-                        <td class="border border-gray-300 p-2 text-right">{{ tvTotal.toLocaleString() }}円</td>
+                        <td class="border border-gray-300 p-2 text-right align-bottom font-bold text-lg">{{ tvTotal.toLocaleString() }}円</td>
                     </tr>
                     
                     <!-- ネット -->
                     <tr v-if="net !== 'none'">
-                        <td class="border border-gray-300 p-2 font-bold bg-gray-50">光インターネット</td>
-                        <td class="border border-gray-300 p-2">
-                            {{ labels.net[net] }} {{ isKeizokuWari ? '【継続割 適用】' : '' }}<br>
-                            <span class="text-xs text-gray-600">
-                                {{ router ? 'iCNメッシュWi-Fi　WiFi5版 / ' : '' }}
-                                {{ netOps.jSafe ? 'J-SAFE / ' : '' }}
-                                {{ netOps.spamFilter ? '迷惑メールフィルタ / ' : '' }}
-                                {{ netOps.addMail ? '追加メール / ' : '' }}
-                                <span v-if="!router && !netOps.jSafe && !netOps.spamFilter && !netOps.addMail">オプションなし</span>
-                            </span>
+                        <td class="border border-gray-300 p-2 font-bold bg-gray-50 align-top">光インターネット</td>
+                        <td class="border border-gray-300 p-2 text-xs">
+                            <div class="flex justify-between font-bold text-sm mb-1"><span>{{ labels.net[net] }} (基本料)</span><span>{{ netOptions[net].toLocaleString() }}円</span></div>
+                            <div class="flex justify-between text-red-600 font-bold mb-1" v-if="isKeizokuWari && ['net10g', 'net1g', 'net300m'].includes(net)"><span>【継続利用割引】</span><span>-1,100円</span></div>
+                            
+                            <div class="flex justify-between text-gray-600" v-if="router"><span>iCNメッシュWi-Fi　WiFi5版</span><span>+{{ potentialRouterPrice.toLocaleString() }}円</span></div>
+                            <div class="flex justify-between text-red-600 text-[10px]" v-if="router && net==='net1g'&&isKeizokuWari"><span class="ml-2">↳ 光1G継続割セット値引</span><span>(-550円適用済)</span></div>
+                            
+                            <div class="flex justify-between text-gray-600" v-if="netOps.jSafe"><span>J-SAFE</span><span>+330円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="netOps.spamFilter"><span>迷惑メールフィルタ</span><span>+104円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="netOps.addMail"><span>追加メール</span><span>+220円</span></div>
                         </td>
-                        <td class="border border-gray-300 p-2 text-right">{{ netTotal.toLocaleString() }}円</td>
+                        <td class="border border-gray-300 p-2 text-right align-bottom font-bold text-lg">{{ netTotal.toLocaleString() }}円</td>
                     </tr>
 
                     <!-- 電話 -->
                     <tr v-if="tel">
-                        <td class="border border-gray-300 p-2 font-bold bg-gray-50">光でんわ</td>
-                        <td class="border border-gray-300 p-2">
-                            ケーブルプラス電話<br>
-                            <span class="text-xs text-gray-600">
-                                {{ telOps.pack ? 'オプションお得パック / ' : '' }}
-                                {{ (!telOps.pack && telOps.disp) ? '発信番号表示 / ' : '' }}
-                                {{ (!telOps.pack && telOps.req) ? '番号通知リクエスト / ' : '' }}
-                                {{ (!telOps.pack && telOps.catchDisp) ? '割込番号表示 / ' : '' }}
-                                {{ (!telOps.pack && telOps.catchCall) ? '割込通話 / ' : '' }}
-                                {{ telOps.transfer ? '着信転送 / ' : '' }}
-                                <span v-if="telOpsTotal === 0">オプションなし</span>
-                            </span>
+                        <td class="border border-gray-300 p-2 font-bold bg-gray-50 align-top">光でんわ</td>
+                        <td class="border border-gray-300 p-2 text-xs">
+                            <div class="flex justify-between font-bold text-sm mb-1"><span>ケーブルプラス電話 (基本料)</span><span>1,639円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="telOps.pack"><span>オプションお得パック</span><span>+550円</span></div>
+                            <template v-else>
+                                <div class="flex justify-between text-gray-600" v-if="telOps.disp"><span>発信番号表示</span><span>+440円</span></div>
+                                <div class="flex justify-between text-gray-600" v-if="telOps.req"><span>番号通知リクエスト</span><span>+220円</span></div>
+                                <div class="flex justify-between text-gray-600" v-if="telOps.catchDisp"><span>割込番号表示</span><span>+110円</span></div>
+                                <div class="flex justify-between text-gray-600" v-if="telOps.catchCall"><span>割込通話</span><span>+330円</span></div>
+                            </template>
+                            <div class="flex justify-between text-gray-600" v-if="telOps.transfer"><span>着信転送</span><span>+550円</span></div>
                         </td>
-                        <td class="border border-gray-300 p-2 text-right">{{ telTotal.toLocaleString() }}円</td>
+                        <td class="border border-gray-300 p-2 text-right align-bottom font-bold text-lg">{{ telTotal.toLocaleString() }}円</td>
                     </tr>
 
                     <!-- 動画パック -->
                     <tr v-if="hasOtt">
-                        <td class="border border-gray-300 p-2 font-bold bg-gray-50">動画配信サービス</td>
-                        <td class="border border-gray-300 p-2">
-                            {{ ottHulu ? 'Hulu / ' : '' }}
-                            {{ ottFod ? 'FOD / ' : '' }}
-                            {{ ottUnext ? 'U-NEXT / ' : '' }}
+                        <td class="border border-gray-300 p-2 font-bold bg-gray-50 align-top">動画配信サービス</td>
+                        <td class="border border-gray-300 p-2 text-xs">
+                            <div class="flex justify-between text-gray-600" v-if="ottHulu"><span>Hulu</span><span>+1,026円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="ottFod"><span>FOD</span><span>+1,320円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="ottUnext"><span>U-NEXT</span><span>+2,189円</span></div>
                         </td>
-                        <td class="border border-gray-300 p-2 text-right">{{ ottTotal.toLocaleString() }}円</td>
+                        <td class="border border-gray-300 p-2 text-right align-bottom font-bold text-lg">{{ ottTotal.toLocaleString() }}円</td>
                     </tr>
 
                     <!-- スマホ -->
                     <tr v-if="mobile !== 'none'">
-                        <td class="border border-gray-300 p-2 font-bold bg-gray-50">ケーブルスマホ</td>
-                        <td class="border border-gray-300 p-2">
-                            {{ labels.mobile[mobile] }}<br>
-                            <span class="text-xs text-gray-600">
-                                {{ mobileOps.call === '10min' ? '10分定額 / ' : (mobileOps.call === 'unlimited' ? 'かけ放題 / ' : '') }}
-                                {{ mobileOps.support === 'packA' ? '安心パックA / ' : (mobileOps.support === 'packB' ? '安心パックB / ' : (mobileOps.support === 'hosho' ? '端末保証 a/i / ' : '')) }}
-                            </span>
+                        <td class="border border-gray-300 p-2 font-bold bg-gray-50 align-top">ケーブルスマホ</td>
+                        <td class="border border-gray-300 p-2 text-xs">
+                            <div class="flex justify-between font-bold text-sm mb-1"><span>{{ labels.mobile[mobile] }} (基本料)</span><span>{{ mobileOptions[mobile].toLocaleString() }}円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="mobileOps.call === '10min'"><span>10分定額</span><span>+880円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="mobileOps.call === 'unlimited'"><span>かけ放題</span><span>+1,650円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="mobileOps.support === 'packA'"><span>安心パックA</span><span>+440円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="mobileOps.support === 'packB'"><span>安心パックB</span><span>+660円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="mobileOps.support === 'hosho'"><span>端末保証 a/i</span><span>+440円</span></div>
                         </td>
-                        <td class="border border-gray-300 p-2 text-right">{{ mobileTotal.toLocaleString() }}円</td>
+                        <td class="border border-gray-300 p-2 text-right align-bottom font-bold text-lg">{{ mobileTotal.toLocaleString() }}円</td>
                     </tr>
                     
                     <!-- セット割引 -->
                     <tr v-if="otherDiscountsTotal < 0">
-                        <td class="border border-gray-300 p-2 font-bold bg-gray-50 text-red-600">適用セット割引</td>
-                        <td class="border border-gray-300 p-2 text-red-600">
-                            <div v-for="(d, i) in crossServiceDiscounts" :key="i">
-                                {{ d.name }}
+                        <td class="border border-gray-300 p-2 font-bold bg-red-50 text-red-700 align-top">複数サービス<br>セット割引</td>
+                        <td class="border border-gray-300 p-2 text-xs bg-red-50/30">
+                            <div class="flex justify-between text-red-600 font-bold mb-1" v-for="(d, i) in crossServiceDiscounts" :key="i">
+                                <span>{{ d.name }}</span><span>{{ d.amount.toLocaleString() }}円</span>
                             </div>
                         </td>
-                        <td class="border border-gray-300 p-2 text-right font-bold text-red-600">
-                            <div v-for="(d, i) in crossServiceDiscounts" :key="i">
-                                {{ d.amount.toLocaleString() }}円
-                            </div>
+                        <td class="border border-gray-300 p-2 text-right align-bottom font-bold text-red-700 text-lg">
+                            {{ otherDiscountsTotal.toLocaleString() }}円
                         </td>
                     </tr>
                 </tbody>

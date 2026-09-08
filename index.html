@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>料金＆初期費用シミュレーター (通常版)</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- CDN読み込み状態の検知フラグ -->
+    <script>
+        window.vueLoadError = false;
+        window.tailwindLoadError = false;
+    </script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js" onerror="window.vueLoadError = true"></script>
+    <script src="https://cdn.tailwindcss.com" onerror="window.tailwindLoadError = true"></script>
     <style>
         [v-cloak] { display: none !important; }
         body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif; background-color: #f1f5f9; }
@@ -26,7 +31,13 @@
     </style>
 </head>
 <body class="text-slate-800 pb-40">
-    <!-- Vueマウント領域 (#app) の内側に印刷用レイアウトも含めます -->
+
+    <!-- CDN読み込み失敗時のエラー通知エリア -->
+    <div id="cdn-error" style="display:none;" class="bg-red-600 text-white font-bold text-center p-3 text-sm z-50 relative">
+        ⚠️ 必要なスクリプトの読み込みに失敗しました。インターネット接続を確認し、ページを再読み込みしてください。
+    </div>
+
+    <!-- Vueマウント領域 (#app) -->
     <div id="app" v-cloak>
         
         <!-- 画面表示用メインレイアウト -->
@@ -74,7 +85,7 @@
                 <section v-if="isAdd" class="bg-white rounded-xl shadow-sm border border-emerald-300 overflow-hidden mb-6">
                     <div class="bg-emerald-50 border-b border-emerald-100 p-4">
                         <h2 class="text-lg font-bold text-emerald-900">② 現在ご契約中のサービス状況</h2>
-                        <p class="text-xs text-slate-600 mt-1">現在契約中のサービスと、継続／変更の希望を選択してください。下のSTEPに反映されます。</p>
+                        <p class="text-xs text-slate-600 mt-1">現在契約中のサービスと、継続／変更の希望を選択してください。選択後の「月額合計」は継続分を含む最終利用料総額となります。</p>
                     </div>
                     <div class="p-4 sm:p-5 space-y-4 text-sm">
 
@@ -172,7 +183,6 @@
                                 </button>
                             </div>
 
-                            <!-- チャンネルラインナップ ポップアップ開くボタン -->
                             <div v-if="['premium', 'standard'].includes(tv)" class="mt-2 text-right">
                                 <button type="button" @click="showChannelModal = true" class="inline-flex items-center text-xs font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition-colors">
                                     📺 {{ labels.tv[tv] }} の専門チャンネル一覧を見る ➔
@@ -259,7 +269,7 @@
                                 <div class="p-3 bg-white space-y-1 text-xs">
                                     <label class="flex justify-between items-center cursor-pointer p-2 hover:bg-slate-50 rounded transition-colors">
                                         <div class="flex items-center"><input type="checkbox" v-model="router" class="mr-3 text-emerald-600 rounded w-4 h-4"><div><span class="font-bold text-slate-800">iCNメッシュWi-Fi</span><span class="text-[11px] text-slate-500 block font-normal">※ルーターレンタル（ご自身で用意された場合は不要です）</span></div></div>
-                                        <div class="text-right"><span class="font-bold text-emerald-800">+{{ potentialRouterPrice }}円/月</span><span v-if="!isMansion && net==='net1g'&&isKeizokuWari" class="text-red-500 text-[10px] block font-normal">※光1G継続割セット値引</span></div>
+                                        <div class="text-right"><span class="font-bold text-emerald-800">+{{ formatPrice(potentialRouterPrice) }}円/月</span><span v-if="!isMansion && net==='net1g'&&isKeizokuWari" class="text-red-500 text-[10px] block font-normal">※光1G継続割セット値引</span></div>
                                     </label>
                                     <label class="flex justify-between items-center cursor-pointer p-2 hover:bg-slate-50 rounded transition-colors">
                                         <div class="flex items-center"><input type="checkbox" v-model="netOps.jSafe" class="mr-3 text-emerald-600 rounded w-4 h-4"><span>J-SAFE (セキュリティソフト)</span></div><span class="font-bold">+330円/月</span>
@@ -531,7 +541,7 @@
                                     </div>
                                 </template>
 
-                                <!-- 適用中の割引表示（分解表記） -->
+                                <!-- 適用中の割引表示 -->
                                 <div class="bg-red-50 p-2.5 rounded text-[11px] space-y-1">
                                     <div class="font-bold text-red-800 mb-1">適用中の割引</div>
                                     <div v-for="(st, dIdx) in getLineDiscounts(line)" :key="dIdx" class="flex justify-between">
@@ -576,7 +586,6 @@
                                 ※期間内に解約した場合は、残月数に応じた費用が発生する場合があります。
                             </p>
 
-                            <!-- 端末一括購入代金の反映 -->
                             <div v-if="totalDeviceOneTimePrice > 0" class="mt-3 pt-2 border-t border-purple-200 flex justify-between items-center font-bold text-slate-800">
                                 <span>📱 スマホ端末一括購入（買取）代金合計：</span>
                                 <span class="text-base text-blue-900">{{ formatPrice(totalDeviceOneTimePrice) }} 円 (初回のみ)</span>
@@ -595,6 +604,55 @@
 
                     </div>
                 </section>
+
+                <!-- ★ おすすめプラン提案エリア -->
+                <transition name="fade">
+                    <section v-if="recommendations.length > 0" class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl shadow-md border border-amber-300 overflow-hidden mb-6">
+                        <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-4 flex justify-between items-center">
+                            <h2 class="text-lg font-bold flex items-center">
+                                <span class="text-xl mr-2">💡</span> おすすめプラン提案
+                            </h2>
+                            <span class="text-xs bg-white text-orange-600 px-2.5 py-1 rounded-md font-bold shadow-sm">最大5件</span>
+                        </div>
+                        <div class="p-4 sm:p-5 space-y-4">
+                            <div v-for="(rec, index) in recommendations" :key="index" class="bg-white border border-orange-200 rounded-lg p-4 shadow-sm relative transition-all hover:shadow-md">
+                                
+                                <div v-if="rec.diff < 0" class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg z-10 shadow">
+                                    お得な上位プラン
+                                </div>
+                                
+                                <h3 class="font-bold text-slate-800 text-base mb-1">{{ rec.title }}</h3>
+                                <p class="text-xs text-slate-600 mb-3">{{ rec.reason }}</p>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                                    <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+                                        <div class="text-[10px] text-slate-500 font-bold mb-1">対象サービス月額（オプション・割引反映）</div>
+                                        <div class="flex items-center text-xs sm:text-sm">
+                                            <span class="line-through text-slate-400 mr-2">{{ formatPrice(rec.currentPrice) }}円</span>
+                                            <span class="font-bold text-slate-800">➔ {{ formatPrice(rec.recommendedPrice) }}円</span>
+                                        </div>
+                                    </div>
+                                    <div class="bg-orange-50 p-2.5 rounded border border-orange-200">
+                                        <div class="text-[10px] text-orange-800 font-bold mb-1">全体月額利用料 (各種セット割引適用後)</div>
+                                        <div class="flex items-center text-xs sm:text-sm">
+                                            <span class="line-through text-slate-400 mr-2">現在 {{ formatPrice(rec.currentTotal) }}円</span>
+                                            <span class="font-bold text-red-600 text-base sm:text-lg">➔ 変更後 {{ formatPrice(rec.recommendedTotal) }}円</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row justify-between items-center border-t border-slate-100 pt-3 gap-2">
+                                    <div class="text-xs font-bold w-full sm:w-auto" :class="rec.diff < 0 ? 'text-red-600' : 'text-orange-700'">
+                                        {{ getDiffText(rec.diff) }}
+                                    </div>
+                                    <button type="button" @click="applyRecommendation(rec)" class="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-5 rounded-lg shadow-sm transition-colors text-xs whitespace-nowrap">
+                                        このプランを適用
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </transition>
 
                 <p class="text-[11px] text-slate-400 text-center">※本シミュレーターの月額表示は定常的なご利用料金です。各種特典・割引の適用条件は確認書をご確認ください。</p>
 
@@ -639,7 +697,7 @@
                                     <div class="text-xs text-slate-600 mt-1 ml-3 space-y-0.5">
                                         <div class="flex justify-between"><span>基本料</span><span>{{ formatPrice(netOptions[net]) }}円</span></div>
                                         <div class="flex justify-between text-red-600 font-bold" v-if="isKeizokuWari && ['net10g', 'net1g', 'net300m'].includes(net)"><span>↳ 継続割</span><span>-1,100円</span></div>
-                                        <div class="flex justify-between" v-if="router"><span>iCNメッシュWi-Fi</span><span>+{{ potentialRouterPrice }}円</span></div>
+                                        <div class="flex justify-between" v-if="router"><span>iCNメッシュWi-Fi</span><span>+{{ formatPrice(potentialRouterPrice) }}円</span></div>
                                         <div class="flex justify-between text-red-600 text-[10px]" v-if="router && net==='net1g'&&isKeizokuWari"><span class="ml-2">↳ 光1G継続割セット値引</span><span>(-550円適用済)</span></div>
                                         <div class="flex justify-between" v-if="netOps.jSafe"><span>J-SAFE</span><span>+330円</span></div>
                                         <div class="flex justify-between" v-if="netOps.spamFilter"><span>迷惑メールフィルタ</span><span>+104円</span></div>
@@ -744,7 +802,7 @@
                                 </div>
                             </div>
 
-                            <!-- 適用中の全割引 総額（合計）枠 -->
+                            <!-- 適用中の全割引 総額枠 -->
                             <div v-if="grandTotalDiscounts < 0" class="border-t-2 border-red-300 pt-3 mt-3 bg-red-50 p-3 rounded flex justify-between items-center shadow-sm">
                                 <div>
                                     <span class="font-bold text-red-800 text-sm flex items-center">🎉 適用中の割引 総額（合計）</span>
@@ -896,7 +954,7 @@
             </div>
         </div>
 
-        <!-- 印刷・PDF出力専用レイアウト（#app の内部に正しく配置） -->
+        <!-- 印刷・PDF出力専用レイアウト -->
         <div class="print-only hidden max-w-3xl mx-auto p-6 font-sans bg-white text-black border-2 border-slate-800 relative">
             <div class="text-center border-b-2 border-black pb-3 mb-4 mt-2">
                 <h1 class="text-xl font-bold tracking-widest">お見積り・お申し込み確認書</h1>
@@ -1078,436 +1136,916 @@
     </div>
 
 <script>
-const { createApp } = Vue
-
-createApp({
-    data() {
-        return {
-            contractPattern: null,
-
-            existingTv: { has: false, plan: 'premium', action: 'keep' },
-            existingNet: { has: false, plan: 'net10g', action: 'keep' },
-            existingTel: { has: false },
-
-            tv: 'none',
-            stb: 'ls500b',
-            net: 'none',
-            isKeizokuWari: false,
-            tel: false,
-            ottHulu: false,
-            ottFod: false,
-            ottUnext: false,
-
-            mobileLines: [],
-
-            showSummaryDetail: false,
-            showChannelModal: false,
-
-            router: false,
-            netOps: { jSafe: false, spamFilter: false, addMail: false },
-
-            telOps: { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false },
-            isTelOpsUpdating: false,
-
-            tvOptions: { none: 0, premium: 4504, standard: 3872, bs: 2618, compact: 1650 },
-            netOptions: { none: 0, net10g: 7370, net1g: 5027, net300m: 4713, net8m: 3300, net1m: 1413, mansion_net: 2750 },
-            mobileOptions: {
-                voice1: 1628, voice3: 1958, voice10: 2728, voice20: 3278, voice50: 5368,
-                data3: 1650, data10: 2288, data20: 2838
-            },
-
-            stbList: {
-                ls500b: { name: 'TZ-LS500B(標準)', price: 0, desc: 'コンパクト・録画対応' },
-                ht3500bw: { name: 'TZ-HT3500BW', price: 770, desc: '2TB HDD・トリプル' },
-                lt1000bw: { name: 'TZ-LT1000BW', price: 682, desc: '外付けHDD対応・トリプル' }
-            },
-
-            devices: {
-                ip16: { name: 'iPhone 16', price: 132000, pay24: 5720, pay48: 2860 },
-                px10a: { name: 'Google Pixel 10a', price: 91300, pay24: 3960, pay48: 1980 },
-                aq10: { name: 'AQUOS sense10', price: 59400, pay24: 2530, pay48: 1265 },
-                aqw5: { name: 'AQUOS wish5', price: 33000, pay24: 1540, pay48: 770 },
-                arw3_64: { name: 'arrows We3 (64GB)', price: 36850, pay24: 1650, pay48: 825 },
-                arw3_128: { name: 'arrows We3 (128GB)', price: 57200, pay24: 2530, pay48: 1265 }
-            },
-
-            labels: {
-                tv: { none: '利用しない', premium: '光プレミアム', standard: '光スタンダード', bs: '光BS', compact: '光コンパクト' },
-                net: { none: '利用しない', net10g: '光10G', net1g: '光1G', net300m: '光300M', net8m: '光8M', net1m: '光1M', mansion_net: '光インターネット(マンション)' },
-                mobile: { voice1: '音声 1GB', voice3: '音声 3GB', voice10: '音声 10GB', voice20: '音声 20GB', voice50: '音声 50GB', data3: 'データ 3GB', data10: 'データ 10GB', data20: 'データ 20GB' }
-            },
-
-            tripleMatrix: {
-                "premium_net10g": -770, "premium_net1g": -519, "premium_net300m": -624, "premium_net8m": -573, "premium_net1m": -48,
-                "standard_net10g": -770, "standard_net1g": -305, "standard_net300m": -620, "standard_net8m": -568, "standard_net1m": -44,
-                "bs_net10g": -770, "bs_net1g": -203, "bs_net300m": -519, "bs_net8m": -467, "bs_net1m": -47,
-                "compact_net10g": -110, "compact_net1g": -73, "compact_net300m": -74, "compact_net8m": -23, "compact_net1m": -22,
-            }
+// CDN安全起動の確保
+function initApp() {
+    if (window.vueLoadError || typeof Vue === 'undefined') {
+        const errDiv = document.getElementById('cdn-error');
+        if (errDiv) {
+            errDiv.style.display = 'block';
+            errDiv.textContent = '⚠️ Vue 3 (CDN) の読み込みに失敗したため、シミュレーターを起動できません。ネットワーク接続をご確認ください。';
         }
-    },
-    watch: {
-        net(newVal) {
-            if (newVal === 'none') {
-                this.router = false;
-                this.netOps = { jSafe: false, spamFilter: false, addMail: false };
-                this.isKeizokuWari = false;
-            } else if (['net10g', 'net1g', 'net300m'].includes(newVal)) {
-                this.isKeizokuWari = true;
-            }
-        },
-        tv(newVal) {
-            if (newVal === 'none') {
-                this.stb = 'ls500b';
-            }
-        },
-        tel(newVal) {
-            if (!newVal) {
-                this.telOps = { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false };
-            }
-        },
-        'telOps.pack'(newVal) {
-            if (this.isTelOpsUpdating) return;
-            this.isTelOpsUpdating = true;
-            if (newVal) { this.telOps.disp = true; this.telOps.req = true; this.telOps.catchDisp = true; this.telOps.catchCall = true; }
-            else { this.telOps.disp = false; this.telOps.req = false; this.telOps.catchDisp = false; this.telOps.catchCall = false; }
-            this.$nextTick(() => { this.isTelOpsUpdating = false; });
-        },
-        'telOps.disp': 'checkTelPack',
-        'telOps.req': 'checkTelPack',
-        'telOps.catchDisp': 'checkTelPack',
-        'telOps.catchCall': 'checkTelPack',
-
-        'existingTv.has'(v) {
-            if (!v) this.tv = 'none';
-            else if (this.existingTv.action === 'keep') this.tv = this.existingTv.plan;
-        },
-        'existingTv.action'(v) { if (v === 'keep') this.tv = this.existingTv.plan; },
-        'existingTv.plan'(v) { if (this.existingTv.has && this.existingTv.action === 'keep') this.tv = v; },
-
-        'existingNet.has'(v) {
-            if (!v) this.net = 'none';
-            else if (this.existingNet.action === 'keep') this.net = this.existingNet.plan;
-        },
-        'existingNet.action'(v) { if (v === 'keep') this.net = this.existingNet.plan; },
-        'existingNet.plan'(v) { if (this.existingNet.has && this.existingNet.action === 'keep') this.net = v; },
-
-        'existingTel.has'(v) { this.tel = v; },
-    },
-    methods: {
-        checkTelPack() {
-            if (this.isTelOpsUpdating) return;
-            let total = 0;
-            if (this.telOps.disp) total += 440;
-            if (this.telOps.req) total += 220;
-            if (this.telOps.catchDisp) total += 110;
-            if (this.telOps.catchCall) total += 330;
-            if (total >= 550) {
-                this.isTelOpsUpdating = true;
-                this.telOps.pack = true;
-                this.telOps.disp = true;
-                this.telOps.req = true;
-                this.telOps.catchDisp = true;
-                this.telOps.catchCall = true;
-                this.$nextTick(() => { this.isTelOpsUpdating = false; });
-            }
-        },
-        selectPattern(p) {
-            if (this.contractPattern !== null) {
-                const ok = confirm('契約種別を変更すると、現在の入力内容がリセットされます。変更しますか？');
-                if (!ok) return;
-            }
-            this.contractPattern = p;
-            this.tv = 'none'; this.net = 'none'; this.tel = false;
-            this.stb = 'ls500b'; this.router = false; this.isKeizokuWari = false;
-            this.ottHulu = false; this.ottFod = false; this.ottUnext = false;
-            this.netOps = { jSafe: false, spamFilter: false, addMail: false };
-            this.telOps = { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false };
-            this.existingTv = { has: false, plan: 'premium', action: 'keep' };
-            this.existingNet = { has: false, plan: 'net10g', action: 'keep' };
-            this.existingTel = { has: false };
-            this.mobileLines = [];
-        },
-        printPDF() {
-            this.showSummaryDetail = false;
-            setTimeout(() => { window.print(); }, 300);
-        },
-        formatPrice(val) {
-            if (val == null || isNaN(val)) return '0';
-            return Number(val).toLocaleString();
-        },
-        formatMobileContractType(line) {
-            if (!line) return '';
-            if (line.source === 'existing') {
-                return line.status === 'keep' ? '既存回線・変更なし' : '既存回線・プラン変更';
-            }
-            return line.contractType === 'mnp' ? '新規追加 (MNP)' : '新規追加';
-        },
-        formatMobileDeviceName(line) {
-            if (!line || !line.device || !this.devices[line.device]) return '';
-            return this.devices[line.device].name;
-        },
-        getTvPriceFor(key) {
-            if (key === 'none') return 0;
-            if (this.contractPattern === 'mansion' && key === 'bs') return 2722;
-            return this.tvOptions[key] || 0;
-        },
-        setExistingMobileCount(count) {
-            let existing = this.mobileLines.filter(l => l.source === 'existing');
-            let others = this.mobileLines.filter(l => l.source !== 'existing');
-            count = Math.min(Math.max(0, count), 5);
-
-            if (count > existing.length) {
-                const addNum = count - existing.length;
-                for (let i = 0; i < addNum; i++) {
-                    existing.push({ source: 'existing', status: 'keep', contractType: null, plan: 'voice3', call: 'none', support: 'none', deviceBuy: 'no', device: 'ip16', devicePay: '24' });
-                }
-            } else if (count < existing.length) {
-                existing = existing.slice(0, count);
-            }
-            this.mobileLines = [...existing, ...others].slice(0, 5);
-        },
-        setMobileCount(count) {
-            let existing = this.mobileLines.filter(l => l.source === 'existing');
-            let others = this.mobileLines.filter(l => l.source !== 'existing');
-            const maxAddable = 5 - existing.length;
-            count = Math.min(Math.max(0, count), maxAddable);
-
-            if (count > others.length) {
-                const addNum = count - others.length;
-                for (let i = 0; i < addNum; i++) {
-                    others.push({ source: 'new', status: null, contractType: 'new', plan: 'voice3', call: 'none', support: 'none', deviceBuy: 'no', device: 'ip16', devicePay: '24' });
-                }
-            } else if (count < others.length) {
-                others = others.slice(0, count);
-            }
-            this.mobileLines = [...existing, ...others];
-        },
-
-        isLineBakuwariTarget(line) {
-            if (this.isMansion || !line) return false;
-
-            const isBakuwariNet = ['net10g', 'net1g'].includes(this.net) && this.isKeizokuWari;
-            const isBakuwariMobile = ['voice3', 'voice20', 'voice50'].includes(line.plan);
-
-            return (this.tv !== 'none' && isBakuwariNet && isBakuwariMobile);
-        },
-
-        getDevicePriceRaw(line) {
-            if (!line || !line.device || !this.devices[line.device]) return '0';
-            const dev = this.devices[line.device];
-            if (line.devicePay === '1') return this.formatPrice(dev.price);
-            if (line.devicePay === '24') return this.formatPrice(dev.pay24);
-            if (line.devicePay === '48') return this.formatPrice(dev.pay48);
-            return '0';
-        },
-
-        getLineTotal(line) {
-            if (!line) return 0;
-            let total = this.mobileOptions[line.plan] || 0;
-            if (line.call === '10min') total += 880;
-            if (line.call === 'unlimited') total += 1650;
-            if (line.support === 'packA') total += 440;
-            if (line.support === 'packB') total += 660;
-            if (line.support === 'hosho') total += 440;
-            if (line.deviceBuy === 'yes' && line.device && this.devices[line.device]) {
-                if (line.devicePay === '24') total += this.devices[line.device].pay24;
-                if (line.devicePay === '48') total += this.devices[line.device].pay48;
-            }
-            return total;
-        },
-
-        /* 通常版のスマホセット割計算（既存・新規問わずセット割条件を満たせば適用） */
-        getLineDiscounts(line) {
-            const list = [];
-            if (this.isMansion || !line) return list;
-
-            if (this.tv !== 'none' && this.net !== 'none') {
-                list.push({ label: 'スマホセット割(TV+NET)', amount: -660 });
-            } else if (this.net !== 'none') {
-                list.push({ label: 'スマホセット割(NET)', amount: -330 });
-            }
-
-            if (this.isLineBakuwariTarget(line)) {
-                list.push({
-                    label: 'スマホ爆割',
-                    amount: -748
-                });
-            }
-
-            return list;
-        },
-
-        getLineDiscountTotal(line) {
-            return this.getLineDiscounts(line).reduce((sum, d) => sum + d.amount, 0);
-        }
-    },
-    computed: {
-        currentDateStr() {
-            return new Date().toLocaleDateString('ja-JP');
-        },
-        contractPatternLabel() {
-            if (this.contractPattern === 'new') return '戸建て 新規契約';
-            if (this.contractPattern === 'add') return '戸建て 追加契約';
-            if (this.contractPattern === 'mansion') return 'マンションタイプ';
-            return '';
-        },
-        isAdd() { return this.contractPattern === 'add'; },
-        isMansion() { return this.contractPattern === 'mansion'; },
-
-        availableTvKeys() {
-            const all = Object.keys(this.tvOptions);
-            return this.isMansion ? all.filter(k => k !== 'compact') : all;
-        },
-        availableNetKeys() {
-            if (this.isMansion) return ['none', 'mansion_net'];
-            return Object.keys(this.netOptions).filter(k => k !== 'mansion_net');
-        },
-
-        tvBasePrice() { return this.getTvPriceFor(this.tv); },
-
-        tvStatusLabel() {
-            if (!this.isAdd) return '';
-            if (!this.existingTv.has) return this.tv !== 'none' ? '新規追加' : '';
-            return this.existingTv.action === 'keep' ? '変更なし' : 'プラン変更';
-        },
-        netStatusLabel() {
-            if (!this.isAdd) return '';
-            if (!this.existingNet.has) return this.net !== 'none' ? '新規追加' : '';
-            return this.existingNet.action === 'keep' ? '変更なし' : 'プラン変更';
-        },
-        telStatusLabel() {
-            if (!this.isAdd) return '';
-            if (this.existingTel.has) return this.tel ? '継続' : '解約予定';
-            return this.tel ? '新規追加' : '';
-        },
-
-        tvNewlyAdded() { return this.isAdd && !this.existingTv.has && this.tv !== 'none'; },
-        netNewlyAdded() { return this.isAdd && !this.existingNet.has && this.net !== 'none'; },
-        telNewlyAdded() { return this.isAdd && !this.existingTel.has && this.tel; },
-
-        existingMobileLinesCount() { return this.mobileLines.filter(l => l.source === 'existing').length; },
-        newMobileLinesCount() { return this.mobileLines.filter(l => l.source !== 'existing').length; },
-
-        potentialRouterPrice() {
-            if (this.isMansion) return 330;
-            return (this.net === 'net1g' && this.isKeizokuWari) ? 330 : 880;
-        },
-        routerPrice() { return (!this.router || this.net === 'none') ? 0 : this.potentialRouterPrice; },
-
-        stbPrice() { return (!['premium', 'standard'].includes(this.tv)) ? 0 : (this.stbList[this.stb] ? this.stbList[this.stb].price : 0); },
-        stbDiscount() { return (['ht3500bw', 'lt1000bw'].includes(this.stb) && ['net10g', 'net1g', 'net300m'].includes(this.net) && ['premium', 'standard'].includes(this.tv)) ? -550 : 0; },
-
-        mansionShatakuWari() { return (this.isMansion && this.tv !== 'none') ? -1100 : 0; },
-        mansionDoubleWari() { return (this.isMansion && this.tv !== 'none' && this.net !== 'none') ? -1100 : 0; },
-
-        tvDiscountTotal() {
-            let sum = 0;
-            if (this.stbDiscount < 0) sum += this.stbDiscount;
-            if (this.mansionShatakuWari < 0) sum += this.mansionShatakuWari;
-            return sum;
-        },
-        tvDiscountCount() {
-            return (this.stbDiscount < 0 ? 1 : 0) + (this.mansionShatakuWari < 0 ? 1 : 0);
-        },
-
-        netOpsTotal() {
-            let t = 0; if (this.netOps.jSafe) t += 330; if (this.netOps.spamFilter) t += 104; if (this.netOps.addMail) t += 220; return t;
-        },
-        telOpsTotal() {
-            if (!this.tel) return 0;
-            let t = this.telOps.pack ? 550 : ((this.telOps.disp?440:0)+(this.telOps.req?220:0)+(this.telOps.catchDisp?110:0)+(this.telOps.catchCall?330:0));
-            return t + (this.telOps.transfer ? 550 : 0);
-        },
-
-        mobileDiscountsTotal() {
-            let total = 0;
-            this.mobileLines.forEach(line => {
-                this.getLineDiscounts(line).forEach(d => total += d.amount);
-            });
-            return total;
-        },
-
-        mobileTotal() {
-            let gross = this.mobileLines.reduce((sum, line) => sum + this.getLineTotal(line), 0);
-            return gross + this.mobileDiscountsTotal;
-        },
-
-        hasOtt() { return this.ottHulu || this.ottFod || this.ottUnext; },
-        ottTotal() { return (this.ottHulu?1026:0) + (this.ottFod?1320:0) + (this.ottUnext?2189:0); },
-        isMoviePackApplied() { return this.hasOtt && ['net10g', 'net1g'].includes(this.net) && ['premium', 'standard', 'bs'].includes(this.tv); },
-        moviePackDiscount() { return this.isMoviePackApplied ? (this.tel ? -1980 : -880) : 0; },
-        tripleDiscount() { return (this.tv !== 'none' && this.net !== 'none' && this.tel && !this.isMoviePackApplied) ? (this.tripleMatrix[`${this.tv}_${this.net}`] || 0) : 0; },
-
-        allDiscounts() {
-            let list = [];
-            if (this.isKeizokuWari && ['net10g', 'net1g', 'net300m'].includes(this.net)) list.push({ name: '継続割', amount: -1100 });
-            if (this.stbDiscount < 0) list.push({ name: '4K-STB割', amount: this.stbDiscount });
-            if (this.tripleDiscount < 0) list.push({ name: 'トリプル割', amount: this.tripleDiscount });
-            if (this.moviePackDiscount < 0) list.push({ name: '動画パック割', amount: this.moviePackDiscount });
-
-            let mobileSetTotal = 0;
-            let bakuwariTotal = 0;
-            this.mobileLines.forEach(line => {
-                this.getLineDiscounts(line).forEach(d => {
-                    if (d.label === 'スマホ爆割') {
-                        bakuwariTotal += d.amount;
-                    } else {
-                        mobileSetTotal += d.amount;
-                    }
-                });
-            });
-            if (mobileSetTotal < 0) list.push({ name: 'スマホセット割', amount: mobileSetTotal });
-            if (bakuwariTotal < 0) list.push({ name: 'スマホ爆割', amount: bakuwariTotal });
-
-            if (this.mansionShatakuWari < 0) list.push({ name: '集合住宅割', amount: this.mansionShatakuWari });
-            if (this.mansionDoubleWari < 0) list.push({ name: 'マンションダブル割', amount: this.mansionDoubleWari });
-            return list;
-        },
-
-        grandTotalDiscounts() {
-            let sum = 0;
-            if (this.stbDiscount < 0) sum += this.stbDiscount;
-            if (this.mansionShatakuWari < 0) sum += this.mansionShatakuWari;
-            if (this.isKeizokuWari && ['net10g', 'net1g', 'net300m'].includes(this.net)) sum += -1100;
-            sum += this.mobileDiscountsTotal;
-            sum += this.crossServiceDiscounts.reduce((s, d) => s + d.amount, 0);
-            return sum;
-        },
-
-        freeMonths() { return this.isMansion ? 6 : 24; },
-        penaltyRates() {
-            if (this.isMansion) return { tv: 1430, net: 1430, tel: 0 };
-            if (this.isAdd) return { tv: 1100, net: 1100, tel: 1100 };
-            return { tv: 2750, net: 2750, tel: 1100 };
-        },
-        initCostNormal() {
-            if (this.isMansion) return (this.tv !== 'none' ? 8800 : 0) + (this.net !== 'none' ? 8800 : 0);
-            if (this.isAdd) return (this.tvNewlyAdded ? 26400 : 0) + (this.netNewlyAdded ? 26400 : 0) + (this.telNewlyAdded ? 26400 : 0);
-            return (this.tv !== 'none' ? 66000 : 0) + (this.net !== 'none' ? 66000 : 0) + (this.tel ? 26400 : 0);
-        },
-
-        tvTotal() { return this.tv === 'none' ? 0 : this.tvBasePrice + this.stbPrice + this.stbDiscount + this.mansionShatakuWari; },
-        netTotal() { return this.net === 'none' ? 0 : (this.netOptions[this.net] || 0) + this.routerPrice + this.netOpsTotal - (this.isKeizokuWari && ['net10g', 'net1g', 'net300m'].includes(this.net) ? 1100 : 0); },
-        telTotal() { return !this.tel ? 0 : 1639 + this.telOpsTotal; },
-
-        crossServiceDiscounts() {
-            let list = [];
-            if (this.tripleDiscount < 0) list.push({ name: 'トリプル割', amount: this.tripleDiscount });
-            if (this.moviePackDiscount < 0) list.push({ name: 'iCN動画パック割', amount: this.moviePackDiscount });
-            if (this.mansionDoubleWari < 0) list.push({ name: 'マンションダブル割', amount: this.mansionDoubleWari });
-            return list;
-        },
-        otherDiscountsTotal() { return this.crossServiceDiscounts.reduce((sum, d) => sum + d.amount, 0); },
-        finalTotal() { return this.tvTotal + this.netTotal + this.telTotal + this.ottTotal + this.mobileTotal + this.otherDiscountsTotal; },
-
-        // スマホ端末一括購入（買取）の合計額
-        totalDeviceOneTimePrice() {
-            return this.mobileLines.reduce((sum, line) => {
-                return sum + (line.deviceBuy === 'yes' && line.devicePay === '1' && line.device && this.devices[line.device] ? this.devices[line.device].price : 0);
-            }, 0);
+        return;
+    }
+    if (window.tailwindLoadError) {
+        const errDiv = document.getElementById('cdn-error');
+        if (errDiv) {
+            errDiv.style.display = 'block';
+            errDiv.textContent = '⚠️ Tailwind CSS (CDN) の読み込みに失敗しました。一部のレイアウトが正しく表示されない可能性があります。';
         }
     }
-}).mount('#app')
+
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                contractPattern: null,
+
+                existingTv: { has: false, plan: 'premium', action: 'keep' },
+                existingNet: { has: false, plan: 'net10g', action: 'keep' },
+                existingTel: { has: false },
+
+                tv: 'none',
+                stb: 'ls500b',
+                net: 'none',
+                isKeizokuWari: false,
+                tel: false,
+                ottHulu: false,
+                ottFod: false,
+                ottUnext: false,
+
+                mobileLines: [],
+
+                showSummaryDetail: false,
+                showChannelModal: false,
+
+                router: false,
+                netOps: { jSafe: false, spamFilter: false, addMail: false },
+
+                telOps: { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false },
+                isTelOpsUpdating: false,
+
+                tvOptions: { none: 0, premium: 4504, standard: 3872, bs: 2618, compact: 1650 },
+                netOptions: { none: 0, net10g: 7370, net1g: 5027, net300m: 4713, net8m: 3300, net1m: 1413, mansion_net: 2750 },
+                mobileOptions: {
+                    voice1: 1628, voice3: 1958, voice10: 2728, voice20: 3278, voice50: 5368,
+                    data3: 1650, data10: 2288, data20: 2838
+                },
+
+                // SIM種別ごとに厳密に定義されたランク構造
+                mobileRanks: {
+                    voice: {
+                        voice1: 1,
+                        voice3: 2,
+                        voice10: 3,
+                        voice20: 4,
+                        voice50: 5
+                    },
+                    data: {
+                        data3: 1,
+                        data10: 2,
+                        data20: 3
+                    }
+                },
+                tvRanks: {
+                    none: 0, compact: 1, bs: 2, standard: 3, premium: 4
+                },
+                netRanks: {
+                    none: 0, net1m: 1, net8m: 2, net300m: 3, net1g: 4, net10g: 5, mansion_net: 4
+                },
+
+                stbList: {
+                    ls500b: { name: 'TZ-LS500B(標準)', price: 0, desc: 'コンパクト・録画対応' },
+                    ht3500bw: { name: 'TZ-HT3500BW', price: 770, desc: '2TB HDD・トリプル' },
+                    lt1000bw: { name: 'TZ-LT1000BW', price: 682, desc: '外付けHDD対応・トリプル' }
+                },
+
+                devices: {
+                    ip16: { name: 'iPhone 16', price: 132000, pay24: 5720, pay48: 2860 },
+                    px10a: { name: 'Google Pixel 10a', price: 91300, pay24: 3960, pay48: 1980 },
+                    aq10: { name: 'AQUOS sense10', price: 59400, pay24: 2530, pay48: 1265 },
+                    aqw5: { name: 'AQUOS wish5', price: 33000, pay24: 1540, pay48: 770 },
+                    arw3_64: { name: 'arrows We3 (64GB)', price: 36850, pay24: 1650, pay48: 825 },
+                    arw3_128: { name: 'arrows We3 (128GB)', price: 57200, pay24: 2530, pay48: 1265 }
+                },
+
+                labels: {
+                    tv: { none: '利用しない', premium: '光プレミアム', standard: '光スタンダード', bs: '光BS', compact: '光コンパクト' },
+                    net: { none: '利用しない', net10g: '光10G', net1g: '光1G', net300m: '光300M', net8m: '光8M', net1m: '光1M', mansion_net: '光インターネット(マンション)' },
+                    mobile: { voice1: '音声 1GB', voice3: '音声 3GB', voice10: '音声 10GB', voice20: '音声 20GB', voice50: '音声 50GB', data3: 'データ 3GB', data10: 'データ 10GB', data20: 'データ 20GB' }
+                },
+
+                tripleMatrix: {
+                    "premium_net10g": -770, "premium_net1g": -519, "premium_net300m": -624, "premium_net8m": -573, "premium_net1m": -48,
+                    "standard_net10g": -770, "standard_net1g": -305, "standard_net300m": -620, "standard_net8m": -568, "standard_net1m": -44,
+                    "bs_net10g": -770, "bs_net1g": -203, "bs_net300m": -519, "bs_net8m": -467, "bs_net1m": -47,
+                    "compact_net10g": -110, "compact_net1g": -73, "compact_net300m": -74, "compact_net8m": -23, "compact_net1m": -22,
+                }
+            };
+        },
+        watch: {
+            // NET継続割のデフォルト適用ルール（要件15）
+            net(newVal) {
+                if (newVal === 'none') {
+                    this.router = false;
+                    this.netOps = {
+                        jSafe: false,
+                        spamFilter: false,
+                        addMail: false
+                    };
+                    this.isKeizokuWari = false;
+                } else if (['net10g', 'net1g', 'net300m'].includes(newVal)) {
+                    this.isKeizokuWari = true;
+                } else {
+                    this.isKeizokuWari = false;
+                }
+            },
+            tv(newVal) {
+                if (newVal === 'none') {
+                    this.stb = 'ls500b';
+                }
+            },
+            tel(newVal) {
+                if (!newVal) {
+                    this.telOps = { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false };
+                }
+            },
+            'telOps.pack'(newVal) {
+                if (this.isTelOpsUpdating) return;
+                this.isTelOpsUpdating = true;
+                if (newVal) { this.telOps.disp = true; this.telOps.req = true; this.telOps.catchDisp = true; this.telOps.catchCall = true; }
+                else { this.telOps.disp = false; this.telOps.req = false; this.telOps.catchDisp = false; this.telOps.catchCall = false; }
+                this.$nextTick(() => { this.isTelOpsUpdating = false; });
+            },
+            'telOps.disp': 'checkTelPack',
+            'telOps.req': 'checkTelPack',
+            'telOps.catchDisp': 'checkTelPack',
+            'telOps.catchCall': 'checkTelPack',
+
+            'existingTv.has'(v) {
+                if (!v) this.tv = 'none';
+                else if (this.existingTv.action === 'keep') this.tv = this.existingTv.plan;
+            },
+            'existingTv.action'(v) { if (v === 'keep') this.tv = this.existingTv.plan; },
+            'existingTv.plan'(v) { if (this.existingTv.has && this.existingTv.action === 'keep') this.tv = v; },
+
+            'existingNet.has'(v) {
+                if (!v) this.net = 'none';
+                else if (this.existingNet.action === 'keep') this.net = this.existingNet.plan;
+            },
+            'existingNet.action'(v) { if (v === 'keep') this.net = this.existingNet.plan; },
+            'existingNet.plan'(v) { if (this.existingNet.has && this.existingNet.action === 'keep') this.net = v; },
+
+            'existingTel.has'(v) { this.tel = v; },
+        },
+        methods: {
+            // SIM種別厳密判定ヘルパー（要件4）
+            getMobileSimType(plan) {
+                if (typeof plan !== 'string') return null;
+                if (plan.startsWith('voice')) return 'voice';
+                if (plan.startsWith('data')) return 'data';
+                return null;
+            },
+
+            // --- 完全一元化された計算コアロジック (状態オブジェクト依存) ---
+            getCurrentState() {
+                return {
+                    contractPattern: this.contractPattern,
+                    existingTv: JSON.parse(JSON.stringify(this.existingTv)),
+                    existingNet: JSON.parse(JSON.stringify(this.existingNet)),
+                    existingTel: JSON.parse(JSON.stringify(this.existingTel)),
+                    tv: this.tv,
+                    stb: this.stb,
+                    net: this.net,
+                    isKeizokuWari: this.isKeizokuWari,
+                    router: this.router,
+                    netOps: JSON.parse(JSON.stringify(this.netOps)),
+                    tel: this.tel,
+                    telOps: JSON.parse(JSON.stringify(this.telOps)),
+                    ottHulu: this.ottHulu,
+                    ottFod: this.ottFod,
+                    ottUnext: this.ottUnext,
+                    mobileLines: JSON.parse(JSON.stringify(this.mobileLines))
+                };
+            },
+
+            getTvPriceFor(key, state) {
+                if (key === 'none') return 0;
+                const currentPattern = state ? state.contractPattern : this.contractPattern;
+                if (currentPattern === 'mansion' && key === 'bs') return 2722;
+                return this.tvOptions[key] || 0;
+            },
+
+            // テレビサービス小計（STB・STB割引・集合住宅割を含む）
+            calculateTvTotal(state) {
+                if (!state || state.tv === 'none') return 0;
+                const isMansion = state.contractPattern === 'mansion';
+                const base = this.getTvPriceFor(state.tv, state);
+                const stbPrice = (!['premium', 'standard'].includes(state.tv)) ? 0 : (this.stbList[state.stb] ? this.stbList[state.stb].price : 0);
+                const stbDiscount = (['ht3500bw', 'lt1000bw'].includes(state.stb) && ['net10g', 'net1g', 'net300m'].includes(state.net) && ['premium', 'standard'].includes(state.tv)) ? -550 : 0;
+                const mansionShatakuWari = (isMansion && state.tv !== 'none') ? -1100 : 0;
+                return base + stbPrice + stbDiscount + mansionShatakuWari;
+            },
+
+            // インターネットサービス小計（ルーター・継続割・オプションを含む）
+            calculateNetTotal(state) {
+                if (!state || state.net === 'none') return 0;
+                const isMansion = state.contractPattern === 'mansion';
+                const base = this.netOptions[state.net] || 0;
+                const isKeizoku = !isMansion && state.isKeizokuWari && ['net10g', 'net1g', 'net300m'].includes(state.net);
+                const keizokuDiscount = isKeizoku ? -1100 : 0;
+                
+                let routerPrice = 0;
+                if (state.router) {
+                    if (isMansion) routerPrice = 330;
+                    else if (state.net === 'net1g' && isKeizoku) routerPrice = 330;
+                    else routerPrice = 880;
+                }
+
+                let ops = 0;
+                if (state.netOps.jSafe) ops += 330;
+                if (state.netOps.spamFilter) ops += 104;
+                if (state.netOps.addMail) ops += 220;
+
+                return base + routerPrice + ops + keizokuDiscount;
+            },
+
+            // 光でんわ小計
+            calculateTelTotal(state) {
+                if (!state || !state.tel || state.contractPattern === 'mansion') return 0;
+                let ops = 0;
+                if (state.telOps.pack) {
+                    ops += 550;
+                } else {
+                    if (state.telOps.disp) ops += 440;
+                    if (state.telOps.req) ops += 220;
+                    if (state.telOps.catchDisp) ops += 110;
+                    if (state.telOps.catchCall) ops += 330;
+                }
+                if (state.telOps.transfer) ops += 550;
+                return 1639 + ops;
+            },
+
+            // 動画配信サービス小計
+            calculateOttTotal(state) {
+                if (!state) return 0;
+                let total = 0;
+                if (state.ottHulu) total += 1026;
+                if (state.ottFod) total += 1320;
+                if (state.ottUnext) total += 2189;
+                return total;
+            },
+
+            // 各スマホ回線ごとの割引計算（爆割・セット割の判定基準要件16連動）
+            getLineDiscountsForState(state, line) {
+                const list = [];
+                if (!state || state.contractPattern === 'mansion' || !line) return list;
+
+                if (state.tv !== 'none' && state.net !== 'none') {
+                    list.push({ label: 'スマホセット割(TV+NET)', amount: -660 });
+                } else if (state.net !== 'none') {
+                    list.push({ label: 'スマホセット割(NET)', amount: -330 });
+                }
+
+                // 爆割連動判定（要件16: NET継続割が実際適用されていることが条件）
+                const isBakuwariNet = ['net10g', 'net1g'].includes(state.net) && state.isKeizokuWari;
+                const isBakuwariMobile = ['voice3', 'voice20', 'voice50'].includes(line.plan);
+
+                if (state.tv !== 'none' && isBakuwariNet && isBakuwariMobile) {
+                    list.push({ label: 'スマホ爆割', amount: -748 });
+                }
+
+                return list;
+            },
+
+            // 回線割引取得ラッパー（要件5）
+            getMobileDiscountsForState(state, line) {
+                return this.getLineDiscountsForState(state, line);
+            },
+
+            // ケーブルスマホ小計
+            calculateMobileTotal(state) {
+                if (!state || !state.mobileLines || state.mobileLines.length === 0) return 0;
+                let total = 0;
+                state.mobileLines.forEach(line => {
+                    let gross = this.mobileOptions[line.plan] || 0;
+                    if (line.call === '10min') gross += 880;
+                    if (line.call === 'unlimited') gross += 1650;
+                    if (line.support === 'packA') gross += 440;
+                    if (line.support === 'packB') gross += 660;
+                    if (line.support === 'hosho') gross += 440;
+                    if (line.deviceBuy === 'yes' && line.device && this.devices[line.device]) {
+                        if (line.devicePay === '24') gross += this.devices[line.device].pay24;
+                        if (line.devicePay === '48') gross += this.devices[line.device].pay48;
+                    }
+                    const discounts = this.getLineDiscountsForState(state, line).reduce((sum, d) => sum + d.amount, 0);
+                    total += (gross + discounts);
+                });
+                return total;
+            },
+
+            // 複数サービス連携割引
+            calculateDiscounts(state) {
+                if (!state) return { crossDiscounts: [], total: 0 };
+                const isMansion = state.contractPattern === 'mansion';
+                const list = [];
+
+                const hasOtt = state.ottHulu || state.ottFod || state.ottUnext;
+                const isMoviePackApplied = hasOtt && ['net10g', 'net1g'].includes(state.net) && ['premium', 'standard', 'bs'].includes(state.tv);
+                const moviePackDiscount = isMoviePackApplied ? (state.tel ? -1980 : -880) : 0;
+                if (moviePackDiscount < 0) {
+                    list.push({ name: 'iCN動画パック割', amount: moviePackDiscount });
+                }
+
+                const tripleDiscount = (state.tv !== 'none' && state.net !== 'none' && state.tel && !isMoviePackApplied) ? (this.tripleMatrix[`${state.tv}_${state.net}`] || 0) : 0;
+                if (tripleDiscount < 0) {
+                    list.push({ name: 'トリプル割', amount: tripleDiscount });
+                }
+
+                const mansionDoubleWari = (isMansion && state.tv !== 'none' && state.net !== 'none') ? -1100 : 0;
+                if (mansionDoubleWari < 0) {
+                    list.push({ name: 'マンションダブル割', amount: mansionDoubleWari });
+                }
+
+                const total = list.reduce((sum, d) => sum + d.amount, 0);
+                return { crossDiscounts: list, total };
+            },
+
+            // 月額総額
+            calculateTotal(state) {
+                if (!state || !state.contractPattern) return 0;
+                const tvTotal = this.calculateTvTotal(state);
+                const netTotal = this.calculateNetTotal(state);
+                const telTotal = this.calculateTelTotal(state);
+                const ottTotal = this.calculateOttTotal(state);
+                const mobileTotal = this.calculateMobileTotal(state);
+                const otherDiscountsTotal = this.calculateDiscounts(state).total;
+                return Math.max(0, tvTotal + netTotal + telTotal + ottTotal + mobileTotal + otherDiscountsTotal);
+            },
+
+            // 仮想シミュレーション（NET継続割の自動連動要件15を含む）
+            calcSimulatedTotal(simulateState) {
+                const state = this.getCurrentState();
+
+                if (simulateState.tv !== undefined) {
+                    state.tv = simulateState.tv;
+                }
+
+                if (simulateState.net !== undefined) {
+                    state.net = simulateState.net;
+
+                    if (['net10g', 'net1g', 'net300m'].includes(state.net)) {
+                        state.isKeizokuWari = true;
+                    } else {
+                        state.isKeizokuWari = false;
+                    }
+                }
+
+                if (simulateState.mobileLines !== undefined) {
+                    state.mobileLines = JSON.parse(JSON.stringify(simulateState.mobileLines));
+                }
+
+                return this.calculateTotal(state);
+            },
+
+            // --- UI操作 & フォーマット関数 ---
+            checkTelPack() {
+                if (this.isTelOpsUpdating) return;
+                let total = 0;
+                if (this.telOps.disp) total += 440;
+                if (this.telOps.req) total += 220;
+                if (this.telOps.catchDisp) total += 110;
+                if (this.telOps.catchCall) total += 330;
+                if (total >= 550) {
+                    this.isTelOpsUpdating = true;
+                    this.telOps.pack = true;
+                    this.telOps.disp = true;
+                    this.telOps.req = true;
+                    this.telOps.catchDisp = true;
+                    this.telOps.catchCall = true;
+                    this.$nextTick(() => { this.isTelOpsUpdating = false; });
+                }
+            },
+
+            selectPattern(p) {
+                if (this.contractPattern !== null) {
+                    const ok = confirm('契約種別を変更すると、現在の入力内容がリセットされます。変更しますか？');
+                    if (!ok) return;
+                }
+                this.contractPattern = p;
+                this.tv = 'none'; this.net = 'none'; this.tel = false;
+                this.stb = 'ls500b'; this.router = false; this.isKeizokuWari = false;
+                this.ottHulu = false; this.ottFod = false; this.ottUnext = false;
+                this.netOps = { jSafe: false, spamFilter: false, addMail: false };
+                this.telOps = { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false };
+                this.existingTv = { has: false, plan: 'premium', action: 'keep' };
+                this.existingNet = { has: false, plan: 'net10g', action: 'keep' };
+                this.existingTel = { has: false };
+                this.mobileLines = [];
+            },
+
+            printPDF() {
+                this.showSummaryDetail = false;
+                setTimeout(() => { window.print(); }, 300);
+            },
+
+            formatPrice(val) {
+                if (val == null || isNaN(val) || !isFinite(val)) return '0';
+                return Number(val).toLocaleString('ja-JP');
+            },
+
+            getDiffText(diff) {
+                if (diff < 0) {
+                    return `月額${this.formatPrice(Math.abs(diff))}円安くなります`;
+                } else if (diff === 0) {
+                    return `月額差額なしでサービス向上`;
+                } else {
+                    return `月額${this.formatPrice(diff)}円の追加でサービス向上`;
+                }
+            },
+
+            formatMobileContractType(line) {
+                if (!line) return '';
+                if (line.source === 'existing') {
+                    return line.status === 'keep' ? '既存回線・変更なし' : '既存回線・プラン変更';
+                }
+                return line.contractType === 'mnp' ? '新規追加 (MNP)' : '新規追加';
+            },
+
+            formatMobileDeviceName(line) {
+                if (!line || !line.device || !this.devices[line.device]) return '';
+                return this.devices[line.device].name;
+            },
+
+            setExistingMobileCount(count) {
+                let existing = this.mobileLines.filter(l => l.source === 'existing');
+                let others = this.mobileLines.filter(l => l.source !== 'existing');
+                count = Math.min(Math.max(0, count), 5);
+
+                if (count > existing.length) {
+                    const addNum = count - existing.length;
+                    for (let i = 0; i < addNum; i++) {
+                        existing.push({ source: 'existing', status: 'keep', contractType: null, plan: 'voice3', call: 'none', support: 'none', deviceBuy: 'no', device: 'ip16', devicePay: '24' });
+                    }
+                } else if (count < existing.length) {
+                    existing = existing.slice(0, count);
+                }
+                this.mobileLines = [...existing, ...others].slice(0, 5);
+            },
+
+            setMobileCount(count) {
+                let existing = this.mobileLines.filter(l => l.source === 'existing');
+                let others = this.mobileLines.filter(l => l.source !== 'existing');
+                const maxAddable = 5 - existing.length;
+                count = Math.min(Math.max(0, count), maxAddable);
+
+                if (count > others.length) {
+                    const addNum = count - others.length;
+                    for (let i = 0; i < addNum; i++) {
+                        others.push({ source: 'new', status: null, contractType: 'new', plan: 'voice3', call: 'none', support: 'none', deviceBuy: 'no', device: 'ip16', devicePay: '24' });
+                    }
+                } else if (count < others.length) {
+                    others = others.slice(0, count);
+                }
+                this.mobileLines = [...existing, ...others];
+            },
+
+            getDevicePriceRaw(line) {
+                if (!line || !line.device || !this.devices[line.device]) return '0';
+                const dev = this.devices[line.device];
+                if (line.devicePay === '1') return this.formatPrice(dev.price);
+                if (line.devicePay === '24') return this.formatPrice(dev.pay24);
+                if (line.devicePay === '48') return this.formatPrice(dev.pay48);
+                return '0';
+            },
+
+            getLineTotal(line) {
+                if (!line) return 0;
+                let total = this.mobileOptions[line.plan] || 0;
+                if (line.call === '10min') total += 880;
+                if (line.call === 'unlimited') total += 1650;
+                if (line.support === 'packA') total += 440;
+                if (line.support === 'packB') total += 660;
+                if (line.support === 'hosho') total += 440;
+                if (line.deviceBuy === 'yes' && line.device && this.devices[line.device]) {
+                    if (line.devicePay === '24') total += this.devices[line.device].pay24;
+                    if (line.devicePay === '48') total += this.devices[line.device].pay48;
+                }
+                return total;
+            },
+
+            getLineDiscounts(line) {
+                return this.getLineDiscountsForState(this.getCurrentState(), line);
+            },
+
+            getLineDiscountTotal(line) {
+                return this.getLineDiscounts(line).reduce((sum, d) => sum + d.amount, 0);
+            },
+
+            applyRecommendation(rec) {
+                const msg = `${rec.title}\n\n【月額料金（全体）】\n現在: ${this.formatPrice(rec.currentTotal)}円/月\n変更後: ${this.formatPrice(rec.recommendedTotal)}円/月\n\n${this.getDiffText(rec.diff)}\n\nこのプランを適用しますか？`;
+                
+                if (confirm(msg)) {
+                    if (typeof rec.apply === 'function') {
+                        rec.apply(this);
+                    }
+                }
+            }
+        },
+        computed: {
+            currentDateStr() {
+                return new Date().toLocaleDateString('ja-JP');
+            },
+            contractPatternLabel() {
+                if (this.contractPattern === 'new') return '戸建て 新規契約';
+                if (this.contractPattern === 'add') return '戸建て 追加契約';
+                if (this.contractPattern === 'mansion') return 'マンションタイプ';
+                return '';
+            },
+            isAdd() { return this.contractPattern === 'add'; },
+            isMansion() { return this.contractPattern === 'mansion'; },
+
+            availableTvKeys() {
+                const all = Object.keys(this.tvOptions);
+                return this.isMansion ? all.filter(k => k !== 'compact') : all;
+            },
+            availableNetKeys() {
+                if (this.isMansion) return ['none', 'mansion_net'];
+                return Object.keys(this.netOptions).filter(k => k !== 'mansion_net');
+            },
+
+            tvBasePrice() { return this.getTvPriceFor(this.tv, this.getCurrentState()); },
+
+            tvStatusLabel() {
+                if (!this.isAdd) return '';
+                if (!this.existingTv.has) return this.tv !== 'none' ? '新規追加' : '';
+                return this.existingTv.action === 'keep' ? '変更なし' : 'プラン変更';
+            },
+            netStatusLabel() {
+                if (!this.isAdd) return '';
+                if (!this.existingNet.has) return this.net !== 'none' ? '新規追加' : '';
+                return this.existingNet.action === 'keep' ? '変更なし' : 'プラン変更';
+            },
+            telStatusLabel() {
+                if (!this.isAdd) return '';
+                if (this.existingTel.has) return this.tel ? '継続' : '解約予定';
+                return this.tel ? '新規追加' : '';
+            },
+
+            tvNewlyAdded() { return this.isAdd && !this.existingTv.has && this.tv !== 'none'; },
+            netNewlyAdded() { return this.isAdd && !this.existingNet.has && this.net !== 'none'; },
+            telNewlyAdded() { return this.isAdd && !this.existingTel.has && this.tel; },
+
+            existingMobileLinesCount() { return this.mobileLines.filter(l => l.source === 'existing').length; },
+            newMobileLinesCount() { return this.mobileLines.filter(l => l.source !== 'existing').length; },
+
+            potentialRouterPrice() {
+                if (this.isMansion) return 330;
+                return (this.net === 'net1g' && this.isKeizokuWari) ? 330 : 880;
+            },
+            routerPrice() { return (!this.router || this.net === 'none') ? 0 : this.potentialRouterPrice; },
+
+            stbPrice() { return (!['premium', 'standard'].includes(this.tv)) ? 0 : (this.stbList[this.stb] ? this.stbList[this.stb].price : 0); },
+            stbDiscount() { return (['ht3500bw', 'lt1000bw'].includes(this.stb) && ['net10g', 'net1g', 'net300m'].includes(this.net) && ['premium', 'standard'].includes(this.tv)) ? -550 : 0; },
+
+            mansionShatakuWari() { return (this.isMansion && this.tv !== 'none') ? -1100 : 0; },
+            mansionDoubleWari() { return (this.isMansion && this.tv !== 'none' && this.net !== 'none') ? -1100 : 0; },
+
+            tvDiscountTotal() {
+                let sum = 0;
+                if (this.stbDiscount < 0) sum += this.stbDiscount;
+                if (this.mansionShatakuWari < 0) sum += this.mansionShatakuWari;
+                return sum;
+            },
+            tvDiscountCount() {
+                return (this.stbDiscount < 0 ? 1 : 0) + (this.mansionShatakuWari < 0 ? 1 : 0);
+            },
+
+            netOpsTotal() {
+                let t = 0; if (this.netOps.jSafe) t += 330; if (this.netOps.spamFilter) t += 104; if (this.netOps.addMail) t += 220; return t;
+            },
+            telOpsTotal() {
+                return this.calculateTelTotal(this.getCurrentState()) - (this.tel ? 1639 : 0);
+            },
+
+            mobileDiscountsTotal() {
+                let total = 0;
+                this.mobileLines.forEach(line => {
+                    this.getLineDiscounts(line).forEach(d => total += d.amount);
+                });
+                return total;
+            },
+
+            mobileTotal() {
+                return this.calculateMobileTotal(this.getCurrentState());
+            },
+
+            hasOtt() { return this.ottHulu || this.ottFod || this.ottUnext; },
+            ottTotal() { return this.calculateOttTotal(this.getCurrentState()); },
+            isMoviePackApplied() { return this.hasOtt && ['net10g', 'net1g'].includes(this.net) && ['premium', 'standard', 'bs'].includes(this.tv); },
+            moviePackDiscount() { return this.isMoviePackApplied ? (this.tel ? -1980 : -880) : 0; },
+            tripleDiscount() { return (this.tv !== 'none' && this.net !== 'none' && this.tel && !this.isMoviePackApplied) ? (this.tripleMatrix[`${this.tv}_${this.net}`] || 0) : 0; },
+
+            allDiscounts() {
+                let list = [];
+                if (this.isKeizokuWari && ['net10g', 'net1g', 'net300m'].includes(this.net)) list.push({ name: '継続割', amount: -1100 });
+                if (this.stbDiscount < 0) list.push({ name: '4K-STB割', amount: this.stbDiscount });
+                if (this.tripleDiscount < 0) list.push({ name: 'トリプル割', amount: this.tripleDiscount });
+                if (this.moviePackDiscount < 0) list.push({ name: '動画パック割', amount: this.moviePackDiscount });
+
+                let mobileSetTotal = 0;
+                let bakuwariTotal = 0;
+                this.mobileLines.forEach(line => {
+                    this.getLineDiscounts(line).forEach(d => {
+                        if (d.label === 'スマホ爆割') {
+                            bakuwariTotal += d.amount;
+                        } else {
+                            mobileSetTotal += d.amount;
+                        }
+                    });
+                });
+                if (mobileSetTotal < 0) list.push({ name: 'スマホセット割', amount: mobileSetTotal });
+                if (bakuwariTotal < 0) list.push({ name: 'スマホ爆割', amount: bakuwariTotal });
+
+                if (this.mansionShatakuWari < 0) list.push({ name: '集合住宅割', amount: this.mansionShatakuWari });
+                if (this.mansionDoubleWari < 0) list.push({ name: 'マンションダブル割', amount: this.mansionDoubleWari });
+                return list;
+            },
+
+            grandTotalDiscounts() {
+                let sum = 0;
+                if (this.stbDiscount < 0) sum += this.stbDiscount;
+                if (this.mansionShatakuWari < 0) sum += this.mansionShatakuWari;
+                if (this.isKeizokuWari && ['net10g', 'net1g', 'net300m'].includes(this.net)) sum += -1100;
+                sum += this.mobileDiscountsTotal;
+                sum += this.crossServiceDiscounts.reduce((s, d) => s + d.amount, 0);
+                return sum;
+            },
+
+            freeMonths() { return this.isMansion ? 6 : 24; },
+            penaltyRates() {
+                if (this.isMansion) return { tv: 1430, net: 1430, tel: 0 };
+                if (this.isAdd) return { tv: 1100, net: 1100, tel: 1100 };
+                return { tv: 2750, net: 2750, tel: 1100 };
+            },
+            initCostNormal() {
+                if (this.isMansion) return (this.tv !== 'none' ? 8800 : 0) + (this.net !== 'none' ? 8800 : 0);
+                if (this.isAdd) return (this.tvNewlyAdded ? 26400 : 0) + (this.netNewlyAdded ? 26400 : 0) + (this.telNewlyAdded ? 26400 : 0);
+                return (this.tv !== 'none' ? 66000 : 0) + (this.net !== 'none' ? 66000 : 0) + (this.tel ? 26400 : 0);
+            },
+
+            tvTotal() { return this.calculateTvTotal(this.getCurrentState()); },
+            netTotal() { return this.calculateNetTotal(this.getCurrentState()); },
+            telTotal() { return this.calculateTelTotal(this.getCurrentState()); },
+
+            crossServiceDiscounts() {
+                return this.calculateDiscounts(this.getCurrentState()).crossDiscounts;
+            },
+            otherDiscountsTotal() { return this.calculateDiscounts(this.getCurrentState()).total; },
+            
+            finalTotal() {
+                return this.calculateTotal(this.getCurrentState());
+            },
+
+            totalDeviceOneTimePrice() {
+                return this.mobileLines.reduce((sum, line) => {
+                    return sum + (line.deviceBuy === 'yes' && line.devicePay === '1' && line.device && this.devices[line.device] ? this.devices[line.device].price : 0);
+                }, 0);
+            },
+
+            // --- おすすめプラン提案生成ロジック (新要件完全準拠) ---
+            recommendations() {
+                if (!this.contractPattern) return [];
+
+                const state = this.getCurrentState();
+                const currentTotal = this.calculateTotal(state);
+                const recs = [];
+
+                // 1. 光テレビの提案
+                if (state.tv !== 'none') {
+                    const tvUpgrades = {
+                        'compact': ['bs', 'standard', 'premium'],
+                        'bs': ['standard', 'premium'],
+                        'standard': ['premium']
+                    };
+                    const upgrades = tvUpgrades[state.tv] || [];
+
+                    upgrades.forEach(newTv => {
+                        if (!this.availableTvKeys.includes(newTv)) return;
+                        if (this.isAdd && state.existingTv.has && state.existingTv.action === 'keep') return;
+
+                        const currentPrice = this.calculateTvTotal(state);
+                        
+                        const tempState = JSON.parse(JSON.stringify(state));
+                        tempState.tv = newTv;
+                        const recommendedPrice = this.calculateTvTotal(tempState);
+
+                        if (this.tvRanks[newTv] <= this.tvRanks[state.tv]) return;
+
+                        const simTotal = this.calcSimulatedTotal({ tv: newTv });
+                        const diff = simTotal - currentTotal;
+
+                        if (diff <= 400) {
+                            recs.push({
+                                type: 'tv',
+                                title: `光テレビを ${this.labels.tv[state.tv]} から ${this.labels.tv[newTv]} へ変更`,
+                                reason: '専門チャンネルの視聴可能数が増え、スポーツ・映画・アニメなど多様な映像コンテンツをお楽しみいただけます。',
+                                currentPrice,
+                                recommendedPrice,
+                                currentTotal,
+                                recommendedTotal: simTotal,
+                                diff,
+                                apply: (vm) => {
+                                    vm.tv = newTv;
+                                }
+                            });
+                        }
+                    });
+                }
+
+                // 2. 光インターネットの提案 (要件15: NET継続割連動対応)
+                if (state.net !== 'none' && !this.isMansion) {
+                    const netUpgrades = {
+                        'net1m': ['net8m', 'net300m', 'net1g', 'net10g'],
+                        'net8m': ['net300m', 'net1g', 'net10g'],
+                        'net300m': ['net1g', 'net10g'],
+                        'net1g': ['net10g']
+                    };
+                    const upgrades = netUpgrades[state.net] || [];
+
+                    upgrades.forEach(newNet => {
+                        if (!this.availableNetKeys.includes(newNet)) return;
+                        if (this.isAdd && state.existingNet.has && state.existingNet.action === 'keep') return;
+
+                        const currentPrice = this.calculateNetTotal(state);
+                        
+                        const tempState = JSON.parse(JSON.stringify(state));
+                        tempState.net = newNet;
+
+                        // ネットプラン変更時の一時状態にも継続割デフォルトルールを適用
+                        if (['net10g', 'net1g', 'net300m'].includes(newNet)) {
+                            tempState.isKeizokuWari = true;
+                        } else {
+                            tempState.isKeizokuWari = false;
+                        }
+
+                        const recommendedPrice = this.calculateNetTotal(tempState);
+
+                        if (this.netRanks[newNet] <= this.netRanks[state.net]) return;
+
+                        const simTotal = this.calcSimulatedTotal({ net: newNet });
+                        const diff = simTotal - currentTotal;
+
+                        if (diff <= 400) {
+                            recs.push({
+                                type: 'net',
+                                title: `光インターネットを ${this.labels.net[state.net]} から ${this.labels.net[newNet]} へ変更`,
+                                reason: '通信速度が向上し、複数端末での高画質動画視聴や大容量データのやり取りがより快適になります。',
+                                currentPrice,
+                                recommendedPrice,
+                                currentTotal,
+                                recommendedTotal: simTotal,
+                                diff,
+                                apply: (vm) => {
+                                    vm.net = newNet;
+                                    if (['net10g', 'net1g', 'net300m'].includes(newNet)) {
+                                        vm.isKeizokuWari = true;
+                                    } else {
+                                        vm.isKeizokuWari = false;
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+
+                // 3. ケーブルスマホの提案 (新仕様1〜12完全準拠)
+                if (state.mobileLines.length > 0) {
+                    const mobilePlanGroups = {
+                        voice: ['voice1', 'voice3', 'voice10', 'voice20', 'voice50'],
+                        data: ['data3', 'data10', 'data20']
+                    };
+
+                    ['voice', 'data'].forEach(targetType => {
+                        // 該当するSIM種別の回線群を抽出 (要件4, 6)
+                        const targetLines = state.mobileLines.filter(line => {
+                            return this.getMobileSimType(line.plan) === targetType;
+                        });
+
+                        if (targetLines.length === 0) return;
+
+                        // 該当SIM種別の中で現在実際に割引（セット割または爆割）が適用されている回線を抽出 (要件1, 5, 6)
+                        const eligibleLines = targetLines.filter(line => {
+                            const discounts = this.getMobileDiscountsForState(state, line);
+                            return discounts.some(discount => discount.amount < 0);
+                        });
+
+                        // 割引対象の回線が存在しない場合は、提案を表示しない (要件1, 2, 6)
+                        if (eligibleLines.length === 0) return;
+
+                        // 割引対象回線の中の現在の最高プランランクを取得 (要件8)
+                        const currentMaxRank = Math.max(...eligibleLines.map(line => {
+                            return this.mobileRanks[targetType][line.plan] || 0;
+                        }));
+
+                        const candidatePlans = mobilePlanGroups[targetType];
+
+                        candidatePlans.forEach(newPlan => {
+                            const newPlanRank = this.mobileRanks[targetType][newPlan] || 0;
+                            // 割引対象回線の最高ランクより上位の新プランのみ検討 (要件3, 8)
+                            if (newPlanRank <= currentMaxRank) return;
+
+                            // 割引対象回線のみプラン変更し、対象外回線は現在のプランを維持 (要件7)
+                            const newMobileLines = state.mobileLines.map(line => {
+                                const isTargetType = this.getMobileSimType(line.plan) === targetType;
+                                const discounts = this.getMobileDiscountsForState(state, line);
+                                const isEligible = isTargetType && discounts.some(discount => discount.amount < 0);
+
+                                if (isEligible) {
+                                    return {
+                                        ...line,
+                                        plan: newPlan
+                                    };
+                                }
+                                return { ...line };
+                            });
+
+                            // 変更後の仮状態でシミュレーション (要件9, 10)
+                            const tempState = JSON.parse(JSON.stringify(state));
+                            tempState.mobileLines = newMobileLines;
+
+                            // 提案後も割引が維持されているか確認 (要件10)
+                            const simulatedDiscounts = tempState.mobileLines
+                                .filter(line => this.getMobileSimType(line.plan) === targetType)
+                                .flatMap(line => this.getMobileDiscountsForState(tempState, line));
+
+                            const keepsDiscount = simulatedDiscounts.some(discount => discount.amount < 0);
+                            if (!keepsDiscount) return;
+
+                            const currentPrice = this.calculateMobileTotal(state);
+                            const recommendedPrice = this.calculateMobileTotal(tempState);
+
+                            const simTotal = this.calcSimulatedTotal({ mobileLines: newMobileLines });
+                            const diff = simTotal - currentTotal;
+
+                            // 提案採用条件 (要件9)
+                            const shouldRecommend = eligibleLines.length > 0 && newPlanRank > currentMaxRank && diff <= 400;
+
+                            if (shouldRecommend) {
+                                const labelType = targetType === 'voice' ? '音声SIM' : 'データSIM';
+                                recs.push({
+                                    type: 'mobile',
+                                    title: `ケーブルスマホ（${labelType}・割引対象${eligibleLines.length}回線）を ${this.labels.mobile[newPlan]} へ変更`,
+                                    reason: '毎月の利用可能データ容量が増え、外出先でも通信速度制限を気にせず快適にご利用いただけます。',
+                                    currentPrice,
+                                    recommendedPrice,
+                                    currentTotal,
+                                    recommendedTotal: simTotal,
+                                    diff,
+                                    // 提案適用処理 (要件12)
+                                    apply: (vm) => {
+                                        const curState = vm.getCurrentState();
+                                        vm.mobileLines.forEach(line => {
+                                            const simType = vm.getMobileSimType(line.plan);
+                                            if (simType !== targetType) return;
+
+                                            const discounts = vm.getMobileDiscountsForState(curState, line);
+                                            const isEligible = discounts.some(discount => discount.amount < 0);
+
+                                            if (isEligible) {
+                                                line.plan = newPlan;
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    });
+                }
+
+                // 優先順位ルールに従ってソート:
+                // 1. 月額差額が小さい順 (diffがマイナス＝値下げ提案が最優先)
+                // 2. 差額が同じ場合、単品品質の伸び幅が大きい順
+                recs.sort((a, b) => {
+                    if (a.diff !== b.diff) return a.diff - b.diff;
+                    const aIncrease = a.recommendedPrice - a.currentPrice;
+                    const bIncrease = b.recommendedPrice - b.currentPrice;
+                    return bIncrease - aIncrease;
+                });
+
+                // 最大5件に制限
+                return recs.slice(0, 5);
+            }
+        }
+    }).mount('#app');
+}
+
+// DOMコンテンツ読み込み完了後に安全にアプリケーションを起動
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
 </script>
 </body>
 </html>

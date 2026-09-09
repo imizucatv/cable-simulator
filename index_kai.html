@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>料金＆初期費用シミュレーター (通常版)</title>
+    <script>
+        window.vueLoadError = false;
+        window.tailwindLoadError = false;
+    </script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js" onerror="window.vueLoadError = true"></script>
+    <script src="https://cdn.tailwindcss.com" onerror="window.tailwindLoadError = true"></script>
+    <style>
+        [v-cloak] { display: none !important; }
+        body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif; background-color: #f1f5f9; }
+        .fade-enter-active, .fade-leave-active { transition: all 0.2s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(6px); }
+        .slide-fade-enter-active { transition: all 0.2s ease-out; }
+        .slide-fade-leave-active { transition: all 0.15s cubic-bezier(1.0, 0.5, 0.8, 1.0); }
+        .slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(15px); opacity: 0; }
+
+        @media print {
+            @page { size: A4 portrait; margin: 10mm; }
+            body { background-color: white !important; color: black !important; font-size: 11px; }
+            .screen-only { display: none !important; }
+            .print-only { display: block !important; }
+            [v-cloak] { display: none !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    </style>
+</head>
+<body class="text-slate-800 pb-40">
+
+    <div id="cdn-error" style="display:none;" class="bg-red-600 text-white font-bold text-center p-3 text-sm z-50 relative">
+        ⚠️ 必要なスクリプトの読み込みに失敗しました。インターネット接続を確認し、ページを再読み込みしてください。
+    </div>
+
+    <div id="app" v-cloak>
+
+        <div class="max-w-4xl mx-auto p-3 sm:p-6 relative screen-only">
+
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-xs text-slate-500 font-bold">※表示価格はすべて税込です。</span>
+                <a href="campaign.html" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow text-xs sm:text-sm flex items-center transition-colors">
+                    <span class="mr-1.5 text-lg">✨</span> キャンペーン版へ切り替え
+                </a>
+            </div>
+
+            <header class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-5 rounded-xl shadow-lg mb-6">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-center tracking-wide">料金シミュレーター</h1>
+                <p class="text-center text-blue-200 text-xs sm:text-sm mt-1">月額利用料・各種オプション・初期工事費用を簡単シミュレーション</p>
+                <div class="text-center mt-2"><span class="bg-slate-800 text-white text-xs px-3 py-1 rounded-full border border-slate-600 font-bold">通常版</span></div>
+            </header>
+
+            <!-- 通信エラー表示 -->
+            <div v-if="apiError" class="bg-red-50 border border-red-300 text-red-700 text-xs font-bold p-3 rounded-lg mb-4">
+                ⚠️ {{ apiError }}
+            </div>
+
+            <!-- STEP0: 契約パターン選択 -->
+            <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                <div class="bg-slate-800 text-white p-4">
+                    <h2 class="text-lg font-bold">① ご契約の種類を選択してください</h2>
+                </div>
+                <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button type="button" @click="selectPattern('new')" class="p-4 rounded-lg border-2 text-left transition-colors" :class="contractPattern==='new' ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-500/20' : 'border-slate-200 hover:bg-slate-50'">
+                        <div class="font-bold text-base text-slate-800">戸建て 新規契約</div>
+                        <div class="text-xs text-slate-500 mt-1">初めてご契約いただく方向け</div>
+                    </button>
+                    <button type="button" @click="selectPattern('add')" class="p-4 rounded-lg border-2 text-left transition-colors" :class="contractPattern==='add' ? 'border-emerald-600 bg-emerald-50 ring-2 ring-emerald-500/20' : 'border-slate-200 hover:bg-slate-50'">
+                        <div class="font-bold text-base text-slate-800">戸建て 追加契約</div>
+                        <div class="text-xs text-slate-500 mt-1">既にご契約中の方が別サービスを追加・変更</div>
+                    </button>
+                    <button type="button" @click="selectPattern('mansion')" class="p-4 rounded-lg border-2 text-left transition-colors" :class="contractPattern==='mansion' ? 'border-purple-600 bg-purple-50 ring-2 ring-purple-500/20' : 'border-slate-200 hover:bg-slate-50'">
+                        <div class="font-bold text-base text-slate-800">マンションタイプ</div>
+                        <div class="text-xs text-slate-500 mt-1">対応マンションにお住まいの方</div>
+                    </button>
+                </div>
+            </section>
+
+            <div v-if="contractPattern" class="space-y-6">
+
+                <!-- STEP0.5: 既存契約状況（追加契約のみ） -->
+                <section v-if="isAdd" class="bg-white rounded-xl shadow-sm border border-emerald-300 overflow-hidden mb-6">
+                    <div class="bg-emerald-50 border-b border-emerald-100 p-4">
+                        <h2 class="text-lg font-bold text-emerald-900">② 現在ご契約中のサービス状況</h2>
+                        <p class="text-xs text-slate-600 mt-1">現在契約中のサービスと、継続／変更の希望を選択してください。選択後の「月額合計」は継続分を含む最終利用料総額となります。</p>
+                    </div>
+                    <div class="p-4 sm:p-5 space-y-4 text-sm">
+
+                        <div class="border border-slate-200 rounded-lg p-3">
+                            <div class="font-bold text-slate-700 mb-2">📺 光テレビ</div>
+                            <div class="flex gap-2 text-xs mb-2">
+                                <button type="button" @click="existingTv.has = false" class="p-2 rounded flex-1 text-center border transition-colors" :class="!existingTv.has ? 'bg-slate-100 font-bold border-slate-300' : 'bg-white border-slate-200'">契約なし</button>
+                                <button type="button" @click="existingTv.has = true" class="p-2 rounded flex-1 text-center border transition-colors" :class="existingTv.has ? 'bg-emerald-50 border-emerald-300 font-bold text-emerald-700' : 'bg-white border-slate-200'">契約中</button>
+                            </div>
+                            <div v-if="existingTv.has" class="pl-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-xs text-slate-600">現在のプラン：</span>
+                                    <select v-model="existingTv.plan" class="border rounded p-1 text-xs">
+                                        <option v-for="key in ['premium','standard','bs','compact']" :key="key" :value="key">{{ tvLabel(key) }}</option>
+                                    </select>
+                                </div>
+                                <div class="flex gap-2 text-xs">
+                                    <button type="button" @click="existingTv.action = 'keep'" class="p-2 rounded flex-1 text-center border transition-colors" :class="existingTv.action==='keep' ? 'bg-emerald-50 border-emerald-300 font-bold text-emerald-700' : 'bg-white border-slate-200'">このまま継続</button>
+                                    <button type="button" @click="existingTv.action = 'change'" class="p-2 rounded flex-1 text-center border transition-colors" :class="existingTv.action==='change' ? 'bg-amber-50 border-amber-300 font-bold text-amber-700' : 'bg-white border-slate-200'">プラン変更する</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border border-slate-200 rounded-lg p-3">
+                            <div class="font-bold text-slate-700 mb-2">🌐 光インターネット</div>
+                            <div class="flex gap-2 text-xs mb-2">
+                                <button type="button" @click="existingNet.has = false" class="p-2 rounded flex-1 text-center border transition-colors" :class="!existingNet.has ? 'bg-slate-100 font-bold border-slate-300' : 'bg-white border-slate-200'">契約なし</button>
+                                <button type="button" @click="existingNet.has = true" class="p-2 rounded flex-1 text-center border transition-colors" :class="existingNet.has ? 'bg-emerald-50 border-emerald-300 font-bold text-emerald-700' : 'bg-white border-slate-200'">契約中</button>
+                            </div>
+                            <div v-if="existingNet.has" class="pl-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-xs text-slate-600">現在のプラン：</span>
+                                    <select v-model="existingNet.plan" class="border rounded p-1 text-xs">
+                                        <option v-for="key in ['net10g','net1g','net300m','net8m','net1m']" :key="key" :value="key">{{ netLabel(key) }}</option>
+                                    </select>
+                                </div>
+                                <div class="flex gap-2 text-xs">
+                                    <button type="button" @click="existingNet.action = 'keep'" class="p-2 rounded flex-1 text-center border transition-colors" :class="existingNet.action==='keep' ? 'bg-emerald-50 border-emerald-300 font-bold text-emerald-700' : 'bg-white border-slate-200'">このまま継続</button>
+                                    <button type="button" @click="existingNet.action = 'change'" class="p-2 rounded flex-1 text-center border transition-colors" :class="existingNet.action==='change' ? 'bg-amber-50 border-amber-300 font-bold text-amber-700' : 'bg-white border-slate-200'">プラン変更する</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border border-slate-200 rounded-lg p-3">
+                            <div class="font-bold text-slate-700 mb-2">☎️ 光でんわ</div>
+                            <div class="flex gap-2 text-xs">
+                                <button type="button" @click="existingTel.has = false" class="p-2 rounded flex-1 text-center border transition-colors" :class="!existingTel.has ? 'bg-slate-100 font-bold border-slate-300' : 'bg-white border-slate-200'">契約なし</button>
+                                <button type="button" @click="existingTel.has = true" class="p-2 rounded flex-1 text-center border transition-colors" :class="existingTel.has ? 'bg-emerald-50 border-emerald-300 font-bold text-emerald-700' : 'bg-white border-slate-200'">契約中</button>
+                            </div>
+                        </div>
+
+                        <div class="border border-slate-200 rounded-lg p-3">
+                            <div class="font-bold text-slate-700 mb-2">📱 ケーブルスマホ（既存ご契約回線数：最大5回線）</div>
+                            <div class="flex gap-2">
+                                <button v-for="n in 6" :key="n" type="button" @click="setExistingMobileCount(n-1)"
+                                        class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-colors"
+                                        :class="(n-1)===existingMobileLinesCount ? 'bg-emerald-600 text-white' : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-100'">
+                                    {{ n-1 }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div v-if="!calc" class="text-center text-slate-400 text-sm py-10">
+                    <span v-if="isLoading">計算中...</span>
+                    <span v-else>サーバーからの計算結果待機中です。</span>
+                </div>
+
+                <template v-else>
+
+                <!-- STEP1: 光テレビ -->
+                <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-blue-50 border-b border-blue-100 p-4 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-blue-900 flex items-center">
+                            <span class="bg-blue-600 text-white text-xs px-2.5 py-1 rounded-md mr-2">STEP 1</span>光テレビ
+                            <span v-if="calc.tv.statusLabel" class="ml-2 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold">{{ calc.tv.statusLabel }}</span>
+                        </h2>
+                        <span class="text-sm font-semibold text-blue-700">{{ tv==='none' ? '未選択' : (tvLabel(tv) + ' (' + formatPrice(calc.tv.basePrice) + '円)') }}</span>
+                    </div>
+                    <div class="p-4 sm:p-5">
+
+                        <div v-if="isAdd && existingTv.has && existingTv.action==='keep'" class="p-4 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-sm text-slate-800">{{ tvLabel(tv) }}</div>
+                                <div class="text-xs text-slate-500 mt-1">現在ご契約中のプランを継続します（変更なし・工事費なし）</div>
+                            </div>
+                            <button type="button" @click="existingTv.action='change'" class="text-xs bg-white border border-blue-300 text-blue-700 px-3 py-1.5 rounded hover:bg-blue-50 whitespace-nowrap">プランを変更する</button>
+                        </div>
+
+                        <template v-else>
+                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 mb-2">
+                                <button type="button" v-for="opt in uiOptions.tv" :key="opt.key" @click="tv = opt.key"
+                                        class="p-3 rounded-lg border text-left transition-all relative flex flex-col justify-between"
+                                        :class="tv === opt.key ? 'border-blue-600 bg-blue-50/80 ring-2 ring-blue-500/20' : 'border-slate-200 hover:bg-slate-50'">
+                                    <span class="font-bold text-sm text-slate-800">{{ opt.label }}</span>
+                                    <span class="text-xs text-slate-500 mt-2 block font-medium">{{ opt.price === 0 ? 'なし' : formatPrice(opt.price) + '円/月' }}</span>
+                                </button>
+                            </div>
+
+                            <div v-if="['premium', 'standard'].includes(tv)" class="mt-2 text-right">
+                                <button type="button" @click="showChannelModal = true" class="inline-flex items-center text-xs font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition-colors">
+                                    📺 {{ tvLabel(tv) }} の専門チャンネル一覧を見る ➔
+                                </button>
+                            </div>
+
+                            <div v-if="isAdd && tv !== 'none' && !existingTv.has" class="text-[11px] bg-amber-50 border border-amber-200 text-amber-700 rounded p-2 my-2">
+                                ※新規追加となるため工事費が発生しますが、{{ calc.initCost.freeMonths }}ヶ月継続利用で実質負担0円となります。
+                            </div>
+                            <div v-if="isMansion && tv !== 'none'" class="text-[11px] bg-purple-50 border border-purple-200 text-purple-800 rounded p-2 my-2">
+                                🏢 集合住宅割 {{ formatPrice(calc.tv.mansionShatakuWari) }}円 が自動適用されます（最低利用期間6ヶ月、期間内解約で違約金{{ formatPrice(calc.initCost.mansionTvPenalty) }}円）。
+                            </div>
+                        </template>
+
+                        <transition name="fade">
+                            <div v-if="['premium', 'standard'].includes(tv)" class="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="font-bold text-sm text-slate-700 flex items-center">📺 STB（専用チューナー）選択</span>
+                                    <span v-if="calc.tv.stbDiscount < 0" class="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded font-bold">4K-STB割 ({{ formatPrice(calc.tv.stbDiscount) }}円) 適用中</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    <div v-for="item in uiOptions.stb" :key="item.key" @click="stb = item.key" class="border p-3 rounded-lg cursor-pointer bg-white flex flex-col justify-between transition-colors" :class="stb === item.key ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-200'">
+                                        <div>
+                                            <div class="font-bold text-xs text-slate-800">{{ item.name }}</div>
+                                            <p class="text-[11px] text-slate-500 mt-1">{{ item.desc }}</p>
+                                        </div>
+                                        <div class="text-right text-xs font-bold text-slate-700 mt-2">{{ item.price === 0 ? '標準内蔵(0円)' : '+' + formatPrice(item.price) + '円/月' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
+                </section>
+
+                <!-- STEP2: 光インターネット -->
+                <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-emerald-50 border-b border-emerald-100 p-4 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-emerald-900 flex items-center">
+                            <span class="bg-emerald-600 text-white text-xs px-2.5 py-1 rounded-md mr-2">STEP 2</span>光インターネット
+                            <span v-if="calc.net.statusLabel" class="ml-2 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold">{{ calc.net.statusLabel }}</span>
+                        </h2>
+                        <span class="text-sm font-semibold text-emerald-700">{{ net==='none' ? '未選択' : (netLabel(net) + ' (' + formatPrice(calc.net.basePrice) + '円)') }}</span>
+                    </div>
+                    <div class="p-4 sm:p-5">
+
+                        <div v-if="isAdd && existingNet.has && existingNet.action==='keep'" class="p-4 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center mb-3">
+                            <div>
+                                <div class="font-bold text-sm text-slate-800">{{ netLabel(net) }}</div>
+                                <div class="text-xs text-slate-500 mt-1">現在ご契約中のプランを継続します（変更なし・工事費なし）</div>
+                            </div>
+                            <button type="button" @click="existingNet.action='change'" class="text-xs bg-white border border-emerald-300 text-emerald-700 px-3 py-1.5 rounded hover:bg-emerald-50 whitespace-nowrap">プランを変更する</button>
+                        </div>
+
+                        <template v-else>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mb-2">
+                                <button type="button" v-for="opt in uiOptions.net" :key="opt.key" @click="net = opt.key"
+                                        class="p-3 rounded-lg border text-left transition-all flex flex-col justify-between"
+                                        :class="net === opt.key ? 'border-emerald-600 bg-emerald-50/80 ring-2 ring-emerald-500/20' : 'border-slate-200 hover:bg-slate-50'">
+                                    <span class="font-bold text-sm text-slate-800">{{ opt.label }}</span>
+                                    <span class="text-xs text-slate-500 mt-2 block font-medium">{{ opt.price === 0 ? 'なし' : formatPrice(opt.price) + '円/月' }}</span>
+                                </button>
+                            </div>
+                            <div v-if="isAdd && net !== 'none' && !existingNet.has" class="text-[11px] bg-amber-50 border border-amber-200 text-amber-700 rounded p-2 mb-2">
+                                ※新規追加となるため工事費が発生しますが、{{ calc.initCost.freeMonths }}ヶ月継続利用で実質負担0円となります。
+                            </div>
+                            <p v-if="isMansion" class="text-[11px] text-slate-500 mb-2">※マンションタイプは速度選択がなく、上り下り最大1Gbps（回線共有）の固定プランです。最低利用期間6ヶ月、期間経過前の解約は違約金が発生します。</p>
+                        </template>
+
+                        <transition name="fade">
+                            <div v-if="!isMansion && ['net10g', 'net1g', 'net300m'].includes(net)" class="mt-3 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-lg">
+                                <label class="flex items-start cursor-pointer">
+                                    <input type="checkbox" v-model="isKeizokuWari" class="w-5 h-5 text-emerald-600 rounded mr-3 mt-0.5">
+                                    <div class="flex-1">
+                                        <div class="flex justify-between items-center"><span class="font-bold text-sm text-emerald-900">継続割 を申し込む ({{ formatPrice(calc.net.keizokuPotentialAmount) }}円/月)</span></div>
+                                        <p class="text-[11px] text-slate-600 mt-1">※年更新あり。申込み月前後3ヶ月以外での解約は違約金({{ formatPrice(calc.net.keizokuPenalty) }}円)が発生します。</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </transition>
+
+                        <transition name="fade">
+                            <div v-if="net !== 'none'" class="mt-4 border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+                                <div class="bg-slate-100 px-3 py-2 border-b border-slate-200 font-bold text-sm text-slate-700 flex items-center">⚙️ ネット オプション設定</div>
+                                <div class="p-3 bg-white space-y-1 text-xs">
+                                    <label class="flex justify-between items-center cursor-pointer p-2 hover:bg-slate-50 rounded transition-colors">
+                                        <div class="flex items-center"><input type="checkbox" v-model="router" class="mr-3 text-emerald-600 rounded w-4 h-4"><div><span class="font-bold text-slate-800">iCNメッシュWi-Fi</span><span class="text-[11px] text-slate-500 block font-normal">※ルーターレンタル（ご自身で用意された場合は不要です）</span></div></div>
+                                        <div class="text-right"><span class="font-bold text-emerald-800">+{{ formatPrice(calc.net.potentialRouterPrice) }}円/月</span><span v-if="!isMansion && net==='net1g'&&isKeizokuWari" class="text-red-500 text-[10px] block font-normal">※光1G継続割セット値引</span></div>
+                                    </label>
+                                    <label class="flex justify-between items-center cursor-pointer p-2 hover:bg-slate-50 rounded transition-colors">
+                                        <div class="flex items-center"><input type="checkbox" v-model="netOps.jSafe" class="mr-3 text-emerald-600 rounded w-4 h-4"><span>J-SAFE (セキュリティソフト)</span></div><span class="font-bold">+{{ formatPrice(uiOptions.netAddOns.jSafe) }}円/月</span>
+                                    </label>
+                                    <label class="flex justify-between items-center cursor-pointer p-2 hover:bg-slate-50 rounded transition-colors">
+                                        <div class="flex items-center"><input type="checkbox" v-model="netOps.spamFilter" class="mr-3 text-emerald-600 rounded w-4 h-4"><span>迷惑メールフィルタ</span></div><span class="font-bold">+{{ formatPrice(uiOptions.netAddOns.spamFilter) }}円/月</span>
+                                    </label>
+                                    <label class="flex justify-between items-center cursor-pointer p-2 hover:bg-slate-50 rounded transition-colors">
+                                        <div class="flex items-center"><input type="checkbox" v-model="netOps.addMail" class="mr-3 text-emerald-600 rounded w-4 h-4"><span>追加メールアカウント</span></div><span class="font-bold">+{{ formatPrice(uiOptions.netAddOns.addMail) }}円/月</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
+                </section>
+
+                <!-- STEP3: 光でんわ（マンションでは非表示） -->
+                <section v-if="!isMansion" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-amber-50 border-b border-amber-100 p-4 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-amber-900 flex items-center">
+                            <span class="bg-amber-600 text-white text-xs px-2.5 py-1 rounded-md mr-2">STEP 3</span>光でんわ（ケーブルプラス電話）
+                            <span v-if="calc.tel.statusLabel" class="ml-2 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold">{{ calc.tel.statusLabel }}</span>
+                        </h2>
+                        <span class="text-sm font-semibold text-amber-700">{{ tel ? ('加入 (+' + formatPrice(uiOptions.telBase) + '円/月)') : '未選択' }}</span>
+                    </div>
+                    <div class="p-4 sm:p-5">
+                        <label class="flex items-center cursor-pointer p-3 border rounded-lg transition-colors" :class="tel ? 'border-amber-500 bg-amber-50/50' : 'border-slate-200'">
+                            <input type="checkbox" v-model="tel" class="w-5 h-5 text-amber-600 rounded mr-3">
+                            <div>
+                                <span class="font-bold text-sm text-slate-800">ケーブルプラス電話 基本料</span>
+                                <span class="text-xs text-slate-500 block">全国のケーブルプラス電話同士通話無料</span>
+                                <span class="text-[11px] text-amber-800 font-bold block mt-0.5">🛡️ 迷惑電話自動ブロックサービス（無料・要別途申込）付き！</span>
+                            </div>
+                        </label>
+                        <p v-if="isAdd && tel && !existingTel.has" class="text-[11px] text-amber-700 mt-1">※新規追加となるため工事費{{ formatPrice(calc.initCost.telFee) }}円が発生します（{{ calc.initCost.freeMonths }}ヶ月継続利用で実質0円）。</p>
+
+                        <transition name="fade">
+                            <div v-if="tel" class="mt-4 border border-slate-200 rounded-lg overflow-hidden shadow-sm text-xs">
+                                <div class="bg-slate-100 px-3 py-2 border-b border-slate-200 font-bold text-slate-700 flex items-center">📞 電話オプション設定</div>
+                                <div class="p-3 bg-white">
+                                    <label class="flex justify-between items-center cursor-pointer p-2 rounded border transition-colors mb-2" :class="telOps.pack ? 'border-amber-500 bg-amber-100' : 'border-amber-200 bg-amber-50 hover:bg-amber-100/50'">
+                                        <div class="flex items-center"><input type="checkbox" v-model="telOps.pack" class="mr-2 text-amber-600 rounded w-4 h-4"><span class="font-bold text-amber-900">オプションお得パック (4点ｾｯﾄ)</span></div>
+                                        <span class="font-bold text-amber-900">+{{ formatPrice(uiOptions.telOptions.pack.price) }}円/月 <span class="line-through text-slate-400 font-normal text-[10px]">{{ formatPrice(uiOptions.telOptions.pack.originalPrice) }}円</span></span>
+                                    </label>
+
+                                    <div class="space-y-1">
+                                        <label class="flex justify-between items-center p-1.5 rounded transition-opacity" :class="telOps.pack ? 'opacity-60 cursor-not-allowed bg-slate-100' : 'cursor-pointer hover:bg-slate-50'"><div class="flex items-center"><input type="checkbox" v-model="telOps.disp" :disabled="telOps.pack" class="mr-2 text-amber-600 rounded w-4 h-4"><span>発信番号表示</span></div><span class="font-bold">+{{ formatPrice(uiOptions.telOptions.disp.price) }}円/月</span></label>
+                                        <label class="flex justify-between items-center p-1.5 rounded transition-opacity" :class="telOps.pack ? 'opacity-60 cursor-not-allowed bg-slate-100' : 'cursor-pointer hover:bg-slate-50'"><div class="flex items-center"><input type="checkbox" v-model="telOps.req" :disabled="telOps.pack" class="mr-2 text-amber-600 rounded w-4 h-4"><span>番号通知リクエスト</span></div><span class="font-bold">+{{ formatPrice(uiOptions.telOptions.req.price) }}円/月</span></label>
+                                        <label class="flex justify-between items-center p-1.5 rounded transition-opacity" :class="telOps.pack ? 'opacity-60 cursor-not-allowed bg-slate-100' : 'cursor-pointer hover:bg-slate-50'"><div class="flex items-center"><input type="checkbox" v-model="telOps.catchDisp" :disabled="telOps.pack" class="mr-2 text-amber-600 rounded w-4 h-4"><span>割込番号表示</span></div><span class="font-bold">+{{ formatPrice(uiOptions.telOptions.catchDisp.price) }}円/月</span></label>
+                                        <label class="flex justify-between items-center p-1.5 rounded transition-opacity" :class="telOps.pack ? 'opacity-60 cursor-not-allowed bg-slate-100' : 'cursor-pointer hover:bg-slate-50'"><div class="flex items-center"><input type="checkbox" v-model="telOps.catchCall" :disabled="telOps.pack" class="mr-2 text-amber-600 rounded w-4 h-4"><span>割込通話</span></div><span class="font-bold">+{{ formatPrice(uiOptions.telOptions.catchCall.price) }}円/月</span></label>
+                                    </div>
+                                    <hr class="border-slate-200 my-3">
+                                    <label class="flex justify-between items-center cursor-pointer p-1.5 hover:bg-slate-50 rounded"><div class="flex items-center"><input type="checkbox" v-model="telOps.transfer" class="mr-2 text-amber-600 rounded w-4 h-4"><span>着信転送</span></div><span class="font-bold">+{{ formatPrice(uiOptions.telOptions.transfer.price) }}円/月</span></label>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
+                </section>
+
+                <!-- STEP4: 動画配信サービス -->
+                <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-indigo-50 border-b border-indigo-100 p-4 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-indigo-900 flex items-center"><span class="bg-indigo-600 text-white text-xs px-2.5 py-1 rounded-md mr-2">STEP 4</span>動画配信サービス</h2>
+                        <span class="text-sm font-semibold text-indigo-700">{{ calc.ott.total > 0 ? '+' + formatPrice(calc.ott.total) + '円' : '未選択' }}</span>
+                    </div>
+                    <div class="p-4 sm:p-5">
+                        <p class="text-xs text-slate-600 mb-3 leading-relaxed">
+                            ケーブルテレビ経由でお申し込みいただけます。対象の「光テレビ＋光ネット」ご契約で<strong class="text-indigo-700">880円引き</strong>、さらに「光でんわ」もご契約なら<strong class="text-indigo-700">1,980円引き</strong>の「iCN動画パック割」が自動適用されます。<br>
+                            <span class="text-[10px] text-slate-500" v-if="isMansion">※マンションタイプは光でんわの取扱いがないため、動画パック割は対象外です（通常価格でのご利用となります）。</span>
+                            <span class="text-[10px] text-slate-500" v-else>※トリプル割とは排他利用（動画パック割が優先）となります。</span>
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <label class="flex justify-between items-center p-3 border rounded-lg cursor-pointer transition-colors" :class="ottHulu ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:bg-slate-50'">
+                                <div class="flex items-center"><input type="checkbox" v-model="ottHulu" class="mr-2 text-indigo-600 rounded w-5 h-5"><span class="font-bold text-sm text-slate-800">{{ ottOption('hulu').label }}</span></div><span class="text-xs font-bold text-slate-600">+{{ formatPrice(ottOption('hulu').price) }}円</span>
+                            </label>
+                            <label class="flex justify-between items-center p-3 border rounded-lg cursor-pointer transition-colors" :class="ottFod ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:bg-slate-50'">
+                                <div class="flex items-center"><input type="checkbox" v-model="ottFod" class="mr-2 text-indigo-600 rounded w-5 h-5"><span class="font-bold text-sm text-slate-800">{{ ottOption('fod').label }}</span></div><span class="text-xs font-bold text-slate-600">+{{ formatPrice(ottOption('fod').price) }}円</span>
+                            </label>
+                            <label class="flex justify-between items-center p-3 border rounded-lg cursor-pointer transition-colors" :class="ottUnext ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:bg-slate-50'">
+                                <div class="flex items-center"><input type="checkbox" v-model="ottUnext" class="mr-2 text-indigo-600 rounded w-5 h-5"><span class="font-bold text-sm text-slate-800">{{ ottOption('unext').label }}</span></div><span class="text-xs font-bold text-slate-600">+{{ formatPrice(ottOption('unext').price) }}円</span>
+                            </label>
+                        </div>
+                        <transition name="fade">
+                            <div v-if="calc.moviePackDiscount < 0" class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex justify-between items-center shadow-sm">
+                                <div class="flex items-center"><span class="text-lg mr-2">🎉</span><span class="font-bold text-red-800 text-sm">iCN動画パック割 適用！</span></div><span class="font-extrabold text-red-700 text-lg">{{ formatPrice(calc.moviePackDiscount) }}円</span>
+                            </div>
+                        </transition>
+                    </div>
+                </section>
+
+                <!-- STEP 5: ケーブルスマホ -->
+                <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-rose-50 border-b border-rose-100 p-4 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-rose-900 flex items-center"><span class="bg-rose-600 text-white text-xs px-2.5 py-1 rounded-md mr-2">STEP 5</span>ケーブルスマホ (最大5回線)</h2>
+                        <span class="text-sm font-semibold text-rose-700">{{ calc.mobile.total > 0 ? '+' + formatPrice(calc.mobile.total) + '円' : '未選択' }}</span>
+                    </div>
+
+                    <div class="p-4 sm:p-5">
+
+                        <div v-if="!isAdd" class="mb-4 bg-rose-50/50 p-3 rounded-lg border border-rose-100 flex items-center">
+                            <span class="font-bold text-sm text-slate-700 mr-4">契約回線数:</span>
+                            <div class="flex gap-2">
+                                <button type="button" v-for="n in 6" :key="n" @click="setMobileCount(n-1)"
+                                        class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors"
+                                        :class="(n-1) === mobileLines.length ? 'bg-rose-600 text-white shadow' : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-100'">
+                                    {{ n-1 }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-else class="mb-4 bg-rose-50/50 p-3 rounded-lg border border-rose-100">
+                            <div class="flex items-center flex-wrap gap-2">
+                                <span class="font-bold text-sm text-slate-700 mr-2">新規で追加する回線数:</span>
+                                <div class="flex gap-2">
+                                    <button type="button" v-for="n in (6 - existingMobileLinesCount)" :key="n" @click="setMobileCount(n-1)"
+                                            class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-colors"
+                                            :class="(n-1) === newMobileLinesCount ? 'bg-rose-600 text-white' : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-100'">
+                                        {{ n-1 }}
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-2">※既存回線と合わせて最大5回線までご指定いただけます。</p>
+                        </div>
+
+                        <div v-for="(line, index) in mobileLines" :key="index" class="mb-6 border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+                            <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-slate-700 flex justify-between items-center">
+                                <span class="flex items-center flex-wrap gap-2">
+                                    📱 回線 {{ index + 1 }}
+                                    <span v-if="line.source==='existing'" class="text-[10px] bg-amber-200 text-amber-800 px-2 py-0.5 rounded font-bold">
+                                        既存回線・{{ line.status === 'keep' ? '変更なし' : 'プラン変更' }}
+                                    </span>
+                                    <span v-else-if="isAdd" class="text-[10px] bg-rose-100 text-rose-700 px-2 py-0.5 rounded font-bold">新規追加</span>
+                                </span>
+                                <span class="text-rose-600">{{ formatPrice(lineCalc(index).total) }} 円/月</span>
+                            </div>
+
+                            <div class="p-4 bg-white space-y-4">
+
+                                <div v-if="line.source==='existing' && line.status==='keep'" class="p-3 bg-slate-50 rounded border border-slate-200 space-y-3">
+                                    <div class="flex justify-between items-center flex-wrap gap-2">
+                                        <div class="text-xs">
+                                            <div class="font-bold text-slate-800">現在の契約内容を入力中</div>
+                                            <div class="text-slate-500 mt-0.5">※現在ご契約中のプラン・オプション・端末購入設定を入力してください（料金計算に反映されます）。</div>
+                                        </div>
+                                        <button type="button" @click="line.status='change'" class="text-xs bg-white border border-rose-300 text-rose-700 px-3 py-1 rounded hover:bg-rose-50 whitespace-nowrap">プランを変更する</button>
+                                    </div>
+
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-700 mb-1">現在の通信プラン</div>
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                            <button type="button" v-for="opt in uiOptions.mobilePlans" :key="opt.key" @click="line.plan = opt.key"
+                                                    class="p-2 rounded border text-left transition-all flex flex-col justify-between"
+                                                    :class="line.plan === opt.key ? 'border-rose-600 bg-rose-50/80 ring-1 ring-rose-500/50' : 'border-slate-200 hover:bg-slate-50'">
+                                                <span class="font-bold text-xs text-slate-800">{{ opt.label }}</span>
+                                                <span class="text-[10px] text-slate-500 mt-1 block font-medium">{{ formatPrice(opt.price) }}円</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-700 mb-1">現在の通話定額・安心パック</div>
+                                        <div class="space-y-2 text-xs">
+                                            <div class="flex gap-2">
+                                                <button type="button" @click="line.call = 'none'" class="p-2 rounded flex-1 text-center border transition-colors" :class="line.call === 'none' ? 'bg-slate-100 font-bold border-slate-300' : 'bg-white border-slate-200'">定額なし</button>
+                                                <button type="button" @click="line.call = '10min'" class="p-2 rounded flex-1 text-center border transition-colors" :class="line.call === '10min' ? 'bg-rose-50 border-rose-300 font-bold text-rose-700' : 'bg-white border-slate-200'">10分定額 (+{{ formatPrice(uiOptions.mobileCallOptions['10min']) }}円)</button>
+                                                <button type="button" @click="line.call = 'unlimited'" class="p-2 rounded flex-1 text-center border transition-colors" :class="line.call === 'unlimited' ? 'bg-rose-50 border-rose-300 font-bold text-rose-700' : 'bg-white border-slate-200'">かけ放題 (+{{ formatPrice(uiOptions.mobileCallOptions.unlimited) }}円)</button>
+                                            </div>
+                                            <select v-model="line.support" class="border p-2 rounded w-full bg-white outline-none font-bold">
+                                                <option value="none">安心パック・端末保証 なし</option>
+                                                <option value="packA">安心パックA (+{{ formatPrice(uiOptions.mobileSupportOptions.packA) }}円)</option>
+                                                <option value="packB">安心パックB for a/i (+{{ formatPrice(uiOptions.mobileSupportOptions.packB) }}円)</option>
+                                                <option value="hosho">端末保証 a/i (+{{ formatPrice(uiOptions.mobileSupportOptions.hosho) }}円)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-700 mb-2">現在の端末購入設定</div>
+                                        <div class="flex gap-2 mb-2 text-xs">
+                                            <button type="button" @click="line.deviceBuy = 'no'" class="p-2 rounded flex-1 text-center border transition-colors" :class="line.deviceBuy === 'no' ? 'bg-slate-100 font-bold border-slate-300' : 'bg-white border-slate-200'">持込 (購入しない)</button>
+                                            <button type="button" @click="line.deviceBuy = 'yes'" class="p-2 rounded flex-1 text-center border transition-colors" :class="line.deviceBuy === 'yes' ? 'bg-rose-50 border-rose-300 font-bold text-rose-700' : 'bg-white border-slate-200'">端末を購入する</button>
+                                        </div>
+                                        <transition name="fade">
+                                            <div v-if="line.deviceBuy === 'yes'" class="bg-rose-50/50 p-3 rounded border border-rose-100 space-y-3">
+                                                <select v-model="line.device" class="border p-2 rounded w-full bg-white text-xs outline-none font-bold">
+                                                    <option v-for="dev in uiOptions.devices" :key="dev.key" :value="dev.key">{{ dev.name }} (一括: {{ formatPrice(dev.price) }}円)</option>
+                                                </select>
+                                                <div class="grid grid-cols-3 gap-2 text-[11px]" v-if="deviceInfo(line.device)">
+                                                    <button type="button" @click="line.devicePay = '1'" class="p-2 rounded border text-center bg-white transition-colors" :class="line.devicePay === '1' ? 'border-rose-400 ring-1 ring-rose-400 font-bold' : 'border-slate-200'">一括払い(買取)<br><span class="text-rose-600">{{ formatPrice(deviceInfo(line.device).price) }}円</span></button>
+                                                    <button type="button" @click="line.devicePay = '24'" class="p-2 rounded border text-center bg-white transition-colors" :class="line.devicePay === '24' ? 'border-rose-400 ring-1 ring-rose-400 font-bold' : 'border-slate-200'">24回払い<br><span class="text-rose-600">+{{ formatPrice(deviceInfo(line.device).pay24) }}円/月</span></button>
+                                                    <button type="button" @click="line.devicePay = '48'" class="p-2 rounded border text-center bg-white transition-colors" :class="line.devicePay === '48' ? 'border-rose-400 ring-1 ring-rose-400 font-bold' : 'border-slate-200'">48回払い<br><span class="text-rose-600">+{{ formatPrice(deviceInfo(line.device).pay48) }}円/月</span></button>
+                                                </div>
+                                            </div>
+                                        </transition>
+                                    </div>
+                                </div>
+
+                                <template v-else>
+                                    <div v-if="line.source==='existing'" class="flex justify-end">
+                                        <button type="button" @click="line.status='keep'" class="text-xs text-slate-500 underline hover:text-slate-700">← プラン変更を取り消す (継続に戻す)</button>
+                                    </div>
+
+                                    <div v-if="line.source!=='existing'">
+                                        <div class="text-xs font-bold text-slate-700 mb-2">① 契約種別</div>
+                                        <div class="flex gap-2 text-xs">
+                                            <button type="button" @click="line.contractType = 'new'" class="p-2 rounded flex-1 text-center border transition-colors" :class="line.contractType === 'new' ? 'bg-rose-50 border-rose-300 font-bold text-rose-700 ring-1 ring-rose-300' : 'bg-white text-slate-600 hover:bg-slate-50'">新規契約</button>
+                                            <button type="button" @click="line.contractType = 'mnp'" class="p-2 rounded flex-1 text-center border transition-colors" :class="line.contractType === 'mnp' ? 'bg-rose-50 border-rose-300 font-bold text-rose-700 ring-1 ring-rose-300' : 'bg-white text-slate-600 hover:bg-slate-50'">MNP (他社から乗り換え)</button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-700 mb-2">② 通信プラン</div>
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                            <button type="button" v-for="opt in uiOptions.mobilePlans" :key="opt.key" @click="line.plan = opt.key"
+                                                    class="p-2 rounded border text-left transition-all flex flex-col justify-between"
+                                                    :class="line.plan === opt.key ? 'border-rose-600 bg-rose-50/80 ring-1 ring-rose-500/50' : 'border-slate-200 hover:bg-slate-50'">
+                                                <span class="font-bold text-xs text-slate-800">{{ opt.label }}</span>
+                                                <span class="text-[10px] text-slate-500 mt-1 block font-medium">{{ formatPrice(opt.price) }}円</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-700 mb-2">③ 通話定額・安心パック</div>
+                                        <div class="space-y-2 text-xs">
+                                            <div class="flex gap-2">
+                                                <button type="button" @click="line.call = 'none'" class="p-2 rounded flex-1 text-center border transition-colors" :class="line.call === 'none' ? 'bg-slate-100 font-bold border-slate-300' : 'bg-white border-slate-200'">定額なし</button>
+                                                <button type="button" @click="line.call = '10min'" class="p-2 rounded flex-1 text-center border transition-colors" :class="line.call === '10min' ? 'bg-rose-50 border-rose-300 font-bold text-rose-700' : 'bg-white border-slate-200'">10分定額 (+{{ formatPrice(uiOptions.mobileCallOptions['10min']) }}円)</button>
+                                                <button type="button" @click="line.call = 'unlimited'" class="p-2 rounded flex-1 text-center border transition-colors" :class="line.call === 'unlimited' ? 'bg-rose-50 border-rose-300 font-bold text-rose-700' : 'bg-white border-slate-200'">かけ放題 (+{{ formatPrice(uiOptions.mobileCallOptions.unlimited) }}円)</button>
+                                            </div>
+
+                                            <div>
+                                                <select v-model="line.support" class="border p-2 rounded w-full bg-white outline-none font-bold">
+                                                    <option value="none">安心パック・端末保証 なし</option>
+                                                    <option value="packA">安心パックA (+{{ formatPrice(uiOptions.mobileSupportOptions.packA) }}円)</option>
+                                                    <option value="packB">安心パックB for a/i (+{{ formatPrice(uiOptions.mobileSupportOptions.packB) }}円)</option>
+                                                    <option value="hosho">端末保証 a/i (+{{ formatPrice(uiOptions.mobileSupportOptions.hosho) }}円)</option>
+                                                </select>
+                                                <p class="text-[10px] text-slate-500 mt-1 pl-1">
+                                                    ※安心パックA（セキュリティソフト＋専用コールセンター）。安心パックB for a/i（パックA＋端末補償無期限）。安心パックは各種申込み月＋1ヶ月無料！
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-700 mb-2">④ 端末購入</div>
+                                        <div class="flex gap-2 mb-2 text-xs">
+                                            <button type="button" @click="line.deviceBuy = 'no'" class="p-2 rounded flex-1 text-center border transition-colors" :class="line.deviceBuy === 'no' ? 'bg-slate-100 font-bold border-slate-300' : 'bg-white border-slate-200'">持込 (購入しない)</button>
+                                            <button type="button" @click="line.deviceBuy = 'yes'" class="p-2 rounded flex-1 text-center border transition-colors" :class="line.deviceBuy === 'yes' ? 'bg-rose-50 border-rose-300 font-bold text-rose-700' : 'bg-white border-slate-200'">端末を購入する</button>
+                                        </div>
+                                        <transition name="fade">
+                                            <div v-if="line.deviceBuy === 'yes'" class="bg-rose-50/50 p-3 rounded border border-rose-100 space-y-3">
+                                                <select v-model="line.device" class="border p-2 rounded w-full bg-white text-xs outline-none font-bold">
+                                                    <option v-for="dev in uiOptions.devices" :key="dev.key" :value="dev.key">{{ dev.name }} (一括: {{ formatPrice(dev.price) }}円)</option>
+                                                </select>
+                                                <div class="grid grid-cols-3 gap-2 text-[11px]" v-if="deviceInfo(line.device)">
+                                                    <button type="button" @click="line.devicePay = '1'" class="p-2 rounded border text-center bg-white transition-colors" :class="line.devicePay === '1' ? 'border-rose-400 ring-1 ring-rose-400 font-bold' : 'border-slate-200'">一括払い(買取)<br><span class="text-rose-600">{{ formatPrice(deviceInfo(line.device).price) }}円</span></button>
+                                                    <button type="button" @click="line.devicePay = '24'" class="p-2 rounded border text-center bg-white transition-colors" :class="line.devicePay === '24' ? 'border-rose-400 ring-1 ring-rose-400 font-bold' : 'border-slate-200'">24回払い<br><span class="text-rose-600">+{{ formatPrice(deviceInfo(line.device).pay24) }}円/月</span></button>
+                                                    <button type="button" @click="line.devicePay = '48'" class="p-2 rounded border text-center bg-white transition-colors" :class="line.devicePay === '48' ? 'border-rose-400 ring-1 ring-rose-400 font-bold' : 'border-slate-200'">48回払い<br><span class="text-rose-600">+{{ formatPrice(deviceInfo(line.device).pay48) }}円/月</span></button>
+                                                </div>
+                                            </div>
+                                        </transition>
+                                    </div>
+                                </template>
+
+                                <div class="bg-red-50 p-2.5 rounded text-[11px] space-y-1">
+                                    <div class="font-bold text-red-800 mb-1">適用中の割引</div>
+                                    <div v-for="(st, dIdx) in lineCalc(index).discounts" :key="dIdx" class="flex justify-between">
+                                        <span class="font-bold text-red-700">✅ {{ st.label }}</span>
+                                        <span class="font-bold text-red-700">{{ formatPrice(st.amount) }}円</span>
+                                    </div>
+                                    <div v-if="lineCalc(index).discounts.length === 0" class="text-slate-400">なし</div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- STEP 6: 初期費用 -->
+                <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-purple-50 border-b border-purple-100 p-4 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-purple-900 flex items-center"><span class="bg-purple-600 text-white text-xs px-2.5 py-1 rounded-md mr-2">STEP 6</span>初期費用</h2>
+                        <span class="text-sm font-semibold text-purple-700">{{ calc.initCost.freeMonths }}ヶ月継続で実質0円</span>
+                    </div>
+                    <div class="p-4 sm:p-5 text-xs space-y-3">
+
+                        <div class="bg-purple-50/60 p-3 rounded-lg border border-purple-200">
+                            <div class="flex justify-between items-center flex-wrap gap-2">
+                                <div><span class="font-bold text-slate-800">標準工事費（新たに発生する分）合計：</span><span class="line-through text-slate-400 font-bold text-sm ml-1">{{ formatPrice(calc.initCost.normal) }}円</span></div>
+                                <div class="text-right"><span class="bg-purple-600 text-white font-bold text-xs px-2 py-0.5 rounded">{{ calc.initCost.freeMonths }}ヶ月継続利用で</span><span class="text-lg font-extrabold text-purple-900 ml-1">実質 0 円</span></div>
+                            </div>
+
+                            <div v-if="isAdd" class="text-[11px] text-slate-500 mt-2 space-y-0.5">
+                                <div v-if="calc.initCost.tvNewlyAdded">・光テレビ（新規追加）：{{ formatPrice(calc.initCost.tvFee) }}円</div>
+                                <div v-if="calc.initCost.netNewlyAdded">・光インターネット（新規追加）：{{ formatPrice(calc.initCost.netFee) }}円</div>
+                                <div v-if="calc.initCost.telNewlyAdded">・光でんわ（新規追加）：{{ formatPrice(calc.initCost.telFee) }}円</div>
+                                <div v-if="!calc.initCost.tvNewlyAdded && !calc.initCost.netNewlyAdded && !calc.initCost.telNewlyAdded" class="text-slate-400">既存サービスの継続・プラン変更のみのため、新たな工事費は発生しません。</div>
+                            </div>
+                            <p v-else class="text-[11px] text-slate-500 mt-2">
+                                <template v-if="isMansion">※標準工事費（光テレビ:{{ formatPrice(calc.initCost.tvFee) }}円 / 光インターネット:{{ formatPrice(calc.initCost.netFee) }}円）。{{ calc.initCost.freeMonths }}か月継続利用で実質無料となります。</template>
+                                <template v-else>※標準工事費（光テレビ:{{ formatPrice(calc.initCost.tvFee) }}円 / 光インターネット:{{ formatPrice(calc.initCost.netFee) }}円 / 光でんわ:{{ formatPrice(calc.initCost.telFee) }}円）。{{ calc.initCost.freeMonths }}か月継続利用で実質無料となります。</template>
+                            </p>
+                            <p class="text-[10px] text-slate-500 mt-1">
+                                ※所定の継続利用期間（戸建て: 24ヶ月／マンション: 6ヶ月）を満たした場合の実質負担額です。<br>
+                                ※期間内に解約した場合は、残月数に応じた費用が発生する場合があります。
+                            </p>
+
+                            <div v-if="calc.mobile.deviceOneTimeTotal > 0" class="mt-3 pt-2 border-t border-purple-200 flex justify-between items-center font-bold text-slate-800">
+                                <span>📱 スマホ端末一括購入（買取）代金合計：</span>
+                                <span class="text-base text-blue-900">{{ formatPrice(calc.mobile.deviceOneTimeTotal) }} 円 (初回のみ)</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                            <div class="font-bold text-slate-700 mb-1">早期解約時の違約金（{{ calc.initCost.freeMonths }}ヶ月未満でのご解約時、月額×残月数）</div>
+                            <ul class="list-disc pl-4 space-y-0.5">
+                                <li v-if="isAdd ? calc.initCost.tvNewlyAdded : tv !== 'none'">光テレビ：{{ formatPrice(calc.initCost.penaltyRates.tv) }}円 × 残月数</li>
+                                <li v-if="isAdd ? calc.initCost.netNewlyAdded : net !== 'none'">光インターネット：{{ formatPrice(calc.initCost.penaltyRates.net) }}円 × 残月数</li>
+                                <li v-if="!isMansion && (isAdd ? calc.initCost.telNewlyAdded : tel)">光でんわ：{{ formatPrice(calc.initCost.penaltyRates.tel) }}円 × 残月数</li>
+                            </ul>
+                            <p v-if="isMansion && tv !== 'none'" class="mt-2 text-purple-700 font-bold">※集合住宅割は最低利用期間6ヶ月です。期間内解約は違約金{{ formatPrice(calc.initCost.mansionTvPenalty) }}円が発生します。</p>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- おすすめプラン提案エリア -->
+                <transition name="fade">
+                    <section v-if="recommendations.length > 0" class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl shadow-md border border-amber-300 overflow-hidden mb-6">
+                        <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-4 flex justify-between items-center">
+                            <h2 class="text-lg font-bold flex items-center">
+                                <span class="text-xl mr-2">💡</span> おすすめプラン提案
+                            </h2>
+                            <span class="text-xs bg-white text-orange-600 px-2.5 py-1 rounded-md font-bold shadow-sm">最大5件</span>
+                        </div>
+                        <div class="p-4 sm:p-5 space-y-4">
+                            <div v-for="(rec, index) in recommendations" :key="index" class="bg-white border border-orange-200 rounded-lg p-4 shadow-sm relative transition-all hover:shadow-md">
+
+                                <div v-if="rec.diff < 0" class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg z-10 shadow">
+                                    お得な上位プラン
+                                </div>
+
+                                <h3 class="font-bold text-slate-800 text-base mb-1">{{ rec.title }}</h3>
+                                <p class="text-xs text-slate-600 mb-3">{{ rec.reason }}</p>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                                    <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+                                        <div class="text-[10px] text-slate-500 font-bold mb-1">対象サービス月額（オプション・割引反映）</div>
+                                        <div class="flex items-center text-xs sm:text-sm">
+                                            <span class="line-through text-slate-400 mr-2">{{ formatPrice(rec.currentPrice) }}円</span>
+                                            <span class="font-bold text-slate-800">➔ {{ formatPrice(rec.recommendedPrice) }}円</span>
+                                        </div>
+                                    </div>
+                                    <div class="bg-orange-50 p-2.5 rounded border border-orange-200">
+                                        <div class="text-[10px] text-orange-800 font-bold mb-1">全体月額利用料 (各種セット割引適用後)</div>
+                                        <div class="flex items-center text-xs sm:text-sm">
+                                            <span class="line-through text-slate-400 mr-2">現在 {{ formatPrice(rec.currentTotal) }}円</span>
+                                            <span class="font-bold text-red-600 text-base sm:text-lg">➔ 変更後 {{ formatPrice(rec.recommendedTotal) }}円</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row justify-between items-center border-t border-slate-100 pt-3 gap-2">
+                                    <div class="text-xs font-bold w-full sm:w-auto" :class="rec.diff < 0 ? 'text-red-600' : 'text-orange-700'">
+                                        {{ getDiffText(rec.diff) }}
+                                    </div>
+                                    <button type="button" @click="applyRecommendation(rec)" class="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-5 rounded-lg shadow-sm transition-colors text-xs whitespace-nowrap">
+                                        このプランを適用
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </transition>
+
+                <p class="text-[11px] text-slate-400 text-center">※本シミュレーターの月額表示は定常的なご利用料金です。各種特典・割引の適用条件は確認書をご確認ください。</p>
+
+                </template>
+
+            </div>
+
+            <!-- 内訳詳細 (フッター連動) -->
+            <transition name="slide-fade">
+                <div v-if="showSummaryDetail && contractPattern && calc" class="fixed bottom-[130px] sm:bottom-[80px] left-0 w-full px-2 sm:px-0 z-40 flex justify-center">
+                    <div class="bg-white rounded-t-xl shadow-[0_-10px_25px_rgba(0,0,0,0.15)] w-full max-w-4xl border border-slate-200 p-4 pb-6 max-h-[60vh] overflow-y-auto">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-lg">月額料金 内訳サマリー (通常版)</h3>
+                                <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full font-bold mt-1">
+                                    ご契約種別：{{ contractPatternLabel }}
+                                </span>
+                            </div>
+                            <button type="button" @click="showSummaryDetail = false" class="text-slate-500 hover:bg-slate-100 p-1.5 rounded-full transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                        </div>
+                        <div class="space-y-4">
+
+                            <div class="flex justify-between items-start" v-if="tv !== 'none'">
+                                <div class="w-2/3">
+                                    <span class="font-bold text-blue-800 border-l-4 border-blue-500 pl-2 text-base">光テレビ <span v-if="calc.tv.statusLabel" class="text-[10px] text-amber-600">({{ calc.tv.statusLabel }})</span></span>
+                                    <div class="text-xs text-slate-600 mt-1 ml-3 space-y-0.5">
+                                        <div class="flex justify-between"><span>基本料</span><span>{{ formatPrice(calc.tv.basePrice) }}円</span></div>
+                                        <div class="flex justify-between" v-if="calc.tv.stbPrice > 0"><span>STB追加料金</span><span>+{{ formatPrice(calc.tv.stbPrice) }}円</span></div>
+                                        <div class="flex justify-between text-red-600 font-bold" v-if="calc.tv.stbDiscount < 0"><span>↳ 4K-STB割</span><span>{{ formatPrice(calc.tv.stbDiscount) }}円</span></div>
+                                        <div class="flex justify-between text-purple-600 font-bold" v-if="calc.tv.mansionShatakuWari < 0"><span>↳ 集合住宅割</span><span>{{ formatPrice(calc.tv.mansionShatakuWari) }}円</span></div>
+                                        <div class="flex justify-between text-blue-900 font-bold border-t border-slate-200 pt-0.5 mt-0.5" v-if="calc.tv.discountCount > 1">
+                                            <span>【テレビ割引小計】</span><span>{{ formatPrice(calc.tv.discountTotal) }}円</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-slate-700 text-lg">{{ formatPrice(calc.tv.total) }}円</span>
+                            </div>
+
+                            <div class="flex justify-between items-start" v-if="net !== 'none'">
+                                <div class="w-2/3">
+                                    <span class="font-bold text-emerald-800 border-l-4 border-emerald-500 pl-2 text-base">光インターネット <span v-if="calc.net.statusLabel" class="text-[10px] text-amber-600">({{ calc.net.statusLabel }})</span></span>
+                                    <div class="text-xs text-slate-600 mt-1 ml-3 space-y-0.5">
+                                        <div class="flex justify-between"><span>基本料</span><span>{{ formatPrice(calc.net.basePrice) }}円</span></div>
+                                        <div class="flex justify-between text-red-600 font-bold" v-if="calc.net.keizokuActive"><span>↳ 継続割</span><span>{{ formatPrice(calc.net.keizokuDiscount) }}円</span></div>
+                                        <div class="flex justify-between" v-if="router"><span>iCNメッシュWi-Fi</span><span>+{{ formatPrice(calc.net.potentialRouterPrice) }}円</span></div>
+                                        <div class="flex justify-between text-red-600 text-[10px]" v-if="router && net==='net1g'&&isKeizokuWari"><span class="ml-2">↳ 光1G継続割セット値引</span><span>適用済</span></div>
+                                        <div class="flex justify-between" v-if="netOps.jSafe"><span>J-SAFE</span><span>+{{ formatPrice(uiOptions.netAddOns.jSafe) }}円</span></div>
+                                        <div class="flex justify-between" v-if="netOps.spamFilter"><span>迷惑メールフィルタ</span><span>+{{ formatPrice(uiOptions.netAddOns.spamFilter) }}円</span></div>
+                                        <div class="flex justify-between" v-if="netOps.addMail"><span>追加メール</span><span>+{{ formatPrice(uiOptions.netAddOns.addMail) }}円</span></div>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-slate-700 text-lg">{{ formatPrice(calc.net.total) }}円</span>
+                            </div>
+
+                            <div class="flex justify-between items-start" v-if="tel">
+                                <div class="w-2/3">
+                                    <span class="font-bold text-amber-800 border-l-4 border-amber-500 pl-2 text-base">光でんわ <span v-if="calc.tel.statusLabel" class="text-[10px] text-amber-600">({{ calc.tel.statusLabel }})</span></span>
+                                    <div class="text-xs text-slate-600 mt-1 ml-3 space-y-0.5">
+                                        <div class="flex justify-between"><span>基本料</span><span>{{ formatPrice(uiOptions.telBase) }}円</span></div>
+                                        <div class="flex justify-between text-amber-800 font-bold"><span>↳ 迷惑電話自動ブロックサービス</span><span>0円 (要別途申込)</span></div>
+                                        <div class="flex justify-between" v-if="telOps.pack"><span>オプションお得パック</span><span>+{{ formatPrice(uiOptions.telOptions.pack.price) }}円</span></div>
+                                        <template v-else>
+                                            <div class="flex justify-between font-normal" v-if="telOps.disp"><span>発信番号表示</span><span>+{{ formatPrice(uiOptions.telOptions.disp.price) }}円</span></div>
+                                            <div class="flex justify-between font-normal" v-if="telOps.req"><span>番号通知リクエスト</span><span>+{{ formatPrice(uiOptions.telOptions.req.price) }}円</span></div>
+                                            <div class="flex justify-between font-normal" v-if="telOps.catchDisp"><span>割込番号表示</span><span>+{{ formatPrice(uiOptions.telOptions.catchDisp.price) }}円</span></div>
+                                            <div class="flex justify-between font-normal" v-if="telOps.catchCall"><span>割込通話</span><span>+{{ formatPrice(uiOptions.telOptions.catchCall.price) }}円</span></div>
+                                        </template>
+                                        <div class="flex justify-between" v-if="telOps.transfer"><span>着信転送</span><span>+{{ formatPrice(uiOptions.telOptions.transfer.price) }}円</span></div>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-slate-700 text-lg">{{ formatPrice(calc.tel.total) }}円</span>
+                            </div>
+
+                            <div class="flex justify-between items-start" v-if="hasOtt">
+                                <div class="w-2/3">
+                                    <span class="font-bold text-indigo-800 border-l-4 border-indigo-500 pl-2 text-base">動画配信サービス</span>
+                                    <div class="text-xs text-slate-600 mt-1 ml-3 space-y-0.5">
+                                        <div class="flex justify-between" v-if="ottHulu"><span>{{ ottOption('hulu').label }}</span><span>+{{ formatPrice(ottOption('hulu').price) }}円</span></div>
+                                        <div class="flex justify-between" v-if="ottFod"><span>{{ ottOption('fod').label }}</span><span>+{{ formatPrice(ottOption('fod').price) }}円</span></div>
+                                        <div class="flex justify-between" v-if="ottUnext"><span>{{ ottOption('unext').label }}</span><span>+{{ formatPrice(ottOption('unext').price) }}円</span></div>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-slate-700 text-lg">{{ formatPrice(calc.ott.total) }}円</span>
+                            </div>
+
+                            <div class="flex justify-between items-start" v-if="mobileLines.length > 0">
+                                <div class="w-2/3">
+                                    <span class="font-bold text-rose-800 border-l-4 border-rose-500 pl-2 text-base">ケーブルスマホ (計{{ mobileLines.length }}回線)</span>
+                                    <div class="text-xs text-slate-600 mt-1 ml-3 space-y-1">
+                                        <div v-for="(line, idx) in mobileLines" :key="idx" class="border-b border-dashed border-slate-200 pb-1">
+                                            <div class="font-bold text-slate-800">回線 {{ idx + 1 }} ({{ lineCalc(idx).contractTypeLabel }})</div>
+                                            <div class="flex justify-between pl-2"><span>基本料({{ lineCalc(idx).planLabel }})</span><span>{{ formatPrice(lineCalc(idx).planPrice) }}円</span></div>
+                                            <div class="flex justify-between pl-2" v-if="line.call === '10min'"><span>10分定額</span><span>+{{ formatPrice(uiOptions.mobileCallOptions['10min']) }}円</span></div>
+                                            <div class="flex justify-between pl-2" v-if="line.call === 'unlimited'"><span>かけ放題</span><span>+{{ formatPrice(uiOptions.mobileCallOptions.unlimited) }}円</span></div>
+                                            <div class="flex justify-between pl-2" v-if="line.support === 'packA'"><span>安心パックA</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packA) }}円</span></div>
+                                            <div class="flex justify-between pl-2" v-if="line.support === 'packB'"><span>安心パックB for a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packB) }}円</span></div>
+                                            <div class="flex justify-between pl-2" v-if="line.support === 'hosho'"><span>端末保証 a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.hosho) }}円</span></div>
+                                            <div class="flex justify-between pl-2 font-bold text-blue-900" v-if="line.deviceBuy === 'yes' && line.devicePay === '1'">
+                                                <span>端末一括購入代金(初回のみ)</span><span>{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円</span>
+                                            </div>
+                                            <div class="flex justify-between pl-2 text-orange-800 font-bold" v-if="line.deviceBuy === 'yes' && line.devicePay !== '1'">
+                                                <span>端末割賦代金({{ line.devicePay }}回)</span><span>+{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円</span>
+                                            </div>
+                                            <div v-for="(st, dIdx) in lineCalc(idx).discounts" :key="dIdx" class="flex justify-between pl-2 text-red-600 font-bold">
+                                                <span>↳ {{ st.label }}</span><span>{{ formatPrice(st.amount) }}円</span>
+                                            </div>
+                                            <div class="flex justify-between text-red-700 font-bold border-t border-slate-200 pt-0.5 mt-0.5 pl-2" v-if="lineCalc(idx).discounts.length > 1">
+                                                <span>【回線{{ idx + 1 }} 割引小計】</span><span>{{ formatPrice(lineCalc(idx).discountTotal) }}円</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-bold text-slate-700 text-lg">{{ formatPrice(calc.mobile.total) }}円</span>
+                                    <span class="block text-[10px] text-red-600 font-bold" v-if="calc.mobile.discountsTotal < 0">（割引適用後）</span>
+                                </div>
+                            </div>
+
+                            <div v-if="calc.otherDiscountsTotal < 0" class="border-t border-slate-200 pt-3 mt-2 bg-slate-50 p-3 rounded">
+                                <div class="text-xs font-bold text-slate-600 mb-2">複数サービス適用によるセット割引（横断割引）</div>
+                                <div class="space-y-1">
+                                    <div v-for="(d, i) in calc.crossServiceDiscounts" :key="i" class="flex justify-between items-center text-red-600 text-sm">
+                                        <span class="font-bold">{{ d.name }}</span><span class="font-bold">{{ formatPrice(d.amount) }}円</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-slate-300 pt-3 mt-3 bg-purple-50/80 p-3 rounded space-y-1">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-purple-900 border-l-4 border-purple-600 pl-2 text-sm">端末一括購入代金（初回のみ）</span>
+                                    <span class="font-bold text-purple-900 text-base">{{ formatPrice(calc.mobile.deviceOneTimeTotal) }}円</span>
+                                </div>
+                                <div class="text-xs text-slate-600 ml-3 space-y-0.5">
+                                    <div class="flex justify-between">
+                                        <span>標準工事費（{{ calc.initCost.freeMonths }}ヶ月継続利用で実質0円）</span>
+                                        <span class="line-through text-slate-400">{{ formatPrice(calc.initCost.normal) }}円 ➔ 0円</span>
+                                    </div>
+                                    <div class="flex justify-between font-bold text-blue-900" v-if="calc.mobile.deviceOneTimeTotal > 0">
+                                        <span>スマホ端末一括購入代金(買取・計)</span>
+                                        <span>{{ formatPrice(calc.mobile.deviceOneTimeTotal) }}円</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="calc.grandTotalDiscounts < 0" class="border-t-2 border-red-300 pt-3 mt-3 bg-red-50 p-3 rounded flex justify-between items-center shadow-sm">
+                                <div>
+                                    <span class="font-bold text-red-800 text-sm flex items-center">🎉 適用中の割引 総額（合計）</span>
+                                    <span class="text-[10px] text-red-600 block mt-0.5">※毎月の利用料から差し引かれる全割引の合計金額です</span>
+                                </div>
+                                <span class="font-black text-red-700 text-xl">{{ formatPrice(calc.grandTotalDiscounts) }}円/月</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- 固定フッターバー -->
+            <div v-if="contractPattern" class="fixed bottom-0 left-0 w-full bg-slate-900 text-white p-3 sm:p-4 shadow-2xl z-50 border-t border-slate-700">
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex justify-between items-center mb-2 sm:hidden border-b border-slate-700 pb-2">
+                        <button type="button" @click="printPDF" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-4 rounded shadow flex items-center w-full justify-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                            PDF保存・印刷
+                        </button>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-3">
+                        <div class="w-full sm:w-auto text-xs space-y-1 flex-1 hidden sm:block">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="text-slate-400 mr-1">適用中の割引：</span>
+                                <span v-if="!calc || calc.allDiscounts.length===0" class="text-slate-500">なし</span>
+                                <span v-for="(d, i) in (calc ? calc.allDiscounts : [])" :key="i" class="bg-slate-700 text-amber-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap">{{ d.name }}</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between w-full sm:w-auto items-center sm:pl-4">
+                            <button type="button" @click="printPDF" class="hidden sm:flex bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-4 rounded shadow items-center mr-4 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                控えを保存(PDF/印刷)
+                            </button>
+                            <button type="button" @click="showSummaryDetail = !showSummaryDetail" class="text-[10px] sm:text-xs bg-slate-700 border border-slate-500 px-3 py-1.5 rounded mr-3 whitespace-nowrap hover:bg-slate-600 transition-colors">
+                                {{ showSummaryDetail ? '内訳を閉じる ▼' : '明細を見る ▲' }}
+                            </button>
+                            <div class="text-right">
+                                <span class="text-[10px] sm:text-xs text-slate-400 hidden sm:inline mr-1">月額合計(税込)</span>
+                                <span class="text-2xl sm:text-4xl font-black text-white tracking-tight">{{ calc ? formatPrice(calc.finalTotal) : (isLoading ? '...' : '---') }}</span>
+                                <span class="text-xs sm:text-sm font-normal text-slate-300 ml-0.5">円/月</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 📺 専門チャンネル一覧モーダル -->
+        <div v-if="showChannelModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 screen-only">
+            <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+                <div class="bg-slate-800 text-white p-4 flex justify-between items-center">
+                    <h3 class="font-bold text-base sm:text-lg flex items-center">
+                        📺 {{ tvLabel(tv) }} 専門チャンネルラインナップ
+                    </h3>
+                    <button type="button" @click="showChannelModal = false" class="text-slate-400 hover:text-white text-xl font-bold px-2">✕</button>
+                </div>
+                <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs">
+
+                    <div v-if="tv === 'standard' || tv === 'premium'" class="space-y-4">
+                        <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                            <div class="font-bold text-blue-900 text-sm mb-1.5 border-b border-blue-200 pb-1">⚽ スポーツ</div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-slate-700">
+                                <div>410ch J SPORTS 3 HD</div>
+                                <div>411ch スカイA</div>
+                                <div>412ch GAORA SPORTS</div>
+                                <div>413ch J SPORTS 1 HD</div>
+                                <div>414ch J SPORTS 2 HD</div>
+                                <div>417ch ゴルフネットワークHD</div>
+                                <div>418ch 日テレジータス</div>
+                                <div v-if="tv==='premium'" class="text-red-600 font-bold">416ch スポーツライブ＋ (★)</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg">
+                            <div class="font-bold text-amber-900 text-sm mb-1.5 border-b border-amber-200 pb-1">🎬 映画・ドラマ</div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-slate-700">
+                                <div>420ch ムービープラス HD</div>
+                                <div>421ch 日本映画専門チャンネル</div>
+                                <div>422ch 映画・チャンネルNECO</div>
+                                <div>430ch ファミリー劇場</div>
+                                <div>432ch アクションチャンネル</div>
+                                <div>434ch 時代劇専門チャンネル</div>
+                                <template v-if="tv==='premium'">
+                                    <div class="text-red-600 font-bold">423ch V☆パラダイス HD (★)</div>
+                                    <div class="text-red-600 font-bold">424ch WOWOWプラス (★)</div>
+                                    <div class="text-red-600 font-bold">437ch ミステリーチャンネル (★)</div>
+                                    <div class="text-red-600 font-bold">446ch ホームドラマチャンネル HD (★)</div>
+                                    <div class="text-red-600 font-bold">497ch アジドラ(★)</div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="bg-rose-50 border border-rose-200 p-3 rounded-lg">
+                            <div class="font-bold text-rose-900 text-sm mb-1.5 border-b border-rose-200 pb-1">🧸 アニメ・キッズ</div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-slate-700">
+                                <div>440ch カートゥーン ネットワーク</div>
+                                <div>441ch アニマックス HD</div>
+                                <div>442ch キッズステーション</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg">
+                            <div class="font-bold text-emerald-900 text-sm mb-1.5 border-b border-emerald-200 pb-1">📺 エンターテイメント・教養・音楽</div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-slate-700">
+                                <div>438ch TBSチャンネル1</div>
+                                <div>447ch TBSチャンネル2</div>
+                                <div>458ch テレ朝チャンネル2</div>
+                                <div>480ch MONDO TV HD</div>
+                                <div>470ch 囲碁・将棋チャンネル</div>
+                                <div>477ch 旅チャンネル HD</div>
+                                <div>461ch MUSIC ON! TV</div>
+                                <div>462ch スペースシャワーTV</div>
+                                <template v-if="tv==='premium'">
+                                    <div class="text-red-600 font-bold">445ch テレ朝チャンネル1 (★)</div>
+                                    <div class="text-red-600 font-bold">479ch メ〜テレNEXT (★)</div>
+                                    <div class="text-red-600 font-bold">481ch フジテレビTWO (★)</div>
+                                    <div class="text-red-600 font-bold">482ch フジテレビONE (★)</div>
+                                    <div class="text-red-600 font-bold">484ch 日テレプラス (★)</div>
+                                    <div class="text-red-600 font-bold">460ch ミュージック・エア (★)</div>
+                                    <div class="text-red-600 font-bold">464ch 歌謡ポップス (★)</div>
+                                    <div class="text-red-600 font-bold">476ch 釣りビジョン HD (★)</div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg">
+                            <div class="font-bold text-slate-800 text-sm mb-1.5 border-b border-slate-200 pb-1">📰 ニュース・ショッピング・他</div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-slate-700">
+                                <div>451ch 日経CNBC</div>
+                                <div>452ch 日テレNEWS24</div>
+                                <div>454ch TBS NEWS</div>
+                                <div>471ch ショップチャンネル</div>
+                                <div>472ch QVC</div>
+                                <div>473ch ジュエリー☆GSTV</div>
+                                <div>401ch/402ch satonoka 4K/TV</div>
+                            </div>
+                        </div>
+
+                        <p v-if="tv==='premium'" class="text-[10px] text-red-600 font-bold">※ (★) 印は光プレミアムでのみご視聴いただける専用追加チャンネルです。</p>
+                    </div>
+
+                </div>
+                <div class="bg-slate-100 p-3 text-right">
+                    <button type="button" @click="showChannelModal = false" class="bg-slate-700 hover:bg-slate-800 text-white font-bold px-4 py-1.5 rounded-lg text-xs">閉じる</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 印刷・PDF出力専用レイアウト -->
+        <div class="print-only hidden max-w-3xl mx-auto p-6 font-sans bg-white text-black border-2 border-slate-800 relative">
+            <template v-if="calc">
+            <div class="text-center border-b-2 border-black pb-3 mb-4 mt-2">
+                <h1 class="text-xl font-bold tracking-widest">お見積り・お申し込み確認書</h1>
+                <p class="text-xs mt-1">
+                    <template v-if="contractPattern==='new'">戸建て新規契約</template>
+                    <template v-else-if="contractPattern==='add'">戸建て追加契約</template>
+                    <template v-else>マンションタイプ</template>
+                    のご利用料金目安（通常価格）
+                </p>
+            </div>
+
+            <div class="flex justify-between items-end mb-4 text-xs">
+                <div class="text-sm border-b border-black w-1/2 pb-1">お名前：<span class="inline-block w-4/5"></span>様</div>
+                <div>作成日： {{ currentDateStr }}</div>
+            </div>
+
+            <div class="bg-gray-100 p-4 rounded-lg text-center mb-6 border border-gray-300 relative">
+                <div class="text-gray-700 font-bold mb-1 text-sm">月額利用料 合計 (税込)</div>
+                <div class="text-3xl font-extrabold">{{ formatPrice(calc.finalTotal) }} <span class="text-lg font-normal text-black">円 / 月</span></div>
+                <div class="text-[10px] text-gray-500 mt-1">※NHK受信料、ユニバーサルサービス料等は含まれておりません。端末一括購入代金は月額に含みません。</div>
+            </div>
+
+            <h3 class="font-bold text-sm border-l-4 border-black pl-2 mb-2">サービスご契約内容・内訳 (ご契約種別：{{ contractPatternLabel }})</h3>
+            <table class="w-full text-xs border-collapse border border-gray-300 mb-6">
+                <thead>
+                    <tr class="bg-gray-100 text-left border-b-2 border-gray-400">
+                        <th class="border-l border-r border-gray-300 p-1.5 w-1/4">サービス名</th>
+                        <th class="border-l border-r border-gray-300 p-1.5 w-1/2">プラン・オプション詳細</th>
+                        <th class="border-l border-r border-gray-300 p-1.5 w-1/4 text-right">月額(税込)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-if="tv !== 'none'">
+                        <td class="border border-gray-300 p-1.5 font-bold bg-gray-50 align-top">光テレビ<span v-if="calc.tv.statusLabel" class="block text-[9px] text-gray-500">({{ calc.tv.statusLabel }})</span></td>
+                        <td class="border border-gray-300 p-1.5 text-[10px]">
+                            <div class="flex justify-between font-bold mb-0.5"><span>{{ tvLabel(tv) }} (基本料)</span><span>{{ formatPrice(calc.tv.basePrice) }}円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="['premium', 'standard'].includes(tv) && calc.tv.stbPrice > 0"><span>STB: {{ stbName(stb) }}</span><span>+{{ formatPrice(calc.tv.stbPrice) }}円</span></div>
+                            <div class="flex justify-between text-red-600 font-bold" v-if="calc.tv.stbDiscount < 0"><span>↳ 4K-STB割</span><span>{{ formatPrice(calc.tv.stbDiscount) }}円</span></div>
+                            <div class="flex justify-between text-purple-700 font-bold" v-if="calc.tv.mansionShatakuWari < 0"><span>↳ 集合住宅割</span><span>{{ formatPrice(calc.tv.mansionShatakuWari) }}円</span></div>
+                            <div class="flex justify-between text-blue-900 font-bold border-t border-gray-200 pt-0.5 mt-0.5" v-if="calc.tv.discountCount > 1">
+                                <span>【テレビ割引小計】</span><span>{{ formatPrice(calc.tv.discountTotal) }}円</span>
+                            </div>
+                        </td>
+                        <td class="border border-gray-300 p-1.5 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.tv.total) }}円</td>
+                    </tr>
+
+                    <tr v-if="net !== 'none'">
+                        <td class="border border-gray-300 p-1.5 font-bold bg-gray-50 align-top">光インターネット<span v-if="calc.net.statusLabel" class="block text-[9px] text-gray-500">({{ calc.net.statusLabel }})</span></td>
+                        <td class="border border-gray-300 p-1.5 text-[10px]">
+                            <div class="flex justify-between font-bold mb-0.5"><span>{{ netLabel(net) }} (基本料)</span><span>{{ formatPrice(calc.net.basePrice) }}円</span></div>
+                            <div class="flex justify-between text-red-600 font-bold mb-0.5" v-if="calc.net.keizokuActive"><span>↳ 継続利用割引</span><span>{{ formatPrice(calc.net.keizokuDiscount) }}円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="router"><span>iCNメッシュWi-Fi</span><span>+{{ formatPrice(calc.net.potentialRouterPrice) }}円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="netOps.jSafe"><span>J-SAFE</span><span>+{{ formatPrice(uiOptions.netAddOns.jSafe) }}円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="netOps.spamFilter"><span>迷惑メールフィルタ</span><span>+{{ formatPrice(uiOptions.netAddOns.spamFilter) }}円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="netOps.addMail"><span>追加メール</span><span>+{{ formatPrice(uiOptions.netAddOns.addMail) }}円</span></div>
+                        </td>
+                        <td class="border border-gray-300 p-1.5 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.net.total) }}円</td>
+                    </tr>
+
+                    <tr v-if="tel">
+                        <td class="border border-gray-300 p-1.5 font-bold bg-gray-50 align-top">光でんわ<span v-if="calc.tel.statusLabel" class="block text-[9px] text-gray-500">({{ calc.tel.statusLabel }})</span></td>
+                        <td class="border border-gray-300 p-1.5 text-[10px]">
+                            <div class="flex justify-between font-bold mb-0.5"><span>ケーブルプラス電話 (基本料)</span><span>{{ formatPrice(uiOptions.telBase) }}円</span></div>
+                            <div class="flex justify-between text-gray-700 font-bold"><span>↳ 迷惑電話自動ブロックサービス</span><span>0円 (要別途申込)</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="telOps.pack"><span>オプションお得パック</span><span>+{{ formatPrice(uiOptions.telOptions.pack.price) }}円</span></div>
+                            <template v-else>
+                                <div class="flex justify-between text-gray-600" v-if="telOps.disp"><span>発信番号表示</span><span>+{{ formatPrice(uiOptions.telOptions.disp.price) }}円</span></div>
+                                <div class="flex justify-between text-gray-600" v-if="telOps.req"><span>番号通知リクエスト</span><span>+{{ formatPrice(uiOptions.telOptions.req.price) }}円</span></div>
+                                <div class="flex justify-between text-gray-600" v-if="telOps.catchDisp"><span>割込番号表示</span><span>+{{ formatPrice(uiOptions.telOptions.catchDisp.price) }}円</span></div>
+                                <div class="flex justify-between text-gray-600" v-if="telOps.catchCall"><span>割込通話</span><span>+{{ formatPrice(uiOptions.telOptions.catchCall.price) }}円</span></div>
+                            </template>
+                            <div class="flex justify-between text-gray-600" v-if="telOps.transfer"><span>着信転送</span><span>+{{ formatPrice(uiOptions.telOptions.transfer.price) }}円</span></div>
+                        </td>
+                        <td class="border border-gray-300 p-1.5 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.tel.total) }}円</td>
+                    </tr>
+
+                    <tr v-if="hasOtt">
+                        <td class="border border-gray-300 p-1.5 font-bold bg-gray-50 align-top">動画配信サービス</td>
+                        <td class="border border-gray-300 p-1.5 text-[10px]">
+                            <div class="flex justify-between text-gray-600" v-if="ottHulu"><span>{{ ottOption('hulu').label }}</span><span>+{{ formatPrice(ottOption('hulu').price) }}円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="ottFod"><span>{{ ottOption('fod').label }}</span><span>+{{ formatPrice(ottOption('fod').price) }}円</span></div>
+                            <div class="flex justify-between text-gray-600" v-if="ottUnext"><span>{{ ottOption('unext').label }}</span><span>+{{ formatPrice(ottOption('unext').price) }}円</span></div>
+                        </td>
+                        <td class="border border-gray-300 p-1.5 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.ott.total) }}円</td>
+                    </tr>
+
+                    <tr v-if="mobileLines.length > 0">
+                        <td class="border border-gray-300 p-1.5 font-bold bg-gray-50 align-top">ケーブルスマホ<br>({{ mobileLines.length }}回線)</td>
+                        <td class="border border-gray-300 p-1.5 text-[10px]">
+                            <div v-for="(line, idx) in mobileLines" :key="idx" class="border-b border-dashed border-gray-300 pb-1.5 mb-1.5 last:border-0 last:mb-0 last:pb-0">
+                                <div class="font-bold text-gray-800 flex justify-between">
+                                    <span>【回線 {{ idx + 1 }}】 {{ lineCalc(idx).planLabel }}</span>
+                                    <span class="text-rose-700 font-bold">[{{ lineCalc(idx).contractTypeLabel }}]</span>
+                                </div>
+                                <div class="flex justify-between pl-1"><span>基本料</span><span>{{ formatPrice(lineCalc(idx).planPrice) }}円</span></div>
+                                <div class="flex justify-between pl-1 text-gray-600" v-if="line.call === '10min'"><span>10分定額</span><span>+{{ formatPrice(uiOptions.mobileCallOptions['10min']) }}円</span></div>
+                                <div class="flex justify-between pl-1 text-gray-600" v-if="line.call === 'unlimited'"><span>かけ放題</span><span>+{{ formatPrice(uiOptions.mobileCallOptions.unlimited) }}円</span></div>
+                                <div class="flex justify-between pl-1 text-gray-600" v-if="line.support === 'packA'"><span>安心パックA</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packA) }}円</span></div>
+                                <div class="flex justify-between pl-1 text-gray-600" v-if="line.support === 'packB'"><span>安心パックB for a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packB) }}円</span></div>
+                                <div class="flex justify-between pl-1 text-gray-600" v-if="line.support === 'hosho'"><span>端末保証 a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.hosho) }}円</span></div>
+
+                                <div v-if="line.deviceBuy === 'yes'" class="pl-1 mt-0.5 border-t border-gray-200 pt-0.5">
+                                    <div class="flex justify-between font-bold text-blue-800">
+                                        <span>端末: {{ lineCalc(idx).deviceName }} ({{ line.devicePay === '1' ? '一括買取' : line.devicePay + '回割賦' }})</span>
+                                        <span v-if="line.devicePay !== '1'">+{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円/月</span>
+                                        <span v-else>※一括代金 {{ formatPrice(lineCalc(idx).devicePriceRaw) }}円(初回)</span>
+                                    </div>
+                                </div>
+
+                                <div v-for="(st, dIdx) in lineCalc(idx).discounts" :key="dIdx" class="flex justify-between pl-1 text-red-600 font-bold">
+                                    <span>↳ {{ st.label }}</span><span>{{ formatPrice(st.amount) }}円</span>
+                                </div>
+                                <div class="flex justify-between text-red-700 font-bold border-t border-gray-200 pt-0.5 mt-0.5 pl-1" v-if="lineCalc(idx).discounts.length > 1">
+                                    <span>【回線{{ idx + 1 }} 割引小計】</span><span>{{ formatPrice(lineCalc(idx).discountTotal) }}円</span>
+                                </div>
+
+                                <div v-if="line.source!=='existing' && line.contractType === 'mnp'" class="mt-1.5 p-1.5 bg-gray-50 border border-gray-300 rounded text-[9px] text-gray-700">
+                                    <div class="font-bold text-gray-800 border-b border-gray-200 pb-0.5 mb-1">📝 MNPお手続きメモ（回線 {{ idx + 1 }}）</div>
+                                    <div class="space-y-1">
+                                        <div>対象電話番号： ___________________________</div>
+                                        <div class="flex justify-between">
+                                            <span>MNP予約番号： ___________________</span>
+                                            <span>有効期限： ____年 __月 __日</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="border border-gray-300 p-1.5 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.mobile.total) }}円</td>
+                    </tr>
+
+                    <tr v-if="calc.otherDiscountsTotal < 0">
+                        <td class="border border-gray-300 p-1.5 font-bold bg-red-50 text-red-700 align-top">複数サービス<br>セット割引</td>
+                        <td class="border border-gray-300 p-1.5 text-[10px] bg-red-50/30">
+                            <div class="flex justify-between text-red-600 font-bold mb-0.5" v-for="(d, i) in calc.crossServiceDiscounts" :key="i">
+                                <span>{{ d.name }}</span><span>{{ formatPrice(d.amount) }}円</span>
+                            </div>
+                        </td>
+                        <td class="border border-gray-300 p-1.5 text-right align-bottom font-bold text-red-700 text-sm">{{ formatPrice(calc.otherDiscountsTotal) }}円</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="flex justify-between items-start text-xs">
+                <div class="w-1/2 pr-2">
+                    <h3 class="font-bold border-l-4 border-black pl-2 mb-1.5">初期費用（初回発生分）</h3>
+                    <div class="border border-gray-300 p-2 rounded space-y-1">
+                        <div class="flex justify-between font-bold mb-1">
+                            <span>標準工事費（新たに発生する分）</span><span class="line-through text-gray-500">{{ formatPrice(calc.initCost.normal) }}円</span>
+                        </div>
+                        <div class="flex justify-between text-sm font-bold text-black border-t pt-1 border-gray-200">
+                            <span>{{ calc.initCost.freeMonths }}ヶ月継続利用お約束</span><span>実質 0 円</span>
+                        </div>
+                        <div v-if="calc.mobile.deviceOneTimeTotal > 0" class="mt-2 pt-2 border-t border-gray-200 flex justify-between font-bold text-blue-900">
+                            <span>スマホ端末一括購入代金(計)</span><span>{{ formatPrice(calc.mobile.deviceOneTimeTotal) }} 円</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-1/2 pl-2">
+                    <h3 class="font-bold border-l-4 border-black pl-2 mb-1.5">早期解約時の違約金について</h3>
+                    <div class="border border-gray-300 bg-gray-50 p-2 rounded text-[10px] leading-relaxed">
+                        <p>{{ calc.initCost.freeMonths }}ヶ月未満でのご解約時は以下の違約金が発生します。</p>
+                        <ul class="list-disc pl-4 mt-0.5">
+                            <li v-if="isAdd ? calc.initCost.tvNewlyAdded : tv !== 'none'">光テレビ： {{ formatPrice(calc.initCost.penaltyRates.tv) }}円 × 残月数</li>
+                            <li v-if="isAdd ? calc.initCost.netNewlyAdded : net !== 'none'">光インターネット： {{ formatPrice(calc.initCost.penaltyRates.net) }}円 × 残月数</li>
+                            <li v-if="!isMansion && (isAdd ? calc.initCost.telNewlyAdded : tel)">光でんわ： {{ formatPrice(calc.initCost.penaltyRates.tel) }}円 × 残月数</li>
+                        </ul>
+                        <div class="mt-1 font-bold">計算式: ({{ calc.initCost.freeMonths }}ヶ月 − ご利用月数) × 単価</div>
+                        <p v-if="isMansion && tv !== 'none'" class="mt-1 text-purple-700 font-bold">集合住宅割：最低利用期間6ヶ月、期間内解約は違約金{{ formatPrice(calc.initCost.mansionTvPenalty) }}円。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-3 border-t border-gray-300 text-center text-[10px] text-gray-500">
+                本シミュレーション結果は目安であり、実際の請求金額と異なる場合がございます。
+            </div>
+            </template>
+        </div>
+
+    </div>
+
+<script>
+function initApp() {
+    if (window.vueLoadError || typeof Vue === 'undefined') {
+        const errDiv = document.getElementById('cdn-error');
+        if (errDiv) {
+            errDiv.style.display = 'block';
+            errDiv.textContent = '⚠️ Vue 3 (CDN) の読み込みに失敗したため、シミュレーターを起動できません。ネットワーク接続をご確認ください。';
+        }
+        return;
+    }
+    if (window.tailwindLoadError) {
+        const errDiv = document.getElementById('cdn-error');
+        if (errDiv) {
+            errDiv.style.display = 'block';
+            errDiv.textContent = '⚠️ Tailwind CSS (CDN) の読み込みに失敗しました。一部のレイアウトが正しく表示されない可能性があります。';
+        }
+    }
+
+    const { createApp } = Vue;
+
+    // ★ ここをデプロイした API Gateway の実際のエンドポイントURLに書き換えてください
+    const API_ENDPOINT = 'https://nwvw1t08le.execute-api.ap-northeast-1.amazonaws.com/simulate';
+
+    createApp({
+        data() {
+            return {
+                contractPattern: null,
+
+                existingTv: { has: false, plan: 'premium', action: 'keep' },
+                existingNet: { has: false, plan: 'net10g', action: 'keep' },
+                existingTel: { has: false },
+
+                tv: 'none',
+                stb: 'ls500b',
+                net: 'none',
+                isKeizokuWari: false,
+                tel: false,
+                ottHulu: false,
+                ottFod: false,
+                ottUnext: false,
+
+                mobileLines: [],
+
+                showSummaryDetail: false,
+                showChannelModal: false,
+
+                router: false,
+                netOps: { jSafe: false, spamFilter: false, addMail: false },
+
+                telOps: { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false },
+                isTelOpsUpdating: false,
+
+                // --- API連携用（料金マスタ・計算結果は保持しない） ---
+                isLoading: false,
+                apiError: null,
+                uiOptions: { tv: [], net: [], mobilePlans: [], stb: [], devices: [], ott: [], telOptions: {}, netAddOns: {}, mobileCallOptions: {}, mobileSupportOptions: {}, telBase: 0 },
+                calc: null,
+                recommendations: [],
+                _fetchTimer: null
+            };
+        },
+        computed: {
+            isAdd() { return this.contractPattern === 'add'; },
+            isMansion() { return this.contractPattern === 'mansion'; },
+            hasOtt() { return this.ottHulu || this.ottFod || this.ottUnext; },
+            existingMobileLinesCount() { return this.mobileLines.filter(l => l.source === 'existing').length; },
+            newMobileLinesCount() { return this.mobileLines.filter(l => l.source !== 'existing').length; },
+            contractPatternLabel() {
+                if (this.contractPattern === 'new') return '戸建て 新規契約';
+                if (this.contractPattern === 'add') return '戸建て 追加契約';
+                if (this.contractPattern === 'mansion') return 'マンションタイプ';
+                return '';
+            },
+            currentDateStr() { return new Date().toLocaleDateString('ja-JP'); },
+            statePayload() {
+                return {
+                    contractPattern: this.contractPattern,
+                    existingTv: this.existingTv,
+                    existingNet: this.existingNet,
+                    existingTel: this.existingTel,
+                    tv: this.tv,
+                    stb: this.stb,
+                    net: this.net,
+                    isKeizokuWari: this.isKeizokuWari,
+                    router: this.router,
+                    netOps: this.netOps,
+                    tel: this.tel,
+                    telOps: this.telOps,
+                    ottHulu: this.ottHulu,
+                    ottFod: this.ottFod,
+                    ottUnext: this.ottUnext,
+                    mobileLines: this.mobileLines
+                };
+            }
+        },
+        watch: {
+            // --- サーバーへの再計算依頼（ここが唯一の「計算トリガー」） ---
+            statePayload: {
+                deep: true,
+                handler() { this.scheduleFetch(); }
+            },
+
+            // --- 以下はUI上の初期値・連動制御のみ（金額計算は一切含まない） ---
+            net(newVal) {
+                if (newVal === 'none') {
+                    this.router = false;
+                    this.netOps = { jSafe: false, spamFilter: false, addMail: false };
+                    this.isKeizokuWari = false;
+                } else if (['net10g', 'net1g', 'net300m'].includes(newVal)) {
+                    this.isKeizokuWari = true;
+                } else {
+                    this.isKeizokuWari = false;
+                }
+            },
+            tv(newVal) { if (newVal === 'none') this.stb = 'ls500b'; },
+            tel(newVal) { if (!newVal) this.telOps = { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false }; },
+
+            'telOps.pack'(newVal) {
+                if (this.isTelOpsUpdating) return;
+                this.isTelOpsUpdating = true;
+                if (newVal) { this.telOps.disp = true; this.telOps.req = true; this.telOps.catchDisp = true; this.telOps.catchCall = true; }
+                else { this.telOps.disp = false; this.telOps.req = false; this.telOps.catchDisp = false; this.telOps.catchCall = false; }
+                this.$nextTick(() => { this.isTelOpsUpdating = false; });
+            },
+            'telOps.disp': 'checkTelPack',
+            'telOps.req': 'checkTelPack',
+            'telOps.catchDisp': 'checkTelPack',
+            'telOps.catchCall': 'checkTelPack',
+
+            'existingTv.has'(v) {
+                if (!v) this.tv = 'none';
+                else if (this.existingTv.action === 'keep') this.tv = this.existingTv.plan;
+            },
+            'existingTv.action'(v) { if (v === 'keep') this.tv = this.existingTv.plan; },
+            'existingTv.plan'(v) { if (this.existingTv.has && this.existingTv.action === 'keep') this.tv = v; },
+
+            'existingNet.has'(v) {
+                if (!v) this.net = 'none';
+                else if (this.existingNet.action === 'keep') this.net = this.existingNet.plan;
+            },
+            'existingNet.action'(v) { if (v === 'keep') this.net = this.existingNet.plan; },
+            'existingNet.plan'(v) { if (this.existingNet.has && this.existingNet.action === 'keep') this.net = v; },
+
+            'existingTel.has'(v) { this.tel = v; }
+        },
+        methods: {
+            // --- サーバー通信 ---
+            scheduleFetch() {
+                clearTimeout(this._fetchTimer);
+                this._fetchTimer = setTimeout(() => { this.fetchCalculation(); }, 250);
+            },
+            async fetchCalculation() {
+                if (!this.contractPattern) { this.calc = null; this.recommendations = []; return; }
+                this.isLoading = true;
+                this.apiError = null;
+                try {
+                    const res = await fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(this.statePayload)
+                    });
+                    if (!res.ok) throw new Error('API応答エラー: ' + res.status);
+                    const data = await res.json();
+                    this.uiOptions = data.options;
+                    this.calc = data.calculation;
+                    this.recommendations = data.recommendations || [];
+                } catch (err) {
+                    this.apiError = '料金計算サーバーとの通信に失敗しました。しばらくしてから再度お試しください。';
+                    console.error(err);
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            // --- 表示用ラベル・オプション参照ヘルパー（価格ロジックは含まない、単純なlookupのみ） ---
+            tvLabel(key) { const o = (this.uiOptions.tv || []).find(x => x.key === key); return o ? o.label : ''; },
+            netLabel(key) { const o = (this.uiOptions.net || []).find(x => x.key === key); return o ? o.label : ''; },
+            stbName(key) { const o = (this.uiOptions.stb || []).find(x => x.key === key); return o ? o.name : ''; },
+            deviceInfo(key) { return (this.uiOptions.devices || []).find(d => d.key === key) || { price: 0, pay24: 0, pay48: 0, name: '' }; },
+            ottOption(key) { return (this.uiOptions.ott || []).find(o => o.key === key) || { label: '', price: 0 }; },
+            lineCalc(index) {
+                return (this.calc && this.calc.mobile && this.calc.mobile.lines && this.calc.mobile.lines[index])
+                    || { total: 0, discounts: [], discountTotal: 0, deviceOneTimePrice: 0, devicePriceRaw: 0, planLabel: '', planPrice: 0, contractTypeLabel: '', deviceName: '' };
+            },
+
+            checkTelPack() {
+                if (this.isTelOpsUpdating) return;
+                const opts = this.uiOptions.telOptions || {};
+                let total = 0;
+                if (this.telOps.disp) total += (opts.disp ? opts.disp.price : 0);
+                if (this.telOps.req) total += (opts.req ? opts.req.price : 0);
+                if (this.telOps.catchDisp) total += (opts.catchDisp ? opts.catchDisp.price : 0);
+                if (this.telOps.catchCall) total += (opts.catchCall ? opts.catchCall.price : 0);
+                if (opts.pack && total >= opts.pack.price) {
+                    this.isTelOpsUpdating = true;
+                    this.telOps.pack = true;
+                    this.telOps.disp = true; this.telOps.req = true; this.telOps.catchDisp = true; this.telOps.catchCall = true;
+                    this.$nextTick(() => { this.isTelOpsUpdating = false; });
+                }
+            },
+
+            selectPattern(p) {
+                if (this.contractPattern !== null) {
+                    const ok = confirm('契約種別を変更すると、現在の入力内容がリセットされます。変更しますか？');
+                    if (!ok) return;
+                }
+                this.contractPattern = p;
+                this.tv = 'none'; this.net = 'none'; this.tel = false;
+                this.stb = 'ls500b'; this.router = false; this.isKeizokuWari = false;
+                this.ottHulu = false; this.ottFod = false; this.ottUnext = false;
+                this.netOps = { jSafe: false, spamFilter: false, addMail: false };
+                this.telOps = { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false };
+                this.existingTv = { has: false, plan: 'premium', action: 'keep' };
+                this.existingNet = { has: false, plan: 'net10g', action: 'keep' };
+                this.existingTel = { has: false };
+                this.mobileLines = [];
+                this.calc = null;
+                this.recommendations = [];
+            },
+
+            printPDF() {
+                this.showSummaryDetail = false;
+                setTimeout(() => { window.print(); }, 300);
+            },
+
+            formatPrice(val) {
+                if (val == null || isNaN(val) || !isFinite(val)) return '0';
+                return Number(val).toLocaleString('ja-JP');
+            },
+
+            getDiffText(diff) {
+                if (diff < 0) return `月額${this.formatPrice(Math.abs(diff))}円安くなります`;
+                if (diff === 0) return `月額差額なしでサービス向上`;
+                return `月額${this.formatPrice(diff)}円の追加でサービス向上`;
+            },
+
+            setExistingMobileCount(count) {
+                let existing = this.mobileLines.filter(l => l.source === 'existing');
+                let others = this.mobileLines.filter(l => l.source !== 'existing');
+                count = Math.min(Math.max(0, count), 5);
+
+                if (count > existing.length) {
+                    const addNum = count - existing.length;
+                    for (let i = 0; i < addNum; i++) {
+                        existing.push({ source: 'existing', status: 'keep', contractType: null, plan: 'voice3', call: 'none', support: 'none', deviceBuy: 'no', device: 'ip16', devicePay: '24' });
+                    }
+                } else if (count < existing.length) {
+                    existing = existing.slice(0, count);
+                }
+                this.mobileLines = [...existing, ...others].slice(0, 5);
+            },
+
+            setMobileCount(count) {
+                let existing = this.mobileLines.filter(l => l.source === 'existing');
+                let others = this.mobileLines.filter(l => l.source !== 'existing');
+                const maxAddable = 5 - existing.length;
+                count = Math.min(Math.max(0, count), maxAddable);
+
+                if (count > others.length) {
+                    const addNum = count - others.length;
+                    for (let i = 0; i < addNum; i++) {
+                        others.push({ source: 'new', status: null, contractType: 'new', plan: 'voice3', call: 'none', support: 'none', deviceBuy: 'no', device: 'ip16', devicePay: '24' });
+                    }
+                } else if (count < others.length) {
+                    others = others.slice(0, count);
+                }
+                this.mobileLines = [...existing, ...others];
+            },
+
+            applyRecommendation(rec) {
+                const msg = `${rec.title}\n\n【月額料金（全体）】\n現在: ${this.formatPrice(rec.currentTotal)}円/月\n変更後: ${this.formatPrice(rec.recommendedTotal)}円/月\n\n${this.getDiffText(rec.diff)}\n\nこのプランを適用しますか？`;
+                if (!confirm(msg)) return;
+                const patch = rec.applyPatch || {};
+                if (patch.tv !== undefined) this.tv = patch.tv;
+                if (patch.net !== undefined) {
+                    this.net = patch.net;
+                    if (patch.isKeizokuWari !== undefined) this.isKeizokuWari = patch.isKeizokuWari;
+                }
+                if (patch.mobilePlanChanges) {
+                    patch.mobilePlanChanges.forEach(c => {
+                        if (this.mobileLines[c.lineIndex]) this.mobileLines[c.lineIndex].plan = c.plan;
+                    });
+                }
+            }
+        }
+    }).mount('#app');
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
+</script>
+</body>
+</html>

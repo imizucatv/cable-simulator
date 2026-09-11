@@ -879,7 +879,7 @@ function initApp() {
                 try {
                     const res = await fetch(API_ENDPOINT, {
                         method: 'POST',
-                        headers: { 'Content-[#007ABC]': 'application/json' },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(this.statePayload)
                     });
                     if (!res.ok) throw new Error('通信エラー');
@@ -889,7 +889,7 @@ function initApp() {
                     this.recommendations = data.recommendations || [];
                 } catch (err) {
                     this.apiError = '料金計算サーバーとの通信に失敗しました。';
-                } font-boldally {
+                } finally {
                     this.isLoading = false;
                 }
             },

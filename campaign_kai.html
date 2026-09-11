@@ -69,15 +69,15 @@
                 </a>
             </div>
 
-<header class="bg-character text-white p-6 sm:p-8 rounded-2xl shadow-sm mb-6 relative overflow-hidden">
-    <div class="absolute top-0 right-0 bg-yellow-400 text-slate-900 font-black px-4 py-1.5 text-xs sm:text-sm rounded-bl-xl shadow-sm">2026年秋 特大キャンペーン</div>
-    <h1 class="text-2xl sm:text-3xl font-extrabold text-center tracking-wide">料金シミュレーター</h1>
-    <p class="text-center text-characterLight text-sm sm:text-base mt-3">【秋の特大キャンペーン適用版】月額利用料・オプション・初期費用</p>
-    <div class="mt-4 bg-white/10 p-3.5 rounded-xl text-xs sm:text-sm text-center border border-white/20 font-bold leading-relaxed">
-        🔥 目玉特典実施中！NET新規(10G/1G)＋スマホ新規で端末最大<span class="text-yellow-300 text-base sm:text-lg font-black underline mx-1">20,000円引き</span>（一括購入時）！<br>
-        スマホ新規のみでも購入金額が、一括<span class="text-yellow-300 text-base font-black">10,000円引き</span>／割賦<span class="text-yellow-300 text-base font-black">総額9,600円引き</span>（-400円×24回 or -200円×48回）！<br>
-    </div>
-</header>
+            <header class="bg-character text-white p-6 sm:p-8 rounded-2xl shadow-sm mb-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-yellow-400 text-slate-900 font-black px-4 py-1.5 text-xs sm:text-sm rounded-bl-xl shadow-sm">2026年秋 特大キャンペーン</div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-center tracking-wide">料金シミュレーター</h1>
+                <p class="text-center text-characterLight text-sm sm:text-base mt-3">【秋の特大キャンペーン適用版】月額利用料・オプション・初期費用</p>
+                <div class="mt-4 bg-white/10 p-3.5 rounded-xl text-xs sm:text-sm text-center border border-white/20 font-bold leading-relaxed">
+                    🔥 目玉特典実施中！NET新規(10G/1G)＋スマホ新規で端末最大<span class="text-yellow-300 text-base sm:text-lg font-black underline mx-1">20,000円引き</span>（一括購入時）！<br>
+                    スマホ新規のみでも購入金額が、一括<span class="text-yellow-300 text-base font-black">10,000円引き</span>／割賦<span class="text-yellow-300 text-base font-black">総額9,600円引き</span>（-400円×24回 or -200円×48回）！<br>
+                </div>
+            </header>
 
             <!-- 通信エラー表示 -->
             <div v-if="apiError" class="bg-red-50 border-2 border-red-200 text-red-700 text-sm font-bold p-4 rounded-xl">
@@ -1431,10 +1431,100 @@ function initApp() {
                     this.uiOptions = data.options;
                     this.calc = data.calculation;
                     this.recommendations = data.recommendations || [];
+
+                    // ネット既契約（「戸建て追加契約」で既にネット契約がある場合）のNET新規特典の適用外補正ロジック
+                    if (this.isAdd && this.existingNet.has && this.calc) {
+                        this.calc.hasNetPromotion = false;
+                        this.calc.hasNetCampaign = false;
+
+                        if (this.calc.mobile && this.calc.mobile.lines) {
+                            let totalOneTimeDeviceDiscount = 0;
+                            let totalDeviceDiscount = 0;
+
+                            this.calc.mobile.lines.forEach((lineRes, idx) => {
+                                const lineInput = this.mobileLines[idx];
+                                if (!lineInput) return;
+
+                                if (lineInput.source !== 'existing' && lineInput.deviceBuy === 'yes') {
+                                    const dev = this.deviceInfo(lineInput.device);
+                                    if (lineInput.devicePay === '1') {
+                                        const singleDiscount = 10000;
+                                        lineRes.appliedDiscountTotal = singleDiscount;
+                                        lineRes.deviceDiscountDetail = { total: singleDiscount, per24: 0, per48: 0 };
+                                        lineRes.deviceOneTimePrice = Math.max(0, dev.price - singleDiscount);
+                                        totalOneTimeDeviceDiscount += singleDiscount;
+                                        totalDeviceDiscount += singleDiscount;
+                                    } else if (lineInput.devicePay === '24') {
+                                        const totalDisc = 9600;
+                                        const per24 = 400;
+                                        lineRes.appliedDiscountTotal = totalDisc;
+                                        lineRes.deviceDiscountDetail = { total: totalDisc, per24: per24, per48: 0 };
+                                        lineRes.devicePriceRaw = Math.max(0, dev.pay24 - per24);
+                                        totalDeviceDiscount += totalDisc;
+                                    } else if (lineInput.devicePay === '48') {
+                                        const totalDisc = 9600;
+                                        const per48 = 200;
+                                        lineRes.appliedDiscountTotal = totalDisc;
+                                        lineRes.deviceDiscountDetail = { total: totalDisc, per24: 0, per48: per48 };
+                                        lineRes.devicePriceRaw = Math.max(0, dev.pay48 - per48);
+                                        totalDeviceDiscount += totalDisc;
+                                    }
+                                } else {
+                                    lineRes.appliedDiscountTotal = 0;
+                                    lineRes.deviceDiscountDetail = { total: 0, per24: 0, per48: 0 };
+                                }
+                            });
+
+                            this.calc.mobile.totalDeviceDiscountAmount = totalDeviceDiscount;
+                            this.calc.mobile.totalOneTimeDeviceDiscountAmount = totalOneTimeDeviceDiscount;
+
+                            let mobileTotal = 0;
+                            let deviceOneTimeTotal = 0;
+
+                            this.calc.mobile.lines.forEach((lineRes, idx) => {
+                                const lineInput = this.mobileLines[idx];
+                                if (!lineInput) return;
+
+                                let lineBase = lineRes.planPrice || 0;
+                                if (lineInput.call === '10min') lineBase += (this.uiOptions.mobileCallOptions ? this.uiOptions.mobileCallOptions['10min'] : 880);
+                                if (lineInput.call === 'unlimited') lineBase += (this.uiOptions.mobileCallOptions ? this.uiOptions.mobileCallOptions.unlimited : 1650);
+                                if (lineInput.support === 'packA') lineBase += (this.uiOptions.mobileSupportOptions ? this.uiOptions.mobileSupportOptions.packA : 440);
+                                if (lineInput.support === 'packB') lineBase += (this.uiOptions.mobileSupportOptions ? this.uiOptions.mobileSupportOptions.packB : 660);
+                                if (lineInput.support === 'hosho') lineBase += (this.uiOptions.mobileSupportOptions ? this.uiOptions.mobileSupportOptions.hosho : 440);
+
+                                if (lineInput.deviceBuy === 'yes' && lineInput.devicePay !== '1') {
+                                    lineBase += lineRes.devicePriceRaw || 0;
+                                }
+
+                                let discVal = 0;
+                                if (lineRes.discounts && lineRes.discounts.length > 0) {
+                                    discVal = lineRes.discounts.reduce((acc, d) => acc + (d.amount || 0), 0);
+                                }
+                                lineRes.total = Math.max(0, lineBase + discVal);
+                                mobileTotal += lineRes.total;
+
+                                if (lineInput.deviceBuy === 'yes' && lineInput.devicePay === '1') {
+                                    deviceOneTimeTotal += lineRes.deviceOneTimePrice || 0;
+                                }
+                            });
+
+                            this.calc.mobile.total = mobileTotal;
+                            this.calc.mobile.deviceOneTimeTotal = deviceOneTimeTotal;
+
+                            let tvTotal = (this.calc.tv && this.calc.tv.total) || 0;
+                            let netTotal = (this.calc.net && this.calc.net.total) || 0;
+                            let telTotal = (this.calc.tel && this.calc.tel.total) || 0;
+                            let ottTotal = (this.calc.ott && this.calc.ott.total) || 0;
+                            let crossDisc = this.calc.otherDiscountsTotal || 0;
+
+                            this.calc.finalTotal = tvTotal + netTotal + telTotal + ottTotal + mobileTotal + crossDisc;
+                        }
+                    }
+
                 } catch (err) {
                     this.apiError = '料金計算サーバーとの通信に失敗しました。しばらくしてから再度お試しください。';
                     console.error(err);
-                } finally {
+                } fontally {
                     this.isLoading = false;
                 }
             },

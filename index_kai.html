@@ -1197,7 +1197,6 @@ function initApp() {
                 telOps: { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false },
                 isTelOpsUpdating: false,
 
-                // --- API連携用（資料20260911101515.pdfに基づいた初期端末リスト） ---
                 isLoading: false,
                 apiError: null,
                 uiOptions: {
@@ -1328,7 +1327,7 @@ function initApp() {
                 } catch (err) {
                     this.apiError = '料金計算サーバーとの通信に失敗しました。しばらくしてから再度お試しください。';
                     console.error(err);
-                } fontally {
+                } finally {
                     this.isLoading = false;
                 }
             },

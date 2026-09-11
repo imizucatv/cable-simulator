@@ -74,8 +74,9 @@
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-center tracking-wide">料金シミュレーター</h1>
                 <p class="text-center text-characterLight text-sm sm:text-base mt-3">【秋の特大キャンペーン適用版】月額利用料・オプション・初期費用</p>
                 <div class="mt-4 bg-white/10 p-3.5 rounded-xl text-xs sm:text-sm text-center border border-white/20 font-bold leading-relaxed">
-                    🔥 目玉特典実施中！NET10G/1G併用でスマホ端末最大<span class="text-yellow-300 text-base sm:text-lg font-black underline mx-1">20,000円引き</span>！<br>
-                    スマホ単体でも一括<span class="text-yellow-300 text-base font-black">10,000円引き</span>／割賦<span class="text-yellow-300 text-base font-black">総額9,600円引き</span>（-400円×24回 or -200円×48回）！
+                    🔥 目玉特典実施中！NET新規(10G/1G)＋スマホ新規で端末最大<span class="text-yellow-300 text-base sm:text-lg font-black underline mx-1">20,000円引き</span>（一括購入時）！<br>
+                    スマホ新規契約なら単体（ネット既設の方も可）でも一括<span class="text-yellow-300 text-base font-black">10,000円引き</span>／割賦<span class="text-yellow-300 text-base font-black">総額9,600円引き</span>（-400円×24回 or -200円×48回）！<br>
+                    <span class="text-xs font-normal opacity-90">※インターネット既設契約者様はNET新規加入側の端末割引(10,000円分)は対象外となります。</span>
                 </div>
             </header>
 
@@ -315,9 +316,9 @@
                                         <span>③ 他社違約金還元キャッシュバック</span>
                                         <span class="text-rose-600 text-base sm:text-lg font-black bg-rose-50 px-3 py-1 rounded border border-rose-200">{{ isMansion ? '最大 50,000円' : '最大 100,000円' }}</span>
                                     </li>
-                                    <li v-if="!isMansion" class="flex items-center justify-between border-t border-rose-200 pt-2 text-rose-700">
-                                        <span>🔥 【目玉】スマホ同時購入用 割引チケット</span>
-                                        <span class="text-rose-600 text-base font-black bg-rose-100 px-3 py-1 rounded border border-rose-300">一括購入で 10,000円引き増額！</span>
+                                    <li v-if="!isMansion && !isAdd" class="flex items-center justify-between border-t border-rose-200 pt-2 text-rose-700">
+                                        <span>🔥 【目玉】NET新規＋スマホ新規 同時購入特典</span>
+                                        <span class="text-rose-600 text-base font-black bg-rose-100 px-3 py-1 rounded border border-rose-300">一括購入で端末最大20,000円引き！</span>
                                     </li>
                                 </ul>
                             </div>
@@ -544,8 +545,9 @@
                                                 <option v-for="dev in uiOptions.devices" :key="dev.key" :value="dev.key">{{ dev.name }} (定価: {{ formatPrice(dev.price) }}円)</option>
                                             </select>
                                             <div class="text-xs text-rose-950 leading-relaxed font-medium">
-                                                ※端末購入割引は選択した支払方法に応じて適用されます。<br>
-                                                戸建て光10G/1G継続割対象の場合、端末割引が増額（20,000円引き）されますが<span class="text-rose-900 font-extrabold border-b border-rose-700">お支払いは「一括払い（初期費用で清算）」のみ</span>となります。
+                                                ※端末購入割引は選択した支払方法および加入状況に応じて適用されます。<br>
+                                                ・【スマホ新規加入特典】一括10,000円引き / 割賦総額9,600円引き（ネット既設者様も対象）<br>
+                                                ・【NET新規(10G/1G)同時申込み特典】一括割引が増額（最大20,000円引き）されますが<span class="text-rose-900 font-extrabold border-b border-rose-700">お支払いは「一括払い（初期費用で清算）」のみ</span>となります。（※ネット既設者様はNET加入側10,000円分は対象外）
                                             </div>
 
                                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs sm:text-sm" v-if="deviceInfo(line.device)">

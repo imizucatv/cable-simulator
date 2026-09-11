@@ -37,7 +37,7 @@
         .slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(15px); opacity: 0; }
 
         @media print {
-            @page { size: A4 portrait; margin: 10mm; }
+            @page { size: A4 portrait; margin: 8mm; }
             body { background-color: white !important; color: black !important; font-size: 11px; }
             .screen-only { display: none !important; }
             .print-only { display: block !important; }
@@ -581,7 +581,7 @@
                                     <transition name="fade">
                                         <div v-if="lineCalc(index).isBakuwariTarget" class="bg-rose-50 border-2 border-rose-200 p-4 rounded-xl">
                                             <div class="font-bold text-rose-800 text-sm sm:text-base flex items-center">
-                                                <span class="mr-2 text-lg">🎁</span> スマホ爆割適用特典: 月額基本料が受渡月＋1ヶ月無料！
+                                                <span class="mr-2 text-lg">🎁</span> スマホ爆割適用特典: 月額基本料が受渡月＋1ヶ月無料！[cite: 1]
                                             </div>
                                         </div>
                                     </transition>
@@ -589,9 +589,9 @@
                                     <!-- 端末購入 (秋のキャンペーン特典価格) -->
                                     <div>
                                         <div class="text-base font-bold text-slate-800 mb-3 flex items-center justify-between">
-                                            <span>④ 端末購入 (秋のキャンペーン特典価格)</span>
+                                            <span>④ 端末購入 (秋のキャンペーン特典価格)[cite: 1]</span>
                                             <span v-if="line.deviceBuy === 'yes'" class="bg-rose-600 text-white text-xs px-3 py-1 rounded-full font-bold shadow-sm">
-                                                {{ formatPrice(lineCalc(index).appliedDiscountTotal) }}円引き適用中！
+                                                {{ formatPrice(lineCalc(index).appliedDiscountTotal) }}円引き適用中！[cite: 1]
                                             </span>
                                         </div>
                                         <div class="flex flex-col sm:flex-row gap-3 mb-4">
@@ -609,19 +609,19 @@
                                                 </p>
                                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" v-if="deviceInfo(line.device)">
                                                     <button type="button" @click="line.devicePay = '1'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '1' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-sm' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
-                                                        一括払い(買取)<br>
+                                                        一括払い(買取)[cite: 1]<br>
                                                         <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).price) }}円</span><br>
-                                                        <span class="text-lg font-black text-rose-600 mt-1 block">{{ formatPrice(Math.max(0, deviceInfo(line.device).price - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.total : 0))) }}円</span>
+                                                        <span class="text-lg font-black text-rose-600 mt-1 block">{{ formatPrice(Math.max(0, deviceInfo(line.device).price - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.total : 0))) }}円[cite: 1]</span>
                                                     </button>
                                                     <button type="button" @click="line.devicePay = '24'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '24' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-sm' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
-                                                        24回払い<br>
+                                                        24回払い[cite: 1]<br>
                                                         <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).pay24) }}円</span><br>
-                                                        <span class="text-lg font-black text-rose-600 mt-1 block">+{{ formatPrice(Math.max(0, deviceInfo(line.device).pay24 - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.per24 : 0))) }}円/月</span>
+                                                        <span class="text-lg font-black text-rose-600 mt-1 block">+{{ formatPrice(Math.max(0, deviceInfo(line.device).pay24 - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.per24 : 0))) }}円/月[cite: 1]</span>
                                                     </button>
                                                     <button type="button" @click="line.devicePay = '48'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '48' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-sm' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
-                                                        48回払い<br>
+                                                        48回払い[cite: 1]<br>
                                                         <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).pay48) }}円</span><br>
-                                                        <span class="text-lg font-black text-rose-600 mt-1 block">+{{ formatPrice(Math.max(0, deviceInfo(line.device).pay48 - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.per48 : 0))) }}円/月</span>
+                                                        <span class="text-lg font-black text-rose-600 mt-1 block">+{{ formatPrice(Math.max(0, deviceInfo(line.device).pay48 - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.per48 : 0))) }}円/月[cite: 1]</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -747,7 +747,7 @@
 
             </div>
 
-            <!-- 内訳詳細ドロワー（キャンペーン適用条件・お得額を強調表示） -->
+            <!-- 内訳詳細 (フッター連動ドロワー) -->
             <transition name="slide-fade">
                 <div v-if="showSummaryDetail && contractPattern && calc" class="fixed bottom-[140px] sm:bottom-[90px] left-0 w-full px-4 sm:px-0 z-40 flex justify-center">
                     <div class="bg-white rounded-t-2xl shadow-[0_-15px_30px_rgba(0,0,0,0.15)] w-full max-w-4xl border-2 border-slate-200 p-5 pb-8 max-h-[60vh] overflow-y-auto space-y-6">
@@ -761,7 +761,7 @@
                             <button type="button" @click="showSummaryDetail = false" class="text-slate-500 bg-slate-100 hover:bg-slate-200 p-2.5 rounded-full transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                         </div>
 
-                        <!-- 🌟 明細内キャンペーン特別適用パネル 🌟 -->
+                        <!-- 明細内キャンペーン特別適用パネル -->
                         <div class="bg-rose-50 border-2 border-rose-300 p-5 rounded-2xl space-y-3 shadow-sm">
                             <div class="font-extrabold text-rose-900 text-base flex items-center border-b-2 border-rose-200 pb-2">
                                 <span class="text-xl mr-2">🎁</span> 現在適用されているキャンペーン特典＆割引一覧
@@ -769,7 +769,7 @@
                             <ul class="text-sm font-bold space-y-2 text-slate-800">
                                 <li v-if="calc.hasNetPromotion" class="flex flex-col sm:flex-row justify-between sm:items-center bg-white p-3 rounded-xl border border-rose-200 gap-2">
                                     <div>
-                                        <span class="text-rose-700 font-extrabold">【光NET特典】</span> デジタルギフト（{{ isMansion ? '5,000円分' : '10,000円分' }}）＋ 月額無料 ＋ 他社違約金還元
+                                        <span class="text-rose-700 font-extrabold">【光NET特典】</span> デジタルギフト（{{ isMansion ? '5,000円分' : '10,000円分' }}）＋ 月額無料 ＋ 他社違約金還元[cite: 6]
                                     </div>
                                     <span class="bg-rose-600 text-white text-xs px-3 py-1 rounded-full font-black text-center whitespace-nowrap">ネット特典適用</span>
                                 </li>
@@ -869,24 +869,24 @@
                                                 <div class="flex justify-between pl-2" v-if="line.support === 'packB'"><span>安心パックB for a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packB) }}円</span></div>
                                                 <div class="flex justify-between pl-2" v-if="line.support === 'hosho'"><span>端末保証 a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.hosho) }}円</span></div>
                                                 
-                                                <div class="flex justify-between pl-2 font-bold text-characterDark bg-characterLight p-2 rounded-lg mt-1" v-if="line.deviceBuy === 'yes' && line.devicePay === '1'">
+                                                <div class="flex justify-between pl-2 font-bold text-rose-800 bg-rose-50 border border-rose-200 p-2 rounded-lg mt-1" v-if="line.deviceBuy === 'yes' && line.devicePay === '1'">
                                                     <div>
-                                                        <span>端末一括購入(買取)</span>
+                                                        <span class="text-rose-900 font-extrabold">🎁 【キャンペーン適用】端末一括購入(買取)</span>
                                                         <span class="text-xs text-rose-600 block font-bold mt-0.5">
-                                                            ↳ 定価: {{ formatPrice(deviceInfo(line.device).price) }}円 − 割引: -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円[cite: 1]
+                                                            定価: {{ formatPrice(deviceInfo(line.device).price) }}円 − キャンペーン割引: -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円[cite: 1]
                                                         </span>
                                                     </div>
-                                                    <span class="text-base font-extrabold">{{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円(初回)</span>
+                                                    <span class="text-base font-black text-rose-700">{{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円(初回)</span>
                                                 </div>
 
-                                                <div class="flex justify-between pl-2 text-slate-800 font-bold bg-slate-100 p-2 rounded-lg mt-1" v-if="line.deviceBuy === 'yes' && line.devicePay !== '1'">
+                                                <div class="flex justify-between pl-2 text-slate-800 font-bold bg-rose-50 border border-rose-200 p-2 rounded-lg mt-1" v-if="line.deviceBuy === 'yes' && line.devicePay !== '1'">
                                                     <div>
-                                                        <span>端末割賦代金({{ line.devicePay }}回)</span>
+                                                        <span class="text-rose-900 font-extrabold">🎁 【キャンペーン適用】端末割賦代金({{ line.devicePay }}回)</span>
                                                         <span class="text-xs text-rose-600 block font-bold mt-0.5">
-                                                            ↳ 割引: -{{ formatPrice(lineCalc(idx).deviceDiscountDetail ? lineCalc(idx).deviceDiscountDetail['per' + line.devicePay] : 0) }}円/月 (計 -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引)[cite: 1]
+                                                            通常: {{ formatPrice(deviceInfo(line.device)['pay' + line.devicePay]) }}円/月 − 割引: -{{ formatPrice(lineCalc(idx).deviceDiscountDetail ? lineCalc(idx).deviceDiscountDetail['per' + line.devicePay] : 0) }}円/月 (計 -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引)[cite: 1]
                                                         </span>
                                                     </div>
-                                                    <span class="text-base font-extrabold">+{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円/月</span>
+                                                    <span class="text-base font-black text-rose-700">+{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円/月</span>
                                                 </div>
                                                 <div v-for="(st, dIdx) in lineCalc(idx).discounts" :key="dIdx" class="flex justify-between pl-2 text-red-600">
                                                     <span>↳ {{ st.label }}</span><span>{{ formatPrice(st.amount) }}円</span>
@@ -1086,57 +1086,70 @@
             </div>
         </div>
 
-        <!-- 印刷・PDF出力専用レイアウト（キャンペーン特典強調枠付き） -->
+        <!-- 印刷・PDF出力専用レイアウト（秋のキャンペーン特典・条件超強調表示） -->
         <div class="print-only hidden max-w-3xl mx-auto p-6 font-sans bg-white text-black border-2 border-slate-800 relative">
             <template v-if="calc">
             <div class="text-center border-b-2 border-black pb-3 mb-4 mt-2">
                 <h1 class="text-xl font-bold tracking-widest">お見積り・お申し込み確認書</h1>
                 <p class="text-sm mt-2 font-bold text-rose-600">
-                    ✨ 【期間限定】秋のキャンペーン特別価格・特典適用版 ✨
+                    ✨ 【期間限定】秋のキャンペーン特別価格・特典適用版 ✨[cite: 6]
                 </p>
             </div>
 
-            <div class="flex justify-between items-end mb-4 text-sm font-bold">
+            <div class="flex justify-between items-end mb-3 text-sm font-bold">
                 <div class="text-base border-b-2 border-black w-1/2 pb-1">お名前：<span class="inline-block w-4/5"></span>様</div>
                 <div>作成日： {{ currentDateStr }}</div>
             </div>
 
-            <div class="bg-gray-100 p-5 rounded-xl text-center mb-4 border-2 border-gray-300 relative">
-                <div class="text-gray-800 font-bold mb-2 text-base">月額利用料 合計 (税込)</div>
-                <div class="text-4xl font-extrabold text-characterDark">{{ formatPrice(calc.finalTotal) }} <span class="text-xl font-bold text-black">円 / 月</span></div>
-                <div class="text-xs text-gray-600 mt-2 font-bold">※NHK受信料、ユニバーサルサービス料等は含まれておりません。端末一括購入代金は月額に含みません。</div>
-            </div>
+            <!-- 🌟 印刷用：特大キャンペーン特典＆注意書き強調ブロック 🌟 -->
+            <div class="border-2 border-red-600 bg-red-50 p-4 rounded-xl mb-5 text-xs relative">
+                <div class="absolute -top-3 left-4 bg-red-600 text-white font-black px-3 py-0.5 rounded shadow text-xs">
+                    🔥 2026年 秋の特大キャンペーン適用お見積り 🔥
+                </div>
 
-            <!-- 🌟 印刷用：適用予定キャンペーン特典強調ブロック 🌟 -->
-            <div class="border-2 border-rose-600 bg-rose-50 p-4 rounded-xl mb-6 text-xs relative">
-                <div class="absolute -top-3 left-4 bg-rose-600 text-white font-bold px-3 py-0.5 rounded text-xs">✨ 本お見積りで適用される秋の特別キャンペーン特典 ✨</div>
-                <div class="grid grid-cols-2 gap-4 mt-1 font-bold">
-                    <div v-if="calc.hasNetPromotion" class="bg-white p-3 rounded-lg border border-rose-200">
-                        <h4 class="font-extrabold text-rose-800 border-b border-rose-200 pb-1 mb-1.5">【光インターネット特典】</h4>
-                        <ul class="list-disc pl-4 text-slate-800 space-y-1 text-xs">
-                            <li>デジタルギフト <span class="text-rose-600 text-sm font-black">{{ isMansion ? '5,000円分' : '10,000円分' }}</span> プレゼント</li>
-                            <li>月額利用料：<span class="text-rose-600">工事月＋1ヶ月 完全無料！</span></li>
-                            <li>他社違約金還元：<span class="text-rose-600">{{ isMansion ? '最大 5万円' : '最大 10万円' }}</span>[cite: 6]</li>
-                        </ul>
-                    </div>
-                    <div v-else class="bg-white p-3 rounded-lg border border-slate-200 text-slate-400 italic text-xs">
-                        ※対象光インターネットのご加入で、デジタルギフトや月額無料などのキャンペーン特典が適用されます。[cite: 6]
-                    </div>
-
-                    <div class="bg-white p-3 rounded-lg border border-rose-200">
-                        <h4 class="font-extrabold text-rose-800 border-b border-rose-200 pb-1 mb-1.5">【ケーブルスマホ購入特典】[cite: 1]</h4>
-                        <ul class="list-disc pl-4 text-slate-800 space-y-1 text-xs">
-                            <li v-if="mobileLines.some((l, idx) => lineCalc(idx).isBakuwariTarget)">スマホ基本料：<span class="text-rose-600">受渡月＋1ヶ月無料</span>[cite: 1]</li>
-                            <li v-if="calc.mobile.totalDeviceDiscountAmount > 0">
-                                端末購入割引：<span class="text-rose-600 text-sm font-black">計 -{{ formatPrice(calc.mobile.totalDeviceDiscountAmount) }}円引き</span>[cite: 1]
-                                <span class="block text-[10px] text-slate-500 font-normal">
-                                    {{ calc.hasNetCampaign ? '※NET新規併用により一括20,000円引き適用' : '※スマホ契約特典（一括10,000円/24回400円月/48回200円月引き）' }}[cite: 1]
+                <div class="grid grid-cols-2 gap-3 mt-1 font-bold">
+                    <div class="bg-white p-3 rounded-lg border-2 border-red-300 shadow-sm">
+                        <h4 class="font-black text-red-700 text-sm border-b-2 border-red-200 pb-1 mb-2 flex items-center">
+                            <span class="text-base mr-1">🎁</span> 適用中の超お得なキャンペーン特典
+                        </h4>
+                        <ul class="space-y-1.5 text-xs">
+                            <li v-if="calc.hasNetPromotion" class="bg-red-50 p-1.5 rounded border border-red-200">
+                                <span class="text-red-700 font-extrabold">🌐 光NET特典：</span><br>
+                                ・デジタルギフト <span class="text-red-600 font-black text-sm">{{ isMansion ? '5,000円分' : '10,000円分' }}</span> 進呈[cite: 6]<br>
+                                ・ネット月額基本料 <span class="text-red-600 font-black">工事月＋1ヶ月 完全無料！</span>[cite: 1, 6]<br>
+                                ・他社違約金還元 <span class="text-red-600 font-black">{{ isMansion ? '最大5万円' : '最大10万円' }}</span>[cite: 6]
+                            </li>
+                            <li v-if="calc.mobile.totalDeviceDiscountAmount > 0" class="bg-orange-50 p-1.5 rounded border border-orange-200">
+                                <span class="text-orange-800 font-extrabold">📱 スマホ端末購入特典：</span><br>
+                                ・端末購入代金 <span class="text-red-600 font-black text-sm">最大 {{ formatPrice(calc.mobile.totalDeviceDiscountAmount) }}円引き</span> 適用済！[cite: 1]<br>
+                                <span class="text-[10px] text-gray-600 font-normal">
+                                    ({{ calc.hasNetCampaign ? 'NET新規併用特典：1台あたり一括20,000円引き' : 'スマホ特典：1台あたり一括10,000円/24回400円/48回200円引き' }})[cite: 1]
                                 </span>
                             </li>
-                            <li class="text-[10px] text-slate-500 font-normal">【条件】音声SIM新規契約・端末購入、または最終機種購入から2年以上経過[cite: 1]</li>
+                            <li v-if="mobileLines.some((l, idx) => lineCalc(idx).isBakuwariTarget)" class="bg-rose-50 p-1.5 rounded border border-rose-200">
+                                <span class="text-rose-800 font-extrabold">✨ スマホ基本料特典：</span><br>
+                                ・スマホ爆割対象回線 <span class="text-red-600 font-black">受渡月＋1ヶ月 完全無料！</span>[cite: 1]
+                            </li>
                         </ul>
                     </div>
+
+                    <div class="bg-white p-3 rounded-lg border-2 border-gray-300 shadow-sm text-[11px] leading-tight space-y-1.5">
+                        <h4 class="font-black text-gray-800 border-b-2 border-gray-200 pb-1 mb-1.5 flex items-center">
+                            <span class="text-base mr-1">⚠️</span> キャンペーン適用条件・重要注意書き
+                        </h4>
+                        <p><strong>【端末購入特典の条件】</strong> 音声SIM新規契約・端末購入、または最終購入から2年以上経過された方が対象です。[cite: 1]</p>
+                        <p><strong>【NET特典併用時のご注意】</strong> NET新規特典とスマホ端末購入特典を併用する場合、端末代金のお支払いは<strong>一括支払いのみ</strong>となります。[cite: 1]</p>
+                        <p class="text-red-600 font-bold border-t border-gray-200 pt-1 mt-1">
+                            <strong>【継続利用期間について】</strong> 本キャンペーンによる端末割引適用後、継続利用期間は1年間となります。購入後1年未満で解約された場合、キャンペーン相当分（一括最大20,000円／割賦の場合は残月数相当＋違約金）の返金規定がございます。[cite: 1]
+                        </p>
+                    </div>
                 </div>
+            </div>
+
+            <div class="bg-gray-100 p-4 rounded-xl text-center mb-5 border-2 border-gray-300 relative">
+                <div class="text-gray-800 font-bold mb-1 text-sm">月額利用料 合計 (税込)</div>
+                <div class="text-4xl font-extrabold text-characterDark">{{ formatPrice(calc.finalTotal) }} <span class="text-xl font-bold text-black">円 / 月</span></div>
+                <div class="text-xs text-gray-600 mt-1 font-bold">※NHK受信料、ユニバーサルサービス料等は含まれておりません。端末一括購入代金は月額に含みません。</div>
             </div>
 
             <h3 class="font-bold text-base border-l-4 border-black pl-3 mb-3">サービスご契約内容・内訳 (ご契約種別：{{ contractPatternLabel }})</h3>
@@ -1218,27 +1231,24 @@
                                 <div class="flex justify-between pl-2 text-gray-700" v-if="line.support === 'packB'"><span>安心パックB for a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packB) }}円</span></div>
                                 <div class="flex justify-between pl-2 text-gray-700" v-if="line.support === 'hosho'"><span>端末保証 a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.hosho) }}円</span></div>
 
-                                <div v-if="line.deviceBuy === 'yes'" class="pl-2 mt-1 border-t-2 border-gray-200 pt-1">
-                                    <div class="flex justify-between text-gray-800 bg-gray-100 p-1 rounded font-bold">
-                                        <span>端末: {{ lineCalc(idx).deviceName }} ({{ line.devicePay === '1' ? '一括買取' : line.devicePay + '回割賦' }})</span>
+                                <div v-if="line.deviceBuy === 'yes'" class="pl-2 mt-1 border-t border-gray-300 pt-1 bg-rose-50 p-1.5 rounded border border-rose-200">
+                                    <div class="flex justify-between font-extrabold text-rose-900">
+                                        <span>🎁【キャンペーン価格】{{ lineCalc(idx).deviceName }} ({{ line.devicePay === '1' ? '一括買取' : line.devicePay + '回割賦' }})</span>
                                         <span v-if="line.devicePay !== '1'">+{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円/月</span>
-                                        <span v-else>※一括代金 {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円(初回)</span>
+                                        <span v-else>※一括支払い {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円(初回)</span>
                                     </div>
-                                    <div class="text-[10px] text-rose-600 ml-2 font-bold" v-if="line.devicePay === '1'">
-                                        ↳ 定価: {{ formatPrice(deviceInfo(line.device).price) }}円 − キャンペーン割引: -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円 ＝ {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円[cite: 1]
+                                    <div class="text-[10px] text-rose-700 font-bold mt-0.5" v-if="line.devicePay === '1'">
+                                        定価: {{ formatPrice(deviceInfo(line.device).price) }}円 − 特典割引: -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円 ＝ <span class="text-red-600 underline">お支払い代金: {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円</span>[cite: 1]
                                     </div>
-                                    <div class="text-[10px] text-rose-600 ml-2 font-bold" v-else-if="line.devicePay === '24'">
-                                        ↳ 割引: -{{ formatPrice(lineCalc(idx).deviceDiscountDetail ? lineCalc(idx).deviceDiscountDetail.per24 : 0) }}円/月 × 24回 ＝ 計 -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引き[cite: 1]
-                                    </div>
-                                    <div class="text-[10px] text-rose-600 ml-2 font-bold" v-else-if="line.devicePay === '48'">
-                                        ↳ 割引: -{{ formatPrice(lineCalc(idx).deviceDiscountDetail ? lineCalc(idx).deviceDiscountDetail.per48 : 0) }}円/月 × 48回 ＝ 計 -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引き[cite: 1]
+                                    <div class="text-[10px] text-rose-700 font-bold mt-0.5" v-else>
+                                        定価: {{ formatPrice(deviceInfo(line.device)['pay' + line.devicePay]) }}円/月 − 特典割引: -{{ formatPrice(lineCalc(idx).deviceDiscountDetail ? lineCalc(idx).deviceDiscountDetail['per' + line.devicePay] : 0) }}円/月 ＝ <span class="text-red-600 underline">お支払い代金: +{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円/月</span> (計 -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引き)[cite: 1]
                                     </div>
                                 </div>
 
-                                <div v-for="(st, dIdx) in lineCalc(idx).discounts" :key="dIdx" class="flex justify-between pl-2 text-red-600 font-bold">
+                                <div v-for="(st, dIdx) in lineCalc(idx).discounts" :key="dIdx" class="flex justify-between pl-2 text-red-600 mt-1">
                                     <span>↳ {{ st.label }}</span><span>{{ formatPrice(st.amount) }}円</span>
                                 </div>
-                                <div class="flex justify-between text-red-700 font-bold border-t border-gray-200 pt-0.5 mt-0.5 pl-2" v-if="lineCalc(idx).discounts.length > 1">
+                                <div class="flex justify-between text-red-700 border-t border-gray-200 pt-0.5 mt-0.5 pl-2" v-if="lineCalc(idx).discounts.length > 1">
                                     <span>【回線{{ idx + 1 }} 割引小計】</span><span>{{ formatPrice(lineCalc(idx).discountTotal) }}円</span>
                                 </div>
 

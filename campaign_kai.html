@@ -12,23 +12,38 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js" onerror="window.vueLoadError = true"></script>
     <script src="https://cdn.tailwindcss.com" onerror="window.tailwindLoadError = true"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        character: '#00a0d2',
-                        characterLight: '#e6f6fb',
-                        characterDark: '#007b9f'
-                    },
-                    fontFamily: {
-                        sans: ['"Helvetica Neue"', 'Arial', '"Hiragino Kaku Gothic ProN"', '"Hiragino Sans"', 'Meiryo', 'sans-serif'],
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            character: '#00a0d2',
+                            characterLight: '#e6f6fb',
+                            characterDark: '#007b9f'
+                        },
+                        fontFamily: {
+                            sans: ['"Helvetica Neue"', 'Arial', '"Hiragino Kaku Gothic ProN"', '"Hiragino Sans"', 'Meiryo', 'sans-serif'],
+                        }
                     }
                 }
             }
         }
     </script>
     <style>
-        [v-cloak] { display: none !important; }
+        /* Vue起動前 または 起動失敗時 に動的要素を隠すためのスタイル（完全な白画面を防ぐ） */
+        [v-cloak] [v-if], 
+        [v-cloak] [v-else-if], 
+        [v-cloak] [v-else], 
+        [v-cloak] template, 
+        [v-cloak] .vue-hidden-fallback,
+        #app.vue-init-failed [v-if], 
+        #app.vue-init-failed [v-else-if], 
+        #app.vue-init-failed [v-else], 
+        #app.vue-init-failed template, 
+        #app.vue-init-failed .vue-hidden-fallback { 
+            display: none !important; 
+        }
+
         body { background-color: #f8fafc; }
         .fade-enter-active, .fade-leave-active { transition: all 0.2s ease; }
         .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(6px); }
@@ -69,7 +84,7 @@
                 <p class="text-center text-characterLight text-sm sm:text-base mt-3">【秋の特大キャンペーン適用版】月額利用料・オプション・初期費用</p>
                 <div class="mt-4 bg-white/10 p-3.5 rounded-xl text-xs sm:text-sm text-center border border-white/20 font-bold leading-relaxed">
                     🔥 目玉特典実施中！NET10G/1G併用でスマホ端末最大<span class="text-yellow-300 text-base sm:text-lg font-black underline mx-1">20,000円引き</span>！<br>
-                    スマホ単体でも一括<span class="text-yellow-300 text-base font-black">10,000円引き</span>／割賦<span class="text-yellow-300 text-base font-black">総額9,600円引き</span>（-400円×24回 or -200円×48回）！[cite: 8, 9]
+                    スマホ単体でも一括<span class="text-yellow-300 text-base font-black">10,000円引き</span>／割賦<span class="text-yellow-300 text-base font-black">総額9,600円引き</span>（-400円×24回 or -200円×48回）！
                 </div>
             </header>
 
@@ -243,7 +258,7 @@
                 <!-- STEP2: 光インターネット (キャンペーン特典表示) -->
                 <section class="bg-white rounded-2xl shadow-sm border-2 border-slate-200 overflow-hidden relative">
                     <div class="absolute top-0 right-0 z-10" v-if="calc.hasNetPromotion">
-                        <div class="bg-rose-600 text-white font-bold text-xs sm:text-sm px-4 py-1.5 rounded-bl-xl shadow-sm">🎁 NET特典対象！[cite: 8, 9]</div>
+                        <div class="bg-rose-600 text-white font-bold text-xs sm:text-sm px-4 py-1.5 rounded-bl-xl shadow-sm">🎁 NET特典対象！</div>
                     </div>
 
                     <div class="bg-characterLight border-b-2 border-character/20 p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -294,24 +309,24 @@
                         <transition name="fade">
                             <div v-if="calc.hasNetPromotion" class="mt-4 p-5 bg-rose-50 border-2 border-rose-300 rounded-xl shadow-sm">
                                 <div class="font-extrabold text-rose-800 text-base sm:text-lg mb-3 flex items-center">
-                                    <span class="mr-2 text-xl">🎉</span> 秋のネット加入キャンペーン特典（{{ isMansion ? 'マンションネット対象' : '光10G/1G継続割対象' }}）[cite: 8, 9]
+                                    <span class="mr-2 text-xl">🎉</span> 秋のネット加入キャンペーン特典（{{ isMansion ? 'マンションネット対象' : '光10G/1G継続割対象' }}）
                                 </div>
                                 <ul class="text-sm space-y-2.5 text-slate-800 font-bold bg-white p-4 rounded-lg border border-rose-200 shadow-inner">
                                     <li class="flex items-center justify-between">
                                         <span>① デジタルギフト進呈</span>
-                                        <span class="text-rose-600 text-base sm:text-lg font-black bg-rose-50 px-3 py-1 rounded border border-rose-200">{{ isMansion ? '5,000円分' : '10,000円分' }}</span>[cite: 8, 9]
+                                        <span class="text-rose-600 text-base sm:text-lg font-black bg-rose-50 px-3 py-1 rounded border border-rose-200">{{ isMansion ? '5,000円分' : '10,000円分' }}</span>
                                     </li>
                                     <li class="flex items-center justify-between">
                                         <span>② 月額基本料特典</span>
-                                        <span class="text-rose-600 text-base sm:text-lg font-black bg-rose-50 px-3 py-1 rounded border border-rose-200">工事月＋1ヶ月 完全無料！</span>[cite: 8, 9]
+                                        <span class="text-rose-600 text-base sm:text-lg font-black bg-rose-50 px-3 py-1 rounded border border-rose-200">工事月＋1ヶ月 完全無料！</span>
                                     </li>
                                     <li class="flex items-center justify-between">
                                         <span>③ 他社違約金還元キャッシュバック</span>
-                                        <span class="text-rose-600 text-base sm:text-lg font-black bg-rose-50 px-3 py-1 rounded border border-rose-200">{{ isMansion ? '最大 50,000円' : '最大 100,000円' }}</span>[cite: 8, 9]
+                                        <span class="text-rose-600 text-base sm:text-lg font-black bg-rose-50 px-3 py-1 rounded border border-rose-200">{{ isMansion ? '最大 50,000円' : '最大 100,000円' }}</span>
                                     </li>
                                     <li v-if="!isMansion" class="flex items-center justify-between border-t border-rose-200 pt-2 text-rose-700">
                                         <span>🔥 【目玉】スマホ同時購入用 割引チケット</span>
-                                        <span class="text-rose-600 text-base font-black bg-rose-100 px-3 py-1 rounded border border-rose-300">一括購入で 10,000円引き増額！</span>[cite: 8, 9]
+                                        <span class="text-rose-600 text-base font-black bg-rose-100 px-3 py-1 rounded border border-rose-300">一括購入で 10,000円引き増額！</span>
                                     </li>
                                 </ul>
                             </div>
@@ -515,17 +530,17 @@
                                                     <button type="button" @click="line.devicePay = '1'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '1' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-sm' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
                                                         一括払い(買取)<br>
                                                         <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).price) }}円</span><br>
-                                                        <span class="text-lg font-black text-rose-600 mt-1 block">{{ formatPrice(Math.max(0, deviceInfo(line.device).price - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.total : 0))) }}円</span>
+                                                        <span class="text-lg font-black text-rose-600 mt-1 block">{{ formatPrice(getOneTimePrice(index, line.device)) }}円</span>
                                                     </button>
                                                     <button type="button" @click="line.devicePay = '24'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '24' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-sm' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
                                                         24回払い<br>
                                                         <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).pay24) }}円</span><br>
-                                                        <span class="text-lg font-black text-rose-600 mt-1 block">+{{ formatPrice(Math.max(0, deviceInfo(line.device).pay24 - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.per24 : 0))) }}円/月</span>
+                                                        <span class="text-lg font-black text-rose-600 mt-1 block">+{{ formatPrice(getInstallmentPrice(index, line.device, 24)) }}円/月</span>
                                                     </button>
                                                     <button type="button" @click="line.devicePay = '48'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '48' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-sm' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
                                                         48回払い<br>
                                                         <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).pay48) }}円</span><br>
-                                                        <span class="text-lg font-black text-rose-600 mt-1 block">+{{ formatPrice(Math.max(0, deviceInfo(line.device).pay48 - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.per48 : 0))) }}円/月</span>
+                                                        <span class="text-lg font-black text-rose-600 mt-1 block">+{{ formatPrice(getInstallmentPrice(index, line.device, 48)) }}円/月</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -583,9 +598,9 @@
 
                                     <!-- スマホ基本料無料特典パネル -->
                                     <transition name="fade">
-                                        <div v-if="lineCalc(index).isBakuwariTarget" class="bg-rose-50 border-2 border-rose-200 p-4 rounded-xl">
+                                        <div v-if="hasBakuwariTarget()" class="bg-rose-50 border-2 border-rose-200 p-4 rounded-xl">
                                             <div class="font-bold text-rose-800 text-sm sm:text-base flex items-center">
-                                                <span class="mr-2 text-lg">🎁</span> スマホ爆割適用特典: 月額基本料が受渡月＋1ヶ月無料！[cite: 8, 9]
+                                                <span class="mr-2 text-lg">🎁</span> スマホ爆割適用特典: 月額基本料が受渡月＋1ヶ月無料！
                                             </div>
                                         </div>
                                     </transition>
@@ -595,14 +610,14 @@
                                         <!-- 目玉キャンペーン説明バナー -->
                                         <div class="bg-rose-500 text-white p-4 rounded-t-xl font-bold border-b-2 border-rose-600 shadow-sm">
                                             <div class="text-base sm:text-lg flex items-center justify-between">
-                                                <span>🔥 2026年秋 特大端末購入割引キャンペーン！</span>[cite: 8, 9]
+                                                <span>🔥 2026年秋 特大端末購入割引キャンペーン！</span>
                                                 <span v-if="line.deviceBuy === 'yes'" class="bg-yellow-300 text-rose-900 text-xs sm:text-sm px-3 py-1 rounded-full font-black">
-                                                    -{{ formatPrice(lineCalc(index).appliedDiscountTotal) }}円引き適用中！[cite: 8, 9]
+                                                    -{{ formatPrice(lineCalc(index).appliedDiscountTotal) }}円引き適用中！
                                                 </span>
                                             </div>
                                             <div class="text-xs text-rose-100 font-normal mt-1.5 leading-relaxed">
-                                                ・NET10G/1G(継続割)同時申し込みで、一括購入が<strong class="text-yellow-300 underline font-extrabold text-sm">20,000円引き</strong>！（※一括のみ対応）[cite: 8, 9]<br>
-                                                ・スマホ単体でも、一括購入で<strong class="text-yellow-300 underline font-extrabold text-sm">10,000円引き</strong>／ 割賦購入で<strong class="text-yellow-300 underline font-extrabold text-sm">総額9,600円引き</strong>（24回: -400円/月、48回: -200円/月）！[cite: 8, 9]
+                                                ・NET10G/1G(継続割)同時申し込みで、一括購入が<strong class="text-yellow-300 underline font-extrabold text-sm">20,000円引き</strong>！（※一括のみ対応）<br>
+                                                ・スマホ単体でも、一括購入で<strong class="text-yellow-300 underline font-extrabold text-sm">10,000円引き</strong>／ 割賦購入で<strong class="text-yellow-300 underline font-extrabold text-sm">総額9,600円引き</strong>（24回: -400円/月、48回: -200円/月）！
                                             </div>
                                         </div>
 
@@ -624,7 +639,7 @@
                                                             </div>
                                                             <div class="mt-2">一括払い(買取)</div>
                                                             <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).price) }}円</span><br>
-                                                            <span class="text-xl font-black text-rose-600 mt-1 block">{{ formatPrice(Math.max(0, deviceInfo(line.device).price - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.total : 0))) }}円[cite: 8, 9]</span>
+                                                            <span class="text-xl font-black text-rose-600 mt-1 block">{{ formatPrice(getOneTimePrice(index, line.device)) }}円</span>
                                                         </button>
                                                         <button type="button" @click="line.devicePay = '24'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors relative overflow-hidden" :class="line.devicePay === '24' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-md' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
                                                             <div class="bg-orange-500 text-white text-[10px] font-bold py-0.5 px-2 absolute top-0 left-0 rounded-br">
@@ -632,7 +647,7 @@
                                                             </div>
                                                             <div class="mt-2">24回払い</div>
                                                             <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).pay24) }}円</span><br>
-                                                            <span class="text-xl font-black text-rose-600 mt-1 block">+{{ formatPrice(Math.max(0, deviceInfo(line.device).pay24 - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.per24 : 0))) }}円/月[cite: 8, 9]</span>
+                                                            <span class="text-xl font-black text-rose-600 mt-1 block">+{{ formatPrice(getInstallmentPrice(index, line.device, 24)) }}円/月</span>
                                                         </button>
                                                         <button type="button" @click="line.devicePay = '48'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors relative overflow-hidden" :class="line.devicePay === '48' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-md' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
                                                             <div class="bg-orange-500 text-white text-[10px] font-bold py-0.5 px-2 absolute top-0 left-0 rounded-br">
@@ -640,7 +655,7 @@
                                                             </div>
                                                             <div class="mt-2">48回払い</div>
                                                             <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).pay48) }}円</span><br>
-                                                            <span class="text-xl font-black text-rose-600 mt-1 block">+{{ formatPrice(Math.max(0, deviceInfo(line.device).pay48 - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.per48 : 0))) }}円/月[cite: 8, 9]</span>
+                                                            <span class="text-xl font-black text-rose-600 mt-1 block">+{{ formatPrice(getInstallmentPrice(index, line.device, 48)) }}円/月</span>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -701,9 +716,9 @@
                             <div class="bg-white p-5 rounded-xl border-2 border-slate-200">
                                 <div class="font-bold text-slate-800 text-base mb-3 border-b-2 border-slate-100 pb-2">早期解約時の違約金（{{ calc.initCost ? calc.initCost.freeMonths : 24 }}ヶ月未満でのご解約時、月額×残月数）</div>
                                 <ul class="list-disc pl-6 space-y-2 text-slate-700 font-bold">
-                                    <li v-if="isAdd ? (calc.initCost && calc.initCost.tvNewlyAdded) : tv !== 'none'">光テレビ：{{ formatPrice(calc.initCost ? calc.initCost.penaltyRates.tv : 0) }}円 × 残月数</li>
-                                    <li v-if="isAdd ? (calc.initCost && calc.initCost.netNewlyAdded) : net !== 'none'">光インターネット：{{ formatPrice(calc.initCost ? calc.initCost.penaltyRates.net : 0) }}円 × 残月数</li>
-                                    <li v-if="!isMansion && (isAdd ? (calc.initCost && calc.initCost.telNewlyAdded) : tel)">光でんわ：{{ formatPrice(calc.initCost ? calc.initCost.penaltyRates.tel : 0) }}円 × 残月数</li>
+                                    <li v-if="isTvPenaltyTarget()">光テレビ：{{ formatPrice(getPenaltyRate('tv')) }}円 × 残月数</li>
+                                    <li v-if="isNetPenaltyTarget()">光インターネット：{{ formatPrice(getPenaltyRate('net')) }}円 × 残月数</li>
+                                    <li v-if="isTelPenaltyTarget()">光でんわ：{{ formatPrice(getPenaltyRate('tel')) }}円 × 残月数</li>
                                 </ul>
                                 <p v-if="isMansion && tv !== 'none'" class="mt-4 text-characterDark font-bold bg-characterLight p-3 rounded-lg border border-character/20">※集合住宅割は最低利用期間6ヶ月です。期間内解約は違約金{{ formatPrice(calc.initCost ? calc.initCost.mansionTvPenalty : 1622) }}円が発生します。</p>
                             </div>
@@ -783,28 +798,28 @@
                         <!-- 明細内キャンペーン特別適用パネル -->
                         <div class="bg-rose-50 border-2 border-rose-300 p-5 rounded-2xl space-y-3 shadow-sm">
                             <div class="font-extrabold text-rose-900 text-base flex items-center border-b-2 border-rose-200 pb-2">
-                                <span class="text-xl mr-2">🎁</span> 現在適用されているキャンペーン特典＆割引一覧[cite: 8, 9]
+                                <span class="text-xl mr-2">🎁</span> 現在適用されているキャンペーン特典＆割引一覧
                             </div>
                             <ul class="text-sm font-bold space-y-2 text-slate-800">
                                 <li v-if="calc.hasNetPromotion" class="flex flex-col sm:flex-row justify-between sm:items-center bg-white p-3 rounded-xl border border-rose-200 gap-2">
                                     <div>
-                                        <span class="text-rose-700 font-extrabold">【光NET特典】</span> デジタルギフト（{{ isMansion ? '5,000円分' : '10,000円分' }}）＋ 月額無料 ＋ 他社違約金還元[cite: 8, 9]
+                                        <span class="text-rose-700 font-extrabold">【光NET特典】</span> デジタルギフト（{{ isMansion ? '5,000円分' : '10,000円分' }}）＋ 月額無料 ＋ 他社違約金還元
                                     </div>
                                     <span class="bg-rose-600 text-white text-xs px-3 py-1 rounded-full font-black text-center whitespace-nowrap">ネット特典適用</span>
                                 </li>
                                 <li v-if="calc.mobile && calc.mobile.totalDeviceDiscountAmount > 0" class="flex flex-col sm:flex-row justify-between sm:items-center bg-white p-3 rounded-xl border border-rose-200 gap-2">
                                     <div>
                                         <span class="text-rose-700 font-extrabold">【スマホ端末割引】</span>
-                                        <span class="text-rose-900 font-bold">{{ calc.hasNetCampaign ? 'NET10G/1G併用により一括20,000円引き/台' : 'スマホ単体特典により一括10,000円引き／割賦総額9,600円引き' }}</span>[cite: 8, 9]
-                                        <span class="block text-xs text-slate-500 font-normal mt-0.5">※条件: 音声SIM新規・端末購入または最終購入から2年以上経過[cite: 8, 9]</span>
+                                        <span class="text-rose-900 font-bold">{{ calc.hasNetCampaign ? 'NET10G/1G併用により一括20,000円引き/台' : 'スマホ単体特典により一括10,000円引き／割賦総額9,600円引き' }}</span>
+                                        <span class="block text-xs text-slate-500 font-normal mt-0.5">※条件: 音声SIM新規・端末購入または最終購入から2年以上経過</span>
                                     </div>
-                                    <span class="font-black text-rose-600 text-lg bg-rose-50 px-3 py-1 rounded-lg border border-rose-200 text-right whitespace-nowrap">端末割引計 -{{ formatPrice(calc.mobile.totalDeviceDiscountAmount) }}円[cite: 8, 9]</span>
+                                    <span class="font-black text-rose-600 text-lg bg-rose-50 px-3 py-1 rounded-lg border border-rose-200 text-right whitespace-nowrap">端末割引計 -{{ formatPrice(calc.mobile.totalDeviceDiscountAmount) }}円</span>
                                 </li>
-                                <li v-if="mobileLines.some((l, idx) => lineCalc(idx).isBakuwariTarget)" class="flex flex-col sm:flex-row justify-between sm:items-center bg-white p-3 rounded-xl border border-rose-200 gap-2">
+                                <li v-if="hasBakuwariTarget()" class="flex flex-col sm:flex-row justify-between sm:items-center bg-white p-3 rounded-xl border border-rose-200 gap-2">
                                     <div>
-                                        <span class="text-rose-700 font-extrabold">【スマホ基本料特典】</span> スマホ爆割適用により月額基本料 受渡月＋1ヶ月無料！[cite: 8, 9]
+                                        <span class="text-rose-700 font-extrabold">【スマホ基本料特典】</span> スマホ爆割適用により月額基本料 受渡月＋1ヶ月無料！
                                     </div>
-                                    <span class="bg-rose-600 text-white text-xs px-3 py-1 rounded-full font-black text-center whitespace-nowrap">初月無料対象[cite: 8, 9]</span>
+                                    <span class="bg-rose-600 text-white text-xs px-3 py-1 rounded-full font-black text-center whitespace-nowrap">初月無料対象</span>
                                 </li>
                             </ul>
                         </div>
@@ -892,7 +907,7 @@
                                                     <div>
                                                         <span class="text-rose-900 font-extrabold">🎁 【キャンペーン価格】端末一括購入(買取)</span>
                                                         <span class="text-xs text-rose-600 block font-bold mt-0.5">
-                                                            定価: {{ formatPrice(deviceInfo(line.device).price) }}円 − 特典割引: -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円[cite: 8, 9]
+                                                            定価: {{ formatPrice(deviceInfo(line.device).price) }}円 − 特典割引: -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円
                                                         </span>
                                                     </div>
                                                     <span class="text-base font-black text-rose-700">{{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円(初回)</span>
@@ -902,7 +917,7 @@
                                                     <div>
                                                         <span class="text-rose-900 font-extrabold">🎁 【キャンペーン価格】端末割賦代金({{ line.devicePay }}回)</span>
                                                         <span class="text-xs text-rose-600 block font-bold mt-0.5">
-                                                            通常: {{ formatPrice(deviceInfo(line.device)['pay' + line.devicePay]) }}円/月 − 割引: -{{ formatPrice(lineCalc(idx).deviceDiscountDetail ? lineCalc(idx).deviceDiscountDetail['per' + line.devicePay] : 0) }}円/月 (計 -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引)[cite: 8, 9]
+                                                            通常: {{ formatPrice(deviceInfo(line.device)['pay' + line.devicePay]) }}円/月 − 割引: -{{ formatPrice(lineCalc(idx).deviceDiscountDetail ? lineCalc(idx).deviceDiscountDetail['per' + line.devicePay] : 0) }}円/月 (計 -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引)
                                                         </span>
                                                     </div>
                                                     <span class="text-base font-black text-rose-700">+{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円/月</span>
@@ -946,7 +961,7 @@
                                         <div>
                                             <span>📱 スマホ端末一括購入代金(計)</span>
                                             <span class="text-xs text-rose-600 block font-normal" v-if="calc.mobile.totalOneTimeDeviceDiscountAmount > 0">
-                                                (うち端末一括購入割引 合計: -{{ formatPrice(calc.mobile.totalOneTimeDeviceDiscountAmount) }}円 適用済)[cite: 8, 9]
+                                                (うち端末一括購入割引 合計: -{{ formatPrice(calc.mobile.totalOneTimeDeviceDiscountAmount) }}円 適用済)
                                             </span>
                                         </div>
                                         <span class="text-characterDark text-base font-black">{{ formatPrice(calc.mobile.deviceOneTimeTotal) }} 円</span>
@@ -1106,12 +1121,12 @@
         </div>
 
         <!-- 🌟 印刷・PDF出力専用レイアウト（秋のキャンペーン特典・条件超強調表示） 🌟 -->
-        <div class="print-only hidden max-w-3xl mx-auto p-6 font-sans bg-white text-black border-2 border-slate-800 relative">
+        <div class="print-only hidden max-w-3xl mx-auto p-6 font-sans bg-white text-black border-2 border-slate-800 relative vue-hidden-fallback">
             <template v-if="calc">
             <div class="text-center border-b-2 border-black pb-3 mb-4 mt-2">
                 <h1 class="text-xl font-bold tracking-widest">お見積り・お申し込み確認書</h1>
                 <p class="text-sm mt-2 font-bold text-rose-600">
-                    ✨ 【期間限定】秋のキャンペーン特別価格・特典適用版 ✨[cite: 8, 9]
+                    ✨ 【期間限定】秋のキャンペーン特別価格・特典適用版 ✨
                 </p>
             </div>
 
@@ -1129,37 +1144,37 @@
                 <div class="grid grid-cols-2 gap-3 mt-1 font-bold">
                     <div class="bg-white p-3 rounded-lg border-2 border-red-300 shadow-sm">
                         <h4 class="font-black text-red-700 text-sm border-b-2 border-red-200 pb-1 mb-2 flex items-center">
-                            <span class="text-base mr-1">🎁</span> 適用中の超お得なキャンペーン特典[cite: 8, 9]
+                            <span class="text-base mr-1">🎁</span> 適用中の超お得なキャンペーン特典
                         </h4>
                         <ul class="space-y-1.5 text-xs">
                             <li v-if="calc.hasNetPromotion" class="bg-red-50 p-1.5 rounded border border-red-200">
                                 <span class="text-red-700 font-extrabold">🌐 光NET特典：</span><br>
-                                ・デジタルギフト <span class="text-red-600 font-black text-sm">{{ isMansion ? '5,000円分' : '10,000円分' }}</span> 進呈[cite: 8, 9]<br>
-                                ・ネット月額基本料 <span class="text-red-600 font-black">工事月＋1ヶ月 完全無料！</span>[cite: 8, 9]<br>
-                                ・他社違約金還元 <span class="text-red-600 font-black">{{ isMansion ? '最大5万円' : '最大10万円' }}</span>[cite: 8, 9]
+                                ・デジタルギフト <span class="text-red-600 font-black text-sm">{{ isMansion ? '5,000円分' : '10,000円分' }}</span> 進呈<br>
+                                ・ネット月額基本料 <span class="text-red-600 font-black">工事月＋1ヶ月 完全無料！</span><br>
+                                ・他社違約金還元 <span class="text-red-600 font-black">{{ isMansion ? '最大5万円' : '最大10万円' }}</span>
                             </li>
                             <li v-if="calc.mobile && calc.mobile.totalDeviceDiscountAmount > 0" class="bg-orange-50 p-1.5 rounded border border-orange-200">
                                 <span class="text-orange-800 font-extrabold">📱 スマホ端末購入特典：</span><br>
-                                ・端末購入代金 <span class="text-red-600 font-black text-sm">最大 {{ formatPrice(calc.mobile.totalDeviceDiscountAmount) }}円引き</span> 適用済！[cite: 8, 9]<br>
+                                ・端末購入代金 <span class="text-red-600 font-black text-sm">最大 {{ formatPrice(calc.mobile.totalDeviceDiscountAmount) }}円引き</span> 適用済！<br>
                                 <span class="text-[10px] text-gray-600 font-normal">
-                                    ({{ calc.hasNetCampaign ? 'NET新規併用特典：1台あたり一括20,000円引き' : 'スマホ特典：一括10,000円引き／割賦総額9,600円引き（-400円/月×24回, -200円/月×48回）' }})[cite: 8, 9]
+                                    ({{ calc.hasNetCampaign ? 'NET新規併用特典：1台あたり一括20,000円引き' : 'スマホ特典：一括10,000円引き／割賦総額9,600円引き（-400円/月×24回, -200円/月×48回）' }})
                                 </span>
                             </li>
-                            <li v-if="mobileLines.some((l, idx) => lineCalc(idx).isBakuwariTarget)" class="bg-rose-50 p-1.5 rounded border border-rose-200">
+                            <li v-if="hasBakuwariTarget()" class="bg-rose-50 p-1.5 rounded border border-rose-200">
                                 <span class="text-rose-800 font-extrabold">✨ スマホ基本料特典：</span><br>
-                                ・スマホ爆割対象回線 <span class="text-red-600 font-black">受渡月＋1ヶ月 完全無料！</span>[cite: 8, 9]
+                                ・スマホ爆割対象回線 <span class="text-red-600 font-black">受渡月＋1ヶ月 完全無料！</span>
                             </li>
                         </ul>
                     </div>
 
                     <div class="bg-white p-3 rounded-lg border-2 border-gray-300 shadow-sm text-[11px] leading-tight space-y-1.5">
                         <h4 class="font-black text-gray-800 border-b-2 border-gray-200 pb-1 mb-1.5 flex items-center">
-                            <span class="text-base mr-1">⚠️</span> キャンペーン適用条件・重要注意書き[cite: 8, 9]
+                            <span class="text-base mr-1">⚠️</span> キャンペーン適用条件・重要注意書き
                         </h4>
-                        <p><strong>【端末購入特典の条件】</strong> 音声SIM新規契約・端末購入、または最終購入から2年以上経過された方が対象です。[cite: 8, 9]</p>
-                        <p><strong>【NET特典併用時のご注意】</strong> NET新規特典とスマホ端末購入特典を併用する場合、端末代金のお支払いは<strong>一括支払いのみ</strong>となります。[cite: 8, 9]</p>
+                        <p><strong>【端末購入特典の条件】</strong> 音声SIM新規契約・端末購入、または最終購入から2年以上経過された方が対象です。</p>
+                        <p><strong>【NET特典併用時のご注意】</strong> NET新規特典とスマホ端末購入特典を併用する場合、端末代金のお支払いは<strong>一括支払いのみ</strong>となります。</p>
                         <p class="text-red-600 font-bold border-t border-gray-200 pt-1 mt-1">
-                            <strong>【継続利用期間について】</strong> 本キャンペーンによる端末割引適用後、継続利用期間は1年間となります。購入後1年未満で解約された場合、キャンペーン相当分（一括最大20,000円／割賦の場合は残月数相当＋違約金）の返金規定がございます。[cite: 8, 9]
+                            <strong>【継続利用期間について】</strong> 本キャンペーンによる端末割引適用後、継続利用期間は1年間となります。購入後1年未満で解約された場合、キャンペーン相当分（一括最大20,000円／割賦の場合は残月数相当＋違約金）の返金規定がございます。
                         </p>
                     </div>
                 </div>
@@ -1257,10 +1272,10 @@
                                         <span v-else>※一括支払い {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円(初回)</span>
                                     </div>
                                     <div class="text-[10px] text-rose-700 font-bold mt-0.5" v-if="line.devicePay === '1'">
-                                        定価: {{ formatPrice(deviceInfo(line.device).price) }}円 − キャンペーン割引: -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円 ＝ <span class="text-red-600 underline">お支払い代金: {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円</span>[cite: 8, 9]
+                                        定価: {{ formatPrice(deviceInfo(line.device).price) }}円 − キャンペーン割引: -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円 ＝ <span class="text-red-600 underline">お支払い代金: {{ formatPrice(getOneTimePrice(idx, line.device)) }}円</span>
                                     </div>
                                     <div class="text-[10px] text-rose-700 font-bold mt-0.5" v-else>
-                                        定価: {{ formatPrice(deviceInfo(line.device)['pay' + line.devicePay]) }}円/月 − 割引: -{{ formatPrice(lineCalc(idx).deviceDiscountDetail ? lineCalc(idx).deviceDiscountDetail['per' + line.devicePay] : 0) }}円/月 ＝ <span class="text-red-600 underline">お支払い代金: +{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円/月</span> (計 -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引き)[cite: 8, 9]
+                                        定価: {{ formatPrice(deviceInfo(line.device)['pay' + line.devicePay]) }}円/月 − 割引: -{{ formatPrice(lineCalc(idx).deviceDiscountDetail ? lineCalc(idx).deviceDiscountDetail['per' + line.devicePay] : 0) }}円/月 ＝ <span class="text-red-600 underline">お支払い代金: +{{ formatPrice(getInstallmentPrice(idx, line.device, line.devicePay)) }}円/月</span> (計 -{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引き)
                                     </div>
                                 </div>
 
@@ -1312,7 +1327,7 @@
                             <div>
                                 <span>スマホ端末一括購入代金(計)</span>
                                 <span class="text-[9px] text-red-600 block font-normal" v-if="calc.mobile.totalOneTimeDeviceDiscountAmount > 0">
-                                    (うち端末一括購入割引 合計: -{{ formatPrice(calc.mobile.totalOneTimeDeviceDiscountAmount) }}円 適用済)[cite: 8, 9]
+                                    (うち端末一括購入割引 合計: -{{ formatPrice(calc.mobile.totalOneTimeDeviceDiscountAmount) }}円 適用済)
                                 </span>
                             </div>
                             <span>{{ formatPrice(calc.mobile.deviceOneTimeTotal) }} 円</span>
@@ -1324,9 +1339,9 @@
                     <div class="border-2 border-gray-300 bg-gray-50 p-3 rounded-lg text-xs leading-relaxed">
                         <p>{{ calc.initCost ? calc.initCost.freeMonths : 24 }}ヶ月未満でのご解約時は以下の違約金が発生します。</p>
                         <ul class="list-disc pl-5 mt-1 space-y-1">
-                            <li v-if="isAdd ? (calc.initCost && calc.initCost.tvNewlyAdded) : tv !== 'none'">光テレビ： {{ formatPrice(calc.initCost ? calc.initCost.penaltyRates.tv : 0) }}円 × 残月数</li>
-                            <li v-if="isAdd ? (calc.initCost && calc.initCost.netNewlyAdded) : net !== 'none'">光インターネット： {{ formatPrice(calc.initCost ? calc.initCost.penaltyRates.net : 0) }}円 × 残月数</li>
-                            <li v-if="!isMansion && (isAdd ? (calc.initCost && calc.initCost.telNewlyAdded) : tel)">光でんわ： {{ formatPrice(calc.initCost ? calc.initCost.penaltyRates.tel : 0) }}円 × 残月数</li>
+                            <li v-if="isTvPenaltyTarget()">光テレビ： {{ formatPrice(getPenaltyRate('tv')) }}円 × 残月数</li>
+                            <li v-if="isNetPenaltyTarget()">光インターネット： {{ formatPrice(getPenaltyRate('net')) }}円 × 残月数</li>
+                            <li v-if="isTelPenaltyTarget()">光でんわ： {{ formatPrice(getPenaltyRate('tel')) }}円 × 残月数</li>
                         </ul>
                         <div class="mt-2 bg-white p-2 rounded border border-gray-200">計算式: ({{ calc.initCost ? calc.initCost.freeMonths : 24 }}ヶ月 − ご利用月数) × 単価</div>
                         <p v-if="isMansion && tv !== 'none'" class="mt-2 text-gray-800 bg-gray-200 p-2 rounded">集合住宅割：最低利用期間6ヶ月、期間内解約は違約金{{ formatPrice(calc.initCost ? calc.initCost.mansionTvPenalty : 1622) }}円。</p>
@@ -1344,300 +1359,355 @@
 
 <script>
 function initApp() {
-    if (window.vueLoadError || typeof Vue === 'undefined') {
-        const errDiv = document.getElementById('cdn-error');
+    const errDiv = document.getElementById('cdn-error');
+    const appDiv = document.getElementById('app');
+
+    function showErrorAndFallback(msg) {
         if (errDiv) {
             errDiv.style.display = 'block';
-            errDiv.textContent = '⚠️ Vue 3 (CDN) の読み込みに失敗したため、シミュレーターを起動できません。ネットワーク接続をご確認ください。';
+            errDiv.textContent = msg;
         }
+        if (appDiv) {
+            appDiv.classList.add('vue-init-failed');
+            appDiv.removeAttribute('v-cloak');
+        }
+    }
+
+    if (window.vueLoadError || typeof Vue === 'undefined') {
+        showErrorAndFallback('⚠️ Vue 3（CDN）の読み込みに失敗したため、シミュレーターを起動できません。ネットワーク接続をご確認ください。');
         return;
     }
+
+    if (typeof tailwind === 'undefined') {
+        window.tailwindLoadError = true;
+    }
+
     if (window.tailwindLoadError) {
-        const errDiv = document.getElementById('cdn-error');
         if (errDiv) {
             errDiv.style.display = 'block';
-            errDiv.textContent = '⚠️ Tailwind CSS (CDN) の読み込みに失敗しました。一部のレイアウトが正しく表示されない可能性があります。';
+            errDiv.textContent = '⚠️ Tailwind CSS（CDN）の読み込みに失敗しました。一部のレイアウトが正しく表示されない可能性があります。';
         }
     }
 
     const { createApp } = Vue;
-
     const API_ENDPOINT = 'https://nwvw1t08le.execute-api.ap-northeast-1.amazonaws.com/simulate-campaign';
 
-    createApp({
-        data() {
-            return {
-                contractPattern: null,
-
-                existingTv: { has: false, plan: 'premium', action: 'keep' },
-                existingNet: { has: false, plan: 'net10g', action: 'keep' },
-                existingTel: { has: false },
-
-                tv: 'none',
-                stb: 'ls500b',
-                net: 'none',
-                isKeizokuWari: false,
-                tel: false,
-                ottHulu: false,
-                ottFod: false,
-                ottUnext: false,
-
-                mobileLines: [],
-
-                showSummaryDetail: false,
-                showChannelModal: false,
-
-                router: false,
-                netOps: { jSafe: false, spamFilter: false, addMail: false },
-
-                telOps: { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false },
-                isTelOpsUpdating: false,
-
-                isLoading: false,
-                apiError: null,
-                uiOptions: {
-                    tv: [],
-                    net: [],
-                    mobilePlans: [],
-                    stb: [],
-                    devices: [
-                        { key: 'ip16', name: 'iPhone 16 (128GB)', price: 132000, pay24: 5720, pay48: 2860 },
-                        { key: 'px10a', name: 'Google Pixel 10a (128GB)', price: 91300, pay24: 3960, pay48: 1980 },
-                        { key: 'aq10', name: 'AQUOS sense10 (128GB)', price: 59400, pay24: 2530, pay48: 1265 },
-                        { key: 'aqw5', name: 'AQUOS wish5 (128GB)', price: 33000, pay24: 1540, pay48: 770 },
-                        { key: 'oppo_a5', name: 'OPPO A5 5G (128GB)', price: 28600, pay24: 1320, pay48: 660 }
-                    ],
-                    ott: [],
-                    telOptions: {},
-                    netAddOns: {},
-                    mobileCallOptions: {},
-                    mobileSupportOptions: {},
-                    telBase: 0
-                },
-                calc: null,
-                recommendations: [],
-                _fetchTimer: null
-            };
-        },
-        computed: {
-            isAdd() { return this.contractPattern === 'add'; },
-            isMansion() { return this.contractPattern === 'mansion'; },
-            hasOtt() { return this.ottHulu || this.ottFod || this.ottUnext; },
-            existingMobileLinesCount() { return this.mobileLines.filter(l => l.source === 'existing').length; },
-            newMobileLinesCount() { return this.mobileLines.filter(l => l.source !== 'existing').length; },
-            contractPatternLabel() {
-                if (this.contractPattern === 'new') return '戸建て 新規契約';
-                if (this.contractPattern === 'add') return '戸建て 追加契約';
-                if (this.contractPattern === 'mansion') return 'マンションタイプ';
-                return '';
-            },
-            currentDateStr() { return new Date().toLocaleDateString('ja-JP'); },
-            statePayload() {
+    try {
+        const app = createApp({
+            data() {
                 return {
-                    contractPattern: this.contractPattern,
-                    existingTv: this.existingTv,
-                    existingNet: this.existingNet,
-                    existingTel: this.existingTel,
-                    tv: this.tv,
-                    stb: this.stb,
-                    net: this.net,
-                    isKeizokuWari: this.isKeizokuWari,
-                    router: this.router,
-                    netOps: this.netOps,
-                    tel: this.tel,
-                    telOps: this.telOps,
-                    ottHulu: this.ottHulu,
-                    ottFod: this.ottFod,
-                    ottUnext: this.ottUnext,
-                    mobileLines: this.mobileLines
+                    contractPattern: null,
+
+                    existingTv: { has: false, plan: 'premium', action: 'keep' },
+                    existingNet: { has: false, plan: 'net10g', action: 'keep' },
+                    existingTel: { has: false },
+
+                    tv: 'none',
+                    stb: 'ls500b',
+                    net: 'none',
+                    isKeizokuWari: false,
+                    tel: false,
+                    ottHulu: false,
+                    ottFod: false,
+                    ottUnext: false,
+
+                    mobileLines: [],
+
+                    showSummaryDetail: false,
+                    showChannelModal: false,
+
+                    router: false,
+                    netOps: { jSafe: false, spamFilter: false, addMail: false },
+
+                    telOps: { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false },
+                    isTelOpsUpdating: false,
+
+                    isLoading: false,
+                    apiError: null,
+                    uiOptions: {
+                        tv: [],
+                        net: [],
+                        mobilePlans: [],
+                        stb: [],
+                        devices: [
+                            { key: 'ip16', name: 'iPhone 16 (128GB)', price: 132000, pay24: 5720, pay48: 2860 },
+                            { key: 'px10a', name: 'Google Pixel 10a (128GB)', price: 91300, pay24: 3960, pay48: 1980 },
+                            { key: 'aq10', name: 'AQUOS sense10 (128GB)', price: 59400, pay24: 2530, pay48: 1265 },
+                            { key: 'aqw5', name: 'AQUOS wish5 (128GB)', price: 33000, pay24: 1540, pay48: 770 },
+                            { key: 'oppo_a5', name: 'OPPO A5 5G (128GB)', price: 28600, pay24: 1320, pay48: 660 }
+                        ],
+                        ott: [],
+                        telOptions: {},
+                        netAddOns: {},
+                        mobileCallOptions: {},
+                        mobileSupportOptions: {},
+                        telBase: 0
+                    },
+                    calc: null,
+                    recommendations: [],
+                    _fetchTimer: null
                 };
-            }
-        },
-        watch: {
-            statePayload: {
-                deep: true,
-                handler() { this.scheduleFetch(); }
             },
-            net(newVal) {
-                if (newVal === 'none') {
-                    this.router = false;
-                    this.netOps = { jSafe: false, spamFilter: false, addMail: false };
-                    this.isKeizokuWari = false;
-                } else if (['net10g', 'net1g', 'net300m'].includes(newVal)) {
-                    this.isKeizokuWari = true;
-                } else {
-                    this.isKeizokuWari = false;
+            computed: {
+                isAdd() { return this.contractPattern === 'add'; },
+                isMansion() { return this.contractPattern === 'mansion'; },
+                hasOtt() { return this.ottHulu || this.ottFod || this.ottUnext; },
+                existingMobileLinesCount() { return this.mobileLines.filter(l => l.source === 'existing').length; },
+                newMobileLinesCount() { return this.mobileLines.filter(l => l.source !== 'existing').length; },
+                contractPatternLabel() {
+                    if (this.contractPattern === 'new') return '戸建て 新規契約';
+                    if (this.contractPattern === 'add') return '戸建て 追加契約';
+                    if (this.contractPattern === 'mansion') return 'マンションタイプ';
+                    return '';
+                },
+                currentDateStr() { return new Date().toLocaleDateString('ja-JP'); },
+                statePayload() {
+                    return {
+                        contractPattern: this.contractPattern,
+                        existingTv: this.existingTv,
+                        existingNet: this.existingNet,
+                        existingTel: this.existingTel,
+                        tv: this.tv,
+                        stb: this.stb,
+                        net: this.net,
+                        isKeizokuWari: this.isKeizokuWari,
+                        router: this.router,
+                        netOps: this.netOps,
+                        tel: this.tel,
+                        telOps: this.telOps,
+                        ottHulu: this.ottHulu,
+                        ottFod: this.ottFod,
+                        ottUnext: this.ottUnext,
+                        mobileLines: this.mobileLines
+                    };
                 }
             },
-            tv(newVal) { if (newVal === 'none') this.stb = 'ls500b'; },
-            tel(newVal) { if (!newVal) this.telOps = { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false }; },
+            watch: {
+                statePayload: {
+                    deep: true,
+                    handler() { this.scheduleFetch(); }
+                },
+                net(newVal) {
+                    if (newVal === 'none') {
+                        this.router = false;
+                        this.netOps = { jSafe: false, spamFilter: false, addMail: false };
+                        this.isKeizokuWari = false;
+                    } else if (['net10g', 'net1g', 'net300m'].includes(newVal)) {
+                        this.isKeizokuWari = true;
+                    } else {
+                        this.isKeizokuWari = false;
+                    }
+                },
+                tv(newVal) { if (newVal === 'none') this.stb = 'ls500b'; },
+                tel(newVal) { if (!newVal) this.telOps = { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false }; },
 
-            'telOps.pack'(newVal) {
-                if (this.isTelOpsUpdating) return;
-                this.isTelOpsUpdating = true;
-                if (newVal) { this.telOps.disp = true; this.telOps.req = true; this.telOps.catchDisp = true; this.telOps.catchCall = true; }
-                else { this.telOps.disp = false; this.telOps.req = false; this.telOps.catchDisp = false; this.telOps.catchCall = false; }
-                this.$nextTick(() => { this.isTelOpsUpdating = false; });
-            },
-            'telOps.disp': 'checkTelPack',
-            'telOps.req': 'checkTelPack',
-            'telOps.catchDisp': 'checkTelPack',
-            'telOps.catchCall': 'checkTelPack',
-
-            'existingTv.has'(v) {
-                if (!v) this.tv = 'none';
-                else if (this.existingTv.action === 'keep') this.tv = this.existingTv.plan;
-            },
-            'existingTv.action'(v) { if (v === 'keep') this.tv = this.existingTv.plan; },
-            'existingTv.plan'(v) { if (this.existingTv.has && this.existingTv.action === 'keep') this.tv = v; },
-
-            'existingNet.has'(v) {
-                if (!v) this.net = 'none';
-                else if (this.existingNet.action === 'keep') this.net = this.existingNet.plan;
-            },
-            'existingNet.action'(v) { if (v === 'keep') this.net = this.existingNet.plan; },
-            'existingNet.plan'(v) { if (this.existingNet.has && this.existingNet.action === 'keep') this.net = v; },
-
-            'existingTel.has'(v) { this.tel = v; }
-        },
-        methods: {
-            scheduleFetch() {
-                clearTimeout(this._fetchTimer);
-                this._fetchTimer = setTimeout(() => { this.fetchCalculation(); }, 250);
-            },
-            async fetchCalculation() {
-                if (!this.contractPattern) { this.calc = null; this.recommendations = []; return; }
-                this.isLoading = true;
-                this.apiError = null;
-                try {
-                    const res = await fetch(API_ENDPOINT, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(this.statePayload)
-                    });
-                    if (!res.ok) throw new Error('API応答エラー: ' + res.status);
-                    const data = await res.json();
-                    this.uiOptions = data.options;
-                    this.calc = data.calculation;
-                    this.recommendations = data.recommendations || [];
-                } catch (err) {
-                    this.apiError = '料金計算サーバーとの通信に失敗しました。しばらくしてから再度お試しください。';
-                    console.error(err);
-                } finally {
-                    this.isLoading = false;
-                }
-            },
-            tvLabel(key) { const o = (this.uiOptions.tv || []).find(x => x.key === key); return o ? o.label : ''; },
-            netLabel(key) { const o = (this.uiOptions.net || []).find(x => x.key === key); return o ? o.label : ''; },
-            stbName(key) { const o = (this.uiOptions.stb || []).find(x => x.key === key); return o ? o.name : ''; },
-            deviceInfo(key) { return (this.uiOptions.devices || []).find(d => d.key === key) || { price: 0, pay24: 0, pay48: 0, name: '' }; },
-            ottOption(key) { return (this.uiOptions.ott || []).find(o => o.key === key) || { label: '', price: 0 }; },
-            lineCalc(index) {
-                return (this.calc && this.calc.mobile && this.calc.mobile.lines && this.calc.mobile.lines[index])
-                    || { total: 0, discounts: [], discountTotal: 0, deviceOneTimePrice: 0, devicePriceRaw: 0, planLabel: '', planPrice: 0, contractTypeLabel: '', deviceName: '', appliedDiscountTotal: 0, deviceDiscountDetail: { total: 0, per24: 0, per48: 0 }, isBakuwariTarget: false };
-            },
-
-            checkTelPack() {
-                if (this.isTelOpsUpdating) return;
-                const opts = this.uiOptions.telOptions || {};
-                let total = 0;
-                if (this.telOps.disp) total += (opts.disp ? opts.disp.price : 0);
-                if (this.telOps.req) total += (opts.req ? opts.req.price : 0);
-                if (this.telOps.catchDisp) total += (opts.catchDisp ? opts.catchDisp.price : 0);
-                if (this.telOps.catchCall) total += (opts.catchCall ? opts.catchCall.price : 0);
-                if (opts.pack && total >= opts.pack.price) {
+                'telOps.pack'(newVal) {
+                    if (this.isTelOpsUpdating) return;
                     this.isTelOpsUpdating = true;
-                    this.telOps.pack = true;
-                    this.telOps.disp = true; this.telOps.req = true; this.telOps.catchDisp = true; this.telOps.catchCall = true;
+                    if (newVal) { this.telOps.disp = true; this.telOps.req = true; this.telOps.catchDisp = true; this.telOps.catchCall = true; }
+                    else { this.telOps.disp = false; this.telOps.req = false; this.telOps.catchDisp = false; this.telOps.catchCall = false; }
                     this.$nextTick(() => { this.isTelOpsUpdating = false; });
-                }
+                },
+                'telOps.disp': 'checkTelPack',
+                'telOps.req': 'checkTelPack',
+                'telOps.catchDisp': 'checkTelPack',
+                'telOps.catchCall': 'checkTelPack',
+
+                'existingTv.has'(v) {
+                    if (!v) this.tv = 'none';
+                    else if (this.existingTv.action === 'keep') this.tv = this.existingTv.plan;
+                },
+                'existingTv.action'(v) { if (v === 'keep') this.tv = this.existingTv.plan; },
+                'existingTv.plan'(v) { if (this.existingTv.has && this.existingTv.action === 'keep') this.tv = v; },
+
+                'existingNet.has'(v) {
+                    if (!v) this.net = 'none';
+                    else if (this.existingNet.action === 'keep') this.net = this.existingNet.plan;
+                },
+                'existingNet.action'(v) { if (v === 'keep') this.net = this.existingNet.plan; },
+                'existingNet.plan'(v) { if (this.existingNet.has && this.existingNet.action === 'keep') this.net = v; },
+
+                'existingTel.has'(v) { this.tel = v; }
             },
-
-            selectPattern(p) {
-                if (this.contractPattern !== null) {
-                    const ok = confirm('契約種別を変更すると、現在の入力内容がリセットされます。変更しますか？');
-                    if (!ok) return;
-                }
-                this.contractPattern = p;
-                this.tv = 'none'; this.net = 'none'; this.tel = false;
-                this.stb = 'ls500b'; this.router = false; this.isKeizokuWari = false;
-                this.ottHulu = false; this.ottFod = false; this.ottUnext = false;
-                this.netOps = { jSafe: false, spamFilter: false, addMail: false };
-                this.telOps = { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false };
-                this.existingTv = { has: false, plan: 'premium', action: 'keep' };
-                this.existingNet = { has: false, plan: 'net10g', action: 'keep' };
-                this.existingTel = { has: false };
-                this.mobileLines = [];
-                this.calc = null;
-                this.recommendations = [];
-            },
-
-            printPDF() {
-                this.showSummaryDetail = false;
-                setTimeout(() => { window.print(); }, 300);
-            },
-
-            formatPrice(val) {
-                if (val == null || isNaN(val) || !isFinite(val)) return '0';
-                return Number(val).toLocaleString('ja-JP');
-            },
-
-            getDiffText(diff) {
-                if (diff < 0) return `月額${this.formatPrice(Math.abs(diff))}円安くなります`;
-                if (diff === 0) return `月額差額なしでサービス向上`;
-                return `月額${this.formatPrice(diff)}円の追加でサービス向上`;
-            },
-
-            setExistingMobileCount(count) {
-                let existing = this.mobileLines.filter(l => l.source === 'existing');
-                let others = this.mobileLines.filter(l => l.source !== 'existing');
-                count = Math.min(Math.max(0, count), 5);
-
-                if (count > existing.length) {
-                    const addNum = count - existing.length;
-                    for (let i = 0; i < addNum; i++) {
-                        existing.push({ source: 'existing', status: 'keep', contractType: null, plan: 'voice3', call: 'none', support: 'none', deviceBuy: 'no', device: 'ip16', devicePay: '24' });
+            methods: {
+                scheduleFetch() {
+                    clearTimeout(this._fetchTimer);
+                    this._fetchTimer = setTimeout(() => { this.fetchCalculation(); }, 250);
+                },
+                async fetchCalculation() {
+                    if (!this.contractPattern) { this.calc = null; this.recommendations = []; return; }
+                    this.isLoading = true;
+                    this.apiError = null;
+                    try {
+                        const res = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.statePayload)
+                        });
+                        if (!res.ok) throw new Error('API応答エラー: ' + res.status);
+                        const data = await res.json();
+                        this.uiOptions = data.options;
+                        this.calc = data.calculation;
+                        this.recommendations = data.recommendations || [];
+                    } catch (err) {
+                        this.apiError = '料金計算サーバーとの通信に失敗しました。しばらくしてから再度お試しください。';
+                        console.error(err);
+                    } finally {
+                        this.isLoading = false;
                     }
-                } else if (count < existing.length) {
-                    existing = existing.slice(0, count);
-                }
-                this.mobileLines = [...existing, ...others].slice(0, 5);
-            },
+                },
+                tvLabel(key) { const o = (this.uiOptions.tv || []).find(x => x.key === key); return o ? o.label : ''; },
+                netLabel(key) { const o = (this.uiOptions.net || []).find(x => x.key === key); return o ? o.label : ''; },
+                stbName(key) { const o = (this.uiOptions.stb || []).find(x => x.key === key); return o ? o.name : ''; },
+                deviceInfo(key) { return (this.uiOptions.devices || []).find(d => d.key === key) || { price: 0, pay24: 0, pay48: 0, name: '' }; },
+                ottOption(key) { return (this.uiOptions.ott || []).find(o => o.key === key) || { label: '', price: 0 }; },
+                lineCalc(index) {
+                    return (this.calc && this.calc.mobile && this.calc.mobile.lines && this.calc.mobile.lines[index])
+                        || { total: 0, discounts: [], discountTotal: 0, deviceOneTimePrice: 0, devicePriceRaw: 0, planLabel: '', planPrice: 0, contractTypeLabel: '', deviceName: '', appliedDiscountTotal: 0, deviceDiscountDetail: { total: 0, per24: 0, per48: 0 }, isBakuwariTarget: false };
+                },
 
-            setMobileCount(count) {
-                let existing = this.mobileLines.filter(l => l.source === 'existing');
-                let others = this.mobileLines.filter(l => l.source !== 'existing');
-                const maxAddable = 5 - existing.length;
-                count = Math.min(Math.max(0, count), maxAddable);
+                hasBakuwariTarget() {
+                    return this.mobileLines.some((l, idx) => this.lineCalc(idx).isBakuwariTarget);
+                },
+                getOneTimePrice(index, deviceKey) {
+                    const d = this.deviceInfo(deviceKey);
+                    const lc = this.lineCalc(index);
+                    const discount = lc.deviceDiscountDetail ? lc.deviceDiscountDetail.total : 0;
+                    return Math.max(0, d.price - discount);
+                },
+                getInstallmentPrice(index, deviceKey, payTimes) {
+                    const d = this.deviceInfo(deviceKey);
+                    const lc = this.lineCalc(index);
+                    const base = (String(payTimes) === '24') ? d.pay24 : d.pay48;
+                    const discount = lc.deviceDiscountDetail ? ((String(payTimes) === '24') ? lc.deviceDiscountDetail.per24 : lc.deviceDiscountDetail.per48) : 0;
+                    return Math.max(0, base - discount);
+                },
+                isTvPenaltyTarget() {
+                    return this.isAdd ? !!(this.calc && this.calc.initCost && this.calc.initCost.tvNewlyAdded) : this.tv !== 'none';
+                },
+                isNetPenaltyTarget() {
+                    return this.isAdd ? !!(this.calc && this.calc.initCost && this.calc.initCost.netNewlyAdded) : this.net !== 'none';
+                },
+                isTelPenaltyTarget() {
+                    return !this.isMansion && (this.isAdd ? !!(this.calc && this.calc.initCost && this.calc.initCost.telNewlyAdded) : !!this.tel);
+                },
+                getPenaltyRate(type) {
+                    if (!this.calc || !this.calc.initCost || !this.calc.initCost.penaltyRates) return 0;
+                    return this.calc.initCost.penaltyRates[type] || 0;
+                },
 
-                if (count > others.length) {
-                    const addNum = count - others.length;
-                    for (let i = 0; i < addNum; i++) {
-                        others.push({ source: 'new', status: null, contractType: 'new', plan: 'voice3', call: 'none', support: 'none', deviceBuy: 'no', device: 'ip16', devicePay: '24' });
+                checkTelPack() {
+                    if (this.isTelOpsUpdating) return;
+                    const opts = this.uiOptions.telOptions || {};
+                    let total = 0;
+                    if (this.telOps.disp) total += (opts.disp ? opts.disp.price : 0);
+                    if (this.telOps.req) total += (opts.req ? opts.req.price : 0);
+                    if (this.telOps.catchDisp) total += (opts.catchDisp ? opts.catchDisp.price : 0);
+                    if (this.telOps.catchCall) total += (opts.catchCall ? opts.catchCall.price : 0);
+                    if (opts.pack && total >= opts.pack.price) {
+                        this.isTelOpsUpdating = true;
+                        this.telOps.pack = true;
+                        this.telOps.disp = true; this.telOps.req = true; this.telOps.catchDisp = true; this.telOps.catchCall = true;
+                        this.$nextTick(() => { this.isTelOpsUpdating = false; });
                     }
-                } else if (count < others.length) {
-                    others = others.slice(0, count);
-                }
-                this.mobileLines = [...existing, ...others];
-            },
+                },
 
-            applyRecommendation(rec) {
-                const msg = `${rec.title}\n\n【月額料金（全体）】\n現在: ${this.formatPrice(rec.currentTotal)}円/月\n変更後: ${this.formatPrice(rec.recommendedTotal)}円/月\n\n${this.getDiffText(rec.diff)}\n\nこのプランを適用しますか？`;
-                if (!confirm(msg)) return;
-                const patch = rec.applyPatch || {};
-                if (patch.tv !== undefined) this.tv = patch.tv;
-                if (patch.net !== undefined) {
-                    this.net = patch.net;
-                    if (patch.isKeizokuWari !== undefined) this.isKeizokuWari = patch.isKeizokuWari;
-                }
-                if (patch.mobilePlanChanges) {
-                    patch.mobilePlanChanges.forEach(c => {
-                        if (this.mobileLines[c.lineIndex]) this.mobileLines[c.lineIndex].plan = c.plan;
-                    });
+                selectPattern(p) {
+                    if (this.contractPattern !== null) {
+                        const ok = confirm('契約種別を変更すると、現在の入力内容がリセットされます。変更しますか？');
+                        if (!ok) return;
+                    }
+                    this.contractPattern = p;
+                    this.tv = 'none'; this.net = 'none'; this.tel = false;
+                    this.stb = 'ls500b'; this.router = false; this.isKeizokuWari = false;
+                    this.ottHulu = false; this.ottFod = false; this.ottUnext = false;
+                    this.netOps = { jSafe: false, spamFilter: false, addMail: false };
+                    this.telOps = { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false };
+                    this.existingTv = { has: false, plan: 'premium', action: 'keep' };
+                    this.existingNet = { has: false, plan: 'net10g', action: 'keep' };
+                    this.existingTel = { has: false };
+                    this.mobileLines = [];
+                    this.calc = null;
+                    this.recommendations = [];
+                },
+
+                printPDF() {
+                    this.showSummaryDetail = false;
+                    setTimeout(() => { window.print(); }, 300);
+                },
+
+                formatPrice(val) {
+                    if (val == null || isNaN(val) || !isFinite(val)) return '0';
+                    return Number(val).toLocaleString('ja-JP');
+                },
+
+                getDiffText(diff) {
+                    if (diff < 0) return `月額${this.formatPrice(Math.abs(diff))}円安くなります`;
+                    if (diff === 0) return `月額差額なしでサービス向上`;
+                    return `月額${this.formatPrice(diff)}円の追加でサービス向上`;
+                },
+
+                setExistingMobileCount(count) {
+                    let existing = this.mobileLines.filter(l => l.source === 'existing');
+                    let others = this.mobileLines.filter(l => l.source !== 'existing');
+                    count = Math.min(Math.max(0, count), 5);
+
+                    if (count > existing.length) {
+                        const addNum = count - existing.length;
+                        for (let i = 0; i < addNum; i++) {
+                            existing.push({ source: 'existing', status: 'keep', contractType: null, plan: 'voice3', call: 'none', support: 'none', deviceBuy: 'no', device: 'ip16', devicePay: '24' });
+                        }
+                    } else if (count < existing.length) {
+                        existing = existing.slice(0, count);
+                    }
+                    this.mobileLines = [...existing, ...others].slice(0, 5);
+                },
+
+                setMobileCount(count) {
+                    let existing = this.mobileLines.filter(l => l.source === 'existing');
+                    let others = this.mobileLines.filter(l => l.source !== 'existing');
+                    const maxAddable = 5 - existing.length;
+                    count = Math.min(Math.max(0, count), maxAddable);
+
+                    if (count > others.length) {
+                        const addNum = count - others.length;
+                        for (let i = 0; i < addNum; i++) {
+                            others.push({ source: 'new', status: null, contractType: 'new', plan: 'voice3', call: 'none', support: 'none', deviceBuy: 'no', device: 'ip16', devicePay: '24' });
+                        }
+                    } else if (count < others.length) {
+                        others = others.slice(0, count);
+                    }
+                    this.mobileLines = [...existing, ...others];
+                },
+
+                applyRecommendation(rec) {
+                    const msg = `${rec.title}\n\n【月額料金（全体）】\n現在: ${this.formatPrice(rec.currentTotal)}円/月\n変更後: ${this.formatPrice(rec.recommendedTotal)}円/月\n\n${this.getDiffText(rec.diff)}\n\nこのプランを適用しますか？`;
+                    if (!confirm(msg)) return;
+                    const patch = rec.applyPatch || {};
+                    if (patch.tv !== undefined) this.tv = patch.tv;
+                    if (patch.net !== undefined) {
+                        this.net = patch.net;
+                        if (patch.isKeizokuWari !== undefined) this.isKeizokuWari = patch.isKeizokuWari;
+                    }
+                    if (patch.mobilePlanChanges) {
+                        patch.mobilePlanChanges.forEach(c => {
+                            if (this.mobileLines[c.lineIndex]) this.mobileLines[c.lineIndex].plan = c.plan;
+                        });
+                    }
                 }
             }
-        }
-    }).mount('#app');
+        });
+
+        app.config.errorHandler = (err, vm, info) => {
+            console.error('Vue Error:', err, info);
+            showErrorAndFallback('⚠️ 画面の描画中にエラーが発生しました。設定や通信状況をご確認ください。');
+        };
+
+        app.mount('#app');
+    } catch (e) {
+        console.error("Vue Initialization Error:", e);
+        showErrorAndFallback('⚠️ アプリケーションの初期化中にエラーが発生しました。');
+    }
 }
 
 if (document.readyState === 'loading') {

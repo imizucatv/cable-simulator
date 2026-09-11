@@ -27,10 +27,12 @@
                     }
                 }
             }
+        } else {
+            window.tailwindLoadError = true;
         }
     </script>
     <style>
-        /* Vue起動前 または 起動失敗時 に動的要素を隠すためのスタイル（完全な白画面を防ぐ） */
+        /* Vue起動前またはエラー時の白画面防止用CSS */
         [v-cloak] [v-if], 
         [v-cloak] [v-else-if], 
         [v-cloak] [v-else], 
@@ -341,13 +343,13 @@
                                         <div class="text-right"><span class="font-bold text-characterDark text-base">+{{ formatPrice(calc.net ? calc.net.potentialRouterPrice : 880) }}円/月</span><span v-if="!isMansion && net==='net1g'&&isKeizokuWari" class="text-red-600 text-xs sm:text-sm block font-bold mt-1">※光1G継続割セット値引</span></div>
                                     </label>
                                     <label class="flex justify-between items-center cursor-pointer p-3 sm:p-4 border-2 rounded-xl transition-colors" :class="netOps.jSafe ? 'border-character bg-characterLight' : 'border-slate-200 hover:bg-slate-50'">
-                                        <div class="flex items-center"><input type="checkbox" v-model="netOps.jSafe" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-800 text-base">J-SAFE (セキュリティソフト)</span></div><span class="font-bold text-characterDark text-base">+{{ formatPrice(uiOptions.netAddOns.jSafe) }}円/月</span>
+                                        <div class="flex items-center"><input type="checkbox" v-model="netOps.jSafe" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-800 text-base">J-SAFE (セキュリティソフト)</span></div><span class="font-bold text-characterDark text-base">+{{ formatPrice(getNetAddOnPrice('jSafe')) }}円/月</span>
                                     </label>
                                     <label class="flex justify-between items-center cursor-pointer p-3 sm:p-4 border-2 rounded-xl transition-colors" :class="netOps.spamFilter ? 'border-character bg-characterLight' : 'border-slate-200 hover:bg-slate-50'">
-                                        <div class="flex items-center"><input type="checkbox" v-model="netOps.spamFilter" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-800 text-base">迷惑メールフィルタ</span></div><span class="font-bold text-characterDark text-base">+{{ formatPrice(uiOptions.netAddOns.spamFilter) }}円/月</span>
+                                        <div class="flex items-center"><input type="checkbox" v-model="netOps.spamFilter" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-800 text-base">迷惑メールフィルタ</span></div><span class="font-bold text-characterDark text-base">+{{ formatPrice(getNetAddOnPrice('spamFilter')) }}円/月</span>
                                     </label>
                                     <label class="flex justify-between items-center cursor-pointer p-3 sm:p-4 border-2 rounded-xl transition-colors" :class="netOps.addMail ? 'border-character bg-characterLight' : 'border-slate-200 hover:bg-slate-50'">
-                                        <div class="flex items-center"><input type="checkbox" v-model="netOps.addMail" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-800 text-base">追加メールアカウント</span></div><span class="font-bold text-characterDark text-base">+{{ formatPrice(uiOptions.netAddOns.addMail) }}円/月</span>
+                                        <div class="flex items-center"><input type="checkbox" v-model="netOps.addMail" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-800 text-base">追加メールアカウント</span></div><span class="font-bold text-characterDark text-base">+{{ formatPrice(getNetAddOnPrice('addMail')) }}円/月</span>
                                     </label>
                                 </div>
                             </div>
@@ -381,17 +383,17 @@
                                 <div class="p-3 sm:p-5 bg-white space-y-3">
                                     <label class="flex justify-between items-center cursor-pointer p-4 rounded-xl border-2 transition-colors mb-4" :class="telOps.pack ? 'border-character bg-characterLight' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'">
                                         <div class="flex items-center"><input type="checkbox" v-model="telOps.pack" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-800 text-base">オプションお得パック (4点ｾｯﾄ)</span></div>
-                                        <span class="font-bold text-characterDark text-base">+{{ formatPrice(uiOptions.telOptions.pack.price) }}円/月 <span class="line-through text-slate-500 font-normal text-sm ml-2">{{ formatPrice(uiOptions.telOptions.pack.originalPrice) }}円</span></span>
+                                        <span class="font-bold text-characterDark text-base">+{{ formatPrice(getTelOptPrice('pack', 'price')) }}円/月 <span class="line-through text-slate-500 font-normal text-sm ml-2">{{ formatPrice(getTelOptPrice('pack', 'originalPrice')) }}円</span></span>
                                     </label>
 
                                     <div class="space-y-2 pl-2 sm:pl-4">
-                                        <label class="flex justify-between items-center p-3 rounded-lg border transition-opacity" :class="telOps.pack ? 'opacity-60 cursor-not-allowed bg-slate-100 border-slate-200' : 'cursor-pointer hover:bg-slate-50 border-slate-300'"><div class="flex items-center"><input type="checkbox" v-model="telOps.disp" :disabled="telOps.pack" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-700">発信番号表示</span></div><span class="font-bold text-slate-700">+{{ formatPrice(uiOptions.telOptions.disp.price) }}円/月</span></label>
-                                        <label class="flex justify-between items-center p-3 rounded-lg border transition-opacity" :class="telOps.pack ? 'opacity-60 cursor-not-allowed bg-slate-100 border-slate-200' : 'cursor-pointer hover:bg-slate-50 border-slate-300'"><div class="flex items-center"><input type="checkbox" v-model="telOps.req" :disabled="telOps.pack" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-700">番号通知リクエスト</span></div><span class="font-bold text-slate-700">+{{ formatPrice(uiOptions.telOptions.req.price) }}円/月</span></label>
-                                        <label class="flex justify-between items-center p-3 rounded-lg border transition-opacity" :class="telOps.pack ? 'opacity-60 cursor-not-allowed bg-slate-100 border-slate-200' : 'cursor-pointer hover:bg-slate-50 border-slate-300'"><div class="flex items-center"><input type="checkbox" v-model="telOps.catchDisp" :disabled="telOps.pack" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-700">割込番号表示</span></div><span class="font-bold text-slate-700">+{{ formatPrice(uiOptions.telOptions.catchDisp.price) }}円/月</span></label>
-                                        <label class="flex justify-between items-center p-3 rounded-lg border transition-opacity" :class="telOps.pack ? 'opacity-60 cursor-not-allowed bg-slate-100 border-slate-200' : 'cursor-pointer hover:bg-slate-50 border-slate-300'"><div class="flex items-center"><input type="checkbox" v-model="telOps.catchCall" :disabled="telOps.pack" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-700">割込通話</span></div><span class="font-bold text-slate-700">+{{ formatPrice(uiOptions.telOptions.catchCall.price) }}円/月</span></label>
+                                        <label class="flex justify-between items-center p-3 rounded-lg border transition-opacity" :class="telOps.pack ? 'opacity-60 cursor-not-allowed bg-slate-100 border-slate-200' : 'cursor-pointer hover:bg-slate-50 border-slate-300'"><div class="flex items-center"><input type="checkbox" v-model="telOps.disp" :disabled="telOps.pack" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-700">発信番号表示</span></div><span class="font-bold text-slate-700">+{{ formatPrice(getTelOptPrice('disp', 'price')) }}円/月</span></label>
+                                        <label class="flex justify-between items-center p-3 rounded-lg border transition-opacity" :class="telOps.pack ? 'opacity-60 cursor-not-allowed bg-slate-100 border-slate-200' : 'cursor-pointer hover:bg-slate-50 border-slate-300'"><div class="flex items-center"><input type="checkbox" v-model="telOps.req" :disabled="telOps.pack" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-700">番号通知リクエスト</span></div><span class="font-bold text-slate-700">+{{ formatPrice(getTelOptPrice('req', 'price')) }}円/月</span></label>
+                                        <label class="flex justify-between items-center p-3 rounded-lg border transition-opacity" :class="telOps.pack ? 'opacity-60 cursor-not-allowed bg-slate-100 border-slate-200' : 'cursor-pointer hover:bg-slate-50 border-slate-300'"><div class="flex items-center"><input type="checkbox" v-model="telOps.catchDisp" :disabled="telOps.pack" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-700">割込番号表示</span></div><span class="font-bold text-slate-700">+{{ formatPrice(getTelOptPrice('catchDisp', 'price')) }}円/月</span></label>
+                                        <label class="flex justify-between items-center p-3 rounded-lg border transition-opacity" :class="telOps.pack ? 'opacity-60 cursor-not-allowed bg-slate-100 border-slate-200' : 'cursor-pointer hover:bg-slate-50 border-slate-300'"><div class="flex items-center"><input type="checkbox" v-model="telOps.catchCall" :disabled="telOps.pack" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-700">割込通話</span></div><span class="font-bold text-slate-700">+{{ formatPrice(getTelOptPrice('catchCall', 'price')) }}円/月</span></label>
                                     </div>
                                     <hr class="border-slate-300 my-5">
-                                    <label class="flex justify-between items-center cursor-pointer p-4 border-2 rounded-xl transition-colors" :class="telOps.transfer ? 'border-character bg-characterLight' : 'border-slate-300 hover:bg-slate-50'"><div class="flex items-center"><input type="checkbox" v-model="telOps.transfer" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-800 text-base">着信転送</span></div><span class="font-bold text-characterDark text-base">+{{ formatPrice(uiOptions.telOptions.transfer.price) }}円/月</span></label>
+                                    <label class="flex justify-between items-center cursor-pointer p-4 border-2 rounded-xl transition-colors" :class="telOps.transfer ? 'border-character bg-characterLight' : 'border-slate-300 hover:bg-slate-50'"><div class="flex items-center"><input type="checkbox" v-model="telOps.transfer" class="mr-3 text-character rounded w-5 h-5 border-slate-300"><span class="font-bold text-slate-800 text-base">着信転送</span></div><span class="font-bold text-characterDark text-base">+{{ formatPrice(getTelOptPrice('transfer', 'price')) }}円/月</span></label>
                                 </div>
                             </div>
                         </transition>
@@ -503,14 +505,14 @@
                                         <div class="space-y-4">
                                             <div class="flex flex-col sm:flex-row gap-3">
                                                 <button type="button" @click="line.call = 'none'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.call === 'none' ? 'bg-slate-200 font-bold border-slate-400 text-slate-800' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">定額なし</button>
-                                                <button type="button" @click="line.call = '10min'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.call === '10min' ? 'bg-characterLight border-character font-bold text-characterDark' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">10分定額 (+{{ formatPrice(uiOptions.mobileCallOptions['10min']) }}円)</button>
-                                                <button type="button" @click="line.call = 'unlimited'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.call === 'unlimited' ? 'bg-characterLight border-character font-bold text-characterDark' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">かけ放題 (+{{ formatPrice(uiOptions.mobileCallOptions.unlimited) }}円)</button>
+                                                <button type="button" @click="line.call = '10min'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.call === '10min' ? 'bg-characterLight border-character font-bold text-characterDark' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">10分定額 (+{{ formatPrice(getMobileCallPrice('10min')) }}円)</button>
+                                                <button type="button" @click="line.call = 'unlimited'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.call === 'unlimited' ? 'bg-characterLight border-character font-bold text-characterDark' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">かけ放題 (+{{ formatPrice(getMobileCallPrice('unlimited')) }}円)</button>
                                             </div>
                                             <select v-model="line.support" class="border-2 border-slate-300 p-4 rounded-xl w-full bg-white outline-none font-bold text-base text-slate-800">
                                                 <option value="none">安心パック・端末保証 なし</option>
-                                                <option value="packA">安心パックA (+{{ formatPrice(uiOptions.mobileSupportOptions.packA) }}円)</option>
-                                                <option value="packB">安心パックB for a/i (+{{ formatPrice(uiOptions.mobileSupportOptions.packB) }}円)</option>
-                                                <option value="hosho">端末保証 a/i (+{{ formatPrice(uiOptions.mobileSupportOptions.hosho) }}円)</option>
+                                                <option value="packA">安心パックA (+{{ formatPrice(getMobileSupportPrice('packA')) }}円)</option>
+                                                <option value="packB">安心パックB for a/i (+{{ formatPrice(getMobileSupportPrice('packB')) }}円)</option>
+                                                <option value="hosho">端末保証 a/i (+{{ formatPrice(getMobileSupportPrice('hosho')) }}円)</option>
                                             </select>
                                         </div>
                                     </div>
@@ -578,16 +580,16 @@
                                         <div class="space-y-4">
                                             <div class="flex flex-col sm:flex-row gap-3">
                                                 <button type="button" @click="line.call = 'none'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.call === 'none' ? 'bg-slate-200 font-bold border-slate-400 text-slate-800' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">定額なし</button>
-                                                <button type="button" @click="line.call = '10min'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.call === '10min' ? 'bg-characterLight border-character font-bold text-characterDark' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">10分定額 (+{{ formatPrice(uiOptions.mobileCallOptions['10min']) }}円)</button>
-                                                <button type="button" @click="line.call = 'unlimited'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.call === 'unlimited' ? 'bg-characterLight border-character font-bold text-characterDark' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">かけ放題 (+{{ formatPrice(uiOptions.mobileCallOptions.unlimited) }}円)</button>
+                                                <button type="button" @click="line.call = '10min'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.call === '10min' ? 'bg-characterLight border-character font-bold text-characterDark' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">10分定額 (+{{ formatPrice(getMobileCallPrice('10min')) }}円)</button>
+                                                <button type="button" @click="line.call = 'unlimited'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.call === 'unlimited' ? 'bg-characterLight border-character font-bold text-characterDark' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">かけ放題 (+{{ formatPrice(getMobileCallPrice('unlimited')) }}円)</button>
                                             </div>
 
                                             <div>
                                                 <select v-model="line.support" class="border-2 border-slate-300 p-4 rounded-xl w-full bg-white outline-none font-bold text-base text-slate-800">
                                                     <option value="none">安心パック・端末保証 なし</option>
-                                                    <option value="packA">安心パックA (+{{ formatPrice(uiOptions.mobileSupportOptions.packA) }}円)</option>
-                                                    <option value="packB">安心パックB for a/i (+{{ formatPrice(uiOptions.mobileSupportOptions.packB) }}円)</option>
-                                                    <option value="hosho">端末保証 a/i (+{{ formatPrice(uiOptions.mobileSupportOptions.hosho) }}円)</option>
+                                                    <option value="packA">安心パックA (+{{ formatPrice(getMobileSupportPrice('packA')) }}円)</option>
+                                                    <option value="packB">安心パックB for a/i (+{{ formatPrice(getMobileSupportPrice('packB')) }}円)</option>
+                                                    <option value="hosho">端末保証 a/i (+{{ formatPrice(getMobileSupportPrice('hosho')) }}円)</option>
                                                 </select>
                                                 <p class="text-sm text-slate-600 font-bold mt-3 pl-2">
                                                     ※安心パックA（セキュリティソフト＋専用コールセンター）。安心パックB for a/i（パックA＋端末補償無期限）。安心パックは各種申込み月＋1ヶ月無料！
@@ -850,9 +852,9 @@
                                         <div class="flex justify-between text-red-600" v-if="calc.net && calc.net.keizokuActive"><span>↳ 継続割</span><span>{{ formatPrice(calc.net.keizokuDiscount) }}円</span></div>
                                         <div class="flex justify-between" v-if="router"><span>iCNメッシュWi-Fi</span><span>+{{ formatPrice(calc.net ? calc.net.potentialRouterPrice : 880) }}円</span></div>
                                         <div class="flex justify-between text-red-600 text-xs" v-if="router && net==='net1g'&&isKeizokuWari"><span class="ml-3">↳ 光1G継続割セット値引</span><span>適用済</span></div>
-                                        <div class="flex justify-between" v-if="netOps.jSafe"><span>J-SAFE</span><span>+{{ formatPrice(uiOptions.netAddOns.jSafe) }}円</span></div>
-                                        <div class="flex justify-between" v-if="netOps.spamFilter"><span>迷惑メールフィルタ</span><span>+{{ formatPrice(uiOptions.netAddOns.spamFilter) }}円</span></div>
-                                        <div class="flex justify-between" v-if="netOps.addMail"><span>追加メール</span><span>+{{ formatPrice(uiOptions.netAddOns.addMail) }}円</span></div>
+                                        <div class="flex justify-between" v-if="netOps.jSafe"><span>J-SAFE</span><span>+{{ formatPrice(getNetAddOnPrice('jSafe')) }}円</span></div>
+                                        <div class="flex justify-between" v-if="netOps.spamFilter"><span>迷惑メールフィルタ</span><span>+{{ formatPrice(getNetAddOnPrice('spamFilter')) }}円</span></div>
+                                        <div class="flex justify-between" v-if="netOps.addMail"><span>追加メール</span><span>+{{ formatPrice(getNetAddOnPrice('addMail')) }}円</span></div>
                                     </div>
                                 </div>
                                 <span class="font-bold text-characterDark text-xl bg-white px-3 py-1 rounded border border-slate-200">{{ formatPrice(calc.net ? calc.net.total : 0) }}円</span>
@@ -864,14 +866,14 @@
                                     <div class="text-sm text-slate-600 mt-3 ml-4 space-y-1.5 font-bold">
                                         <div class="flex justify-between"><span>基本料</span><span>{{ formatPrice(uiOptions.telBase) }}円</span></div>
                                         <div class="flex justify-between text-slate-800"><span>↳ 迷惑電話自動ブロックサービス</span><span>0円 (要別途申込)</span></div>
-                                        <div class="flex justify-between" v-if="telOps.pack"><span>オプションお得パック</span><span>+{{ formatPrice(uiOptions.telOptions.pack.price) }}円</span></div>
+                                        <div class="flex justify-between" v-if="telOps.pack"><span>オプションお得パック</span><span>+{{ formatPrice(getTelOptPrice('pack', 'price')) }}円</span></div>
                                         <template v-else>
-                                            <div class="flex justify-between" v-if="telOps.disp"><span>発信番号表示</span><span>+{{ formatPrice(uiOptions.telOptions.disp.price) }}円</span></div>
-                                            <div class="flex justify-between" v-if="telOps.req"><span>番号通知リクエスト</span><span>+{{ formatPrice(uiOptions.telOptions.req.price) }}円</span></div>
-                                            <div class="flex justify-between" v-if="telOps.catchDisp"><span>割込番号表示</span><span>+{{ formatPrice(uiOptions.telOptions.catchDisp.price) }}円</span></div>
-                                            <div class="flex justify-between" v-if="telOps.catchCall"><span>割込通話</span><span>+{{ formatPrice(uiOptions.telOptions.catchCall.price) }}円</span></div>
+                                            <div class="flex justify-between" v-if="telOps.disp"><span>発信番号表示</span><span>+{{ formatPrice(getTelOptPrice('disp', 'price')) }}円</span></div>
+                                            <div class="flex justify-between" v-if="telOps.req"><span>番号通知リクエスト</span><span>+{{ formatPrice(getTelOptPrice('req', 'price')) }}円</span></div>
+                                            <div class="flex justify-between" v-if="telOps.catchDisp"><span>割込番号表示</span><span>+{{ formatPrice(getTelOptPrice('catchDisp', 'price')) }}円</span></div>
+                                            <div class="flex justify-between" v-if="telOps.catchCall"><span>割込通話</span><span>+{{ formatPrice(getTelOptPrice('catchCall', 'price')) }}円</span></div>
                                         </template>
-                                        <div class="flex justify-between" v-if="telOps.transfer"><span>着信転送</span><span>+{{ formatPrice(uiOptions.telOptions.transfer.price) }}円</span></div>
+                                        <div class="flex justify-between" v-if="telOps.transfer"><span>着信転送</span><span>+{{ formatPrice(getTelOptPrice('transfer', 'price')) }}円</span></div>
                                     </div>
                                 </div>
                                 <span class="font-bold text-characterDark text-xl bg-white px-3 py-1 rounded border border-slate-200">{{ formatPrice(calc.tel ? calc.tel.total : 0) }}円</span>
@@ -897,11 +899,11 @@
                                             <div class="font-bold text-slate-800 border-b-2 border-slate-100 pb-1.5 mb-2">回線 {{ idx + 1 }} <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded ml-1 font-normal">({{ lineCalc(idx).contractTypeLabel }})</span></div>
                                             <div class="space-y-1">
                                                 <div class="flex justify-between pl-2"><span>基本料({{ lineCalc(idx).planLabel }})</span><span>{{ formatPrice(lineCalc(idx).planPrice) }}円</span></div>
-                                                <div class="flex justify-between pl-2" v-if="line.call === '10min'"><span>10分定額</span><span>+{{ formatPrice(uiOptions.mobileCallOptions['10min']) }}円</span></div>
-                                                <div class="flex justify-between pl-2" v-if="line.call === 'unlimited'"><span>かけ放題</span><span>+{{ formatPrice(uiOptions.mobileCallOptions.unlimited) }}円</span></div>
-                                                <div class="flex justify-between pl-2" v-if="line.support === 'packA'"><span>安心パックA</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packA) }}円</span></div>
-                                                <div class="flex justify-between pl-2" v-if="line.support === 'packB'"><span>安心パックB for a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packB) }}円</span></div>
-                                                <div class="flex justify-between pl-2" v-if="line.support === 'hosho'"><span>端末保証 a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.hosho) }}円</span></div>
+                                                <div class="flex justify-between pl-2" v-if="line.call === '10min'"><span>10分定額</span><span>+{{ formatPrice(getMobileCallPrice('10min')) }}円</span></div>
+                                                <div class="flex justify-between pl-2" v-if="line.call === 'unlimited'"><span>かけ放題</span><span>+{{ formatPrice(getMobileCallPrice('unlimited')) }}円</span></div>
+                                                <div class="flex justify-between pl-2" v-if="line.support === 'packA'"><span>安心パックA</span><span>+{{ formatPrice(getMobileSupportPrice('packA')) }}円</span></div>
+                                                <div class="flex justify-between pl-2" v-if="line.support === 'packB'"><span>安心パックB for a/i</span><span>+{{ formatPrice(getMobileSupportPrice('packB')) }}円</span></div>
+                                                <div class="flex justify-between pl-2" v-if="line.support === 'hosho'"><span>端末保証 a/i</span><span>+{{ formatPrice(getMobileSupportPrice('hosho')) }}円</span></div>
                                                 
                                                 <div class="flex justify-between pl-2 font-bold text-rose-800 bg-rose-50 border border-rose-200 p-2 rounded-lg mt-1" v-if="line.deviceBuy === 'yes' && line.devicePay === '1'">
                                                     <div>
@@ -1216,9 +1218,9 @@
                             <div class="flex justify-between mb-1"><span>{{ netLabel(net) }} (基本料)</span><span>{{ formatPrice(calc.net ? calc.net.basePrice : 0) }}円</span></div>
                             <div class="flex justify-between text-red-600 mb-1" v-if="calc.net && calc.net.keizokuActive"><span>↳ 継続利用割引</span><span>{{ formatPrice(calc.net.keizokuDiscount) }}円</span></div>
                             <div class="flex justify-between text-gray-700" v-if="router"><span>iCNメッシュWi-Fi</span><span>+{{ formatPrice(calc.net ? calc.net.potentialRouterPrice : 880) }}円</span></div>
-                            <div class="flex justify-between text-gray-700" v-if="netOps.jSafe"><span>J-SAFE</span><span>+{{ formatPrice(uiOptions.netAddOns.jSafe) }}円</span></div>
-                            <div class="flex justify-between text-gray-700" v-if="netOps.spamFilter"><span>迷惑メールフィルタ</span><span>+{{ formatPrice(uiOptions.netAddOns.spamFilter) }}円</span></div>
-                            <div class="flex justify-between text-gray-700" v-if="netOps.addMail"><span>追加メール</span><span>+{{ formatPrice(uiOptions.netAddOns.addMail) }}円</span></div>
+                            <div class="flex justify-between text-gray-700" v-if="netOps.jSafe"><span>J-SAFE</span><span>+{{ formatPrice(getNetAddOnPrice('jSafe')) }}円</span></div>
+                            <div class="flex justify-between text-gray-700" v-if="netOps.spamFilter"><span>迷惑メールフィルタ</span><span>+{{ formatPrice(getNetAddOnPrice('spamFilter')) }}円</span></div>
+                            <div class="flex justify-between text-gray-700" v-if="netOps.addMail"><span>追加メール</span><span>+{{ formatPrice(getNetAddOnPrice('addMail')) }}円</span></div>
                         </td>
                         <td class="border-2 border-gray-300 p-2.5 text-right align-bottom text-base">{{ formatPrice(calc.net ? calc.net.total : 0) }}円</td>
                     </tr>
@@ -1228,14 +1230,14 @@
                         <td class="border-2 border-gray-300 p-2.5 text-xs">
                             <div class="flex justify-between mb-1"><span>ケーブルプラス電話 (基本料)</span><span>{{ formatPrice(uiOptions.telBase) }}円</span></div>
                             <div class="flex justify-between text-gray-800"><span>↳ 迷惑電話自動ブロックサービス</span><span>0円 (要別途申込)</span></div>
-                            <div class="flex justify-between text-gray-700" v-if="telOps.pack"><span>オプションお得パック</span><span>+{{ formatPrice(uiOptions.telOptions.pack.price) }}円</span></div>
+                            <div class="flex justify-between text-gray-700" v-if="telOps.pack"><span>オプションお得パック</span><span>+{{ formatPrice(getTelOptPrice('pack', 'price')) }}円</span></div>
                             <template v-else>
-                                <div class="flex justify-between text-gray-700" v-if="telOps.disp"><span>発信番号表示</span><span>+{{ formatPrice(uiOptions.telOptions.disp.price) }}円</span></div>
-                                <div class="flex justify-between text-gray-700" v-if="telOps.req"><span>番号通知リクエスト</span><span>+{{ formatPrice(uiOptions.telOptions.req.price) }}円</span></div>
-                                <div class="flex justify-between text-gray-700" v-if="telOps.catchDisp"><span>割込番号表示</span><span>+{{ formatPrice(uiOptions.telOptions.catchDisp.price) }}円</span></div>
-                                <div class="flex justify-between text-gray-700" v-if="telOps.catchCall"><span>割込通話</span><span>+{{ formatPrice(uiOptions.telOptions.catchCall.price) }}円</span></div>
+                                <div class="flex justify-between text-gray-700" v-if="telOps.disp"><span>発信番号表示</span><span>+{{ formatPrice(getTelOptPrice('disp', 'price')) }}円</span></div>
+                                <div class="flex justify-between text-gray-700" v-if="telOps.req"><span>番号通知リクエスト</span><span>+{{ formatPrice(getTelOptPrice('req', 'price')) }}円</span></div>
+                                <div class="flex justify-between text-gray-700" v-if="telOps.catchDisp"><span>割込番号表示</span><span>+{{ formatPrice(getTelOptPrice('catchDisp', 'price')) }}円</span></div>
+                                <div class="flex justify-between text-gray-700" v-if="telOps.catchCall"><span>割込通話</span><span>+{{ formatPrice(getTelOptPrice('catchCall', 'price')) }}円</span></div>
                             </template>
-                            <div class="flex justify-between text-gray-700" v-if="telOps.transfer"><span>着信転送</span><span>+{{ formatPrice(uiOptions.telOptions.transfer.price) }}円</span></div>
+                            <div class="flex justify-between text-gray-700" v-if="telOps.transfer"><span>着信転送</span><span>+{{ formatPrice(getTelOptPrice('transfer', 'price')) }}円</span></div>
                         </td>
                         <td class="border-2 border-gray-300 p-2.5 text-right align-bottom text-base">{{ formatPrice(calc.tel ? calc.tel.total : 0) }}円</td>
                     </tr>
@@ -1259,11 +1261,11 @@
                                     <span class="text-gray-600 bg-gray-100 px-1 rounded">[{{ lineCalc(idx).contractTypeLabel }}]</span>
                                 </div>
                                 <div class="flex justify-between pl-2"><span>基本料</span><span>{{ formatPrice(lineCalc(idx).planPrice) }}円</span></div>
-                                <div class="flex justify-between pl-2 text-gray-700" v-if="line.call === '10min'"><span>10分定額</span><span>+{{ formatPrice(uiOptions.mobileCallOptions['10min']) }}円</span></div>
-                                <div class="flex justify-between pl-2 text-gray-700" v-if="line.call === 'unlimited'"><span>かけ放題</span><span>+{{ formatPrice(uiOptions.mobileCallOptions.unlimited) }}円</span></div>
-                                <div class="flex justify-between pl-2 text-gray-700" v-if="line.support === 'packA'"><span>安心パックA</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packA) }}円</span></div>
-                                <div class="flex justify-between pl-2 text-gray-700" v-if="line.support === 'packB'"><span>安心パックB for a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packB) }}円</span></div>
-                                <div class="flex justify-between pl-2 text-gray-700" v-if="line.support === 'hosho'"><span>端末保証 a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.hosho) }}円</span></div>
+                                <div class="flex justify-between pl-2 text-gray-700" v-if="line.call === '10min'"><span>10分定額</span><span>+{{ formatPrice(getMobileCallPrice('10min')) }}円</span></div>
+                                <div class="flex justify-between pl-2 text-gray-700" v-if="line.call === 'unlimited'"><span>かけ放題</span><span>+{{ formatPrice(getMobileCallPrice('unlimited')) }}円</span></div>
+                                <div class="flex justify-between pl-2 text-gray-700" v-if="line.support === 'packA'"><span>安心パックA</span><span>+{{ formatPrice(getMobileSupportPrice('packA')) }}円</span></div>
+                                <div class="flex justify-between pl-2 text-gray-700" v-if="line.support === 'packB'"><span>安心パックB for a/i</span><span>+{{ formatPrice(getMobileSupportPrice('packB')) }}円</span></div>
+                                <div class="flex justify-between pl-2 text-gray-700" v-if="line.support === 'hosho'"><span>端末保証 a/i</span><span>+{{ formatPrice(getMobileSupportPrice('hosho')) }}円</span></div>
 
                                 <div v-if="line.deviceBuy === 'yes'" class="pl-2 mt-1 border-t-2 border-gray-200 pt-1 bg-rose-50 p-1.5 rounded border border-rose-200">
                                     <div class="flex justify-between font-extrabold text-rose-900">
@@ -1425,10 +1427,36 @@ function initApp() {
                     isLoading: false,
                     apiError: null,
                     uiOptions: {
-                        tv: [],
-                        net: [],
-                        mobilePlans: [],
-                        stb: [],
+                        tv: [
+                            { key: 'none', label: '利用しない', price: 0 },
+                            { key: 'premium', label: '光プレミアム', price: 4504 },
+                            { key: 'standard', label: '光スタンダード', price: 3872 },
+                            { key: 'bs', label: '光BS', price: 2618 },
+                            { key: 'compact', label: '光コンパクト', price: 1650 }
+                        ],
+                        net: [
+                            { key: 'none', label: '利用しない', price: 0 },
+                            { key: 'net10g', label: '光10G', price: 7370 },
+                            { key: 'net1g', label: '光1G', price: 5027 },
+                            { key: 'net300m', label: '光300M', price: 4713 },
+                            { key: 'net8m', label: '光8M', price: 3300 },
+                            { key: 'net1m', label: '光1M', price: 1413 }
+                        ],
+                        mobilePlans: [
+                            { key: 'voice1', label: '音声 1GB', price: 1628 },
+                            { key: 'voice3', label: '音声 3GB', price: 1958 },
+                            { key: 'voice10', label: '音声 10GB', price: 2728 },
+                            { key: 'voice20', label: '音声 20GB', price: 3278 },
+                            { key: 'voice50', label: '音声 50GB', price: 5368 },
+                            { key: 'data3', label: 'データ 3GB', price: 1650 },
+                            { key: 'data10', label: 'データ 10GB', price: 2288 },
+                            { key: 'data20', label: 'データ 20GB', price: 2838 }
+                        ],
+                        stb: [
+                            { key: 'ls500b', name: 'TZ-LS500B(標準)', price: 0, desc: 'コンパクト・録画対応' },
+                            { key: 'ht3500bw', name: 'TZ-HT3500BW', price: 770, desc: '2TB HDD・トリプル' },
+                            { key: 'lt1000bw', name: 'TZ-LT1000BW', price: 682, desc: '外付けHDD対応・トリプル' }
+                        ],
                         devices: [
                             { key: 'ip16', name: 'iPhone 16 (128GB)', price: 132000, pay24: 5720, pay48: 2860 },
                             { key: 'px10a', name: 'Google Pixel 10a (128GB)', price: 91300, pay24: 3960, pay48: 1980 },
@@ -1436,12 +1464,23 @@ function initApp() {
                             { key: 'aqw5', name: 'AQUOS wish5 (128GB)', price: 33000, pay24: 1540, pay48: 770 },
                             { key: 'oppo_a5', name: 'OPPO A5 5G (128GB)', price: 28600, pay24: 1320, pay48: 660 }
                         ],
-                        ott: [],
-                        telOptions: {},
-                        netAddOns: {},
-                        mobileCallOptions: {},
-                        mobileSupportOptions: {},
-                        telBase: 0
+                        ott: [
+                            { key: 'hulu', label: 'Hulu', price: 1026 },
+                            { key: 'fod', label: 'FOD', price: 1320 },
+                            { key: 'unext', label: 'U-NEXT', price: 2189 }
+                        ],
+                        telBase: 1639,
+                        telOptions: {
+                            pack: { price: 550, originalPrice: 1100 },
+                            disp: { price: 440 },
+                            req: { price: 220 },
+                            catchDisp: { price: 110 },
+                            catchCall: { price: 330 },
+                            transfer: { price: 550 }
+                        },
+                        netAddOns: { jSafe: 330, spamFilter: 104, addMail: 220 },
+                        mobileCallOptions: { none: 0, '10min': 880, unlimited: 1650 },
+                        mobileSupportOptions: { none: 0, packA: 440, packB: 660, hosho: 440 }
                     },
                     calc: null,
                     recommendations: [],
@@ -1546,15 +1585,34 @@ function initApp() {
                         });
                         if (!res.ok) throw new Error('API応答エラー: ' + res.status);
                         const data = await res.json();
-                        this.uiOptions = data.options;
+                        if (data.options) this.uiOptions = data.options;
                         this.calc = data.calculation;
                         this.recommendations = data.recommendations || [];
                     } catch (err) {
-                        this.apiError = '料金計算サーバーとの通信に失敗しました。しばらくしてから再度お試しください。';
-                        console.error(err);
+                        console.warn('API接続に失敗したため、ローカル計算処理を実行します。', err);
+                        // API通信失敗時のフォールバック計算
+                        const res = runLocalSimulation(this.statePayload);
+                        if (res.options) this.uiOptions = res.options;
+                        this.calc = res.calculation;
+                        this.recommendations = res.recommendations || [];
                     } finally {
                         this.isLoading = false;
                     }
+                },
+                getNetAddOnPrice(key) {
+                    return (this.uiOptions && this.uiOptions.netAddOns && this.uiOptions.netAddOns[key]) || 0;
+                },
+                getTelOptPrice(key, subKey) {
+                    if (this.uiOptions && this.uiOptions.telOptions && this.uiOptions.telOptions[key]) {
+                        return this.uiOptions.telOptions[key][subKey] || 0;
+                    }
+                    return 0;
+                },
+                getMobileCallPrice(key) {
+                    return (this.uiOptions && this.uiOptions.mobileCallOptions && this.uiOptions.mobileCallOptions[key]) || 0;
+                },
+                getMobileSupportPrice(key) {
+                    return (this.uiOptions && this.uiOptions.mobileSupportOptions && this.uiOptions.mobileSupportOptions[key]) || 0;
                 },
                 tvLabel(key) { const o = (this.uiOptions.tv || []).find(x => x.key === key); return o ? o.label : ''; },
                 netLabel(key) { const o = (this.uiOptions.net || []).find(x => x.key === key); return o ? o.label : ''; },

@@ -542,7 +542,7 @@
                                     </div>
                                     <div class="flex gap-3 mb-4 text-sm">
                                         <button type="button" @click="line.deviceBuy = 'no'" class="p-3 rounded-lg flex-1 text-center border-2 bg-white transition-all font-bold" :class="line.deviceBuy === 'no' ? 'border-amber-500 text-amber-950 ring-1 ring-amber-400' : 'border-slate-200 text-slate-600'">持込 (購入しない)</button>
-                                        <button type="button" @click="line.deviceBuy = 'yes'" class="p-3 rounded-lg flex-1 text-center border-2 bg-white transition-all font-bold" :class="line.deviceBuy === 'yes' ? 'border-amber-500 text-amber-950 ring-1 ring-amber-400 shadow-sm' : 'border-slate-200 text-slate-600'">端末を新規購入する</button>
+                                        <button type="button" @click="line.deviceBuy = 'yes'; if (calc && calc.hasNetCampaign) line.devicePay = '1';" class="p-3 rounded-lg flex-1 text-center border-2 bg-white transition-all font-bold" :class="line.deviceBuy === 'yes' ? 'border-amber-500 text-amber-950 ring-1 ring-amber-400 shadow-sm' : 'border-slate-200 text-slate-600'">端末を新規購入する</button>
                                     </div>
 
                                     <transition name="fade">

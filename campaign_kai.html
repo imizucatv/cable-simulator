@@ -534,12 +534,12 @@
                                                         <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).price) }}円</span><br>
                                                         <span class="text-lg font-black text-rose-600 mt-1 block">{{ formatPrice(getOneTimePrice(index, line.device)) }}円</span>
                                                     </button>
-                                                    <button type="button" @click="line.devicePay = '24'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '24' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-sm' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
+                                                    <button type="button" @click="selectDevicePay(line, '24')" :disabled="isNetCampaignActive" class="p-4 rounded-xl border-2 text-center bg-white transition-colors relative" :class="[line.devicePay === '24' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-sm' : 'border-slate-300 text-slate-700 hover:bg-slate-50', isNetCampaignActive ? 'opacity-50 cursor-not-allowed' : '']">
                                                         24回払い<br>
                                                         <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).pay24) }}円</span><br>
                                                         <span class="text-lg font-black text-rose-600 mt-1 block">+{{ formatPrice(getInstallmentPrice(index, line.device, 24)) }}円/月</span>
                                                     </button>
-                                                    <button type="button" @click="line.devicePay = '48'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '48' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-sm' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
+                                                    <button type="button" @click="selectDevicePay(line, '48')" :disabled="isNetCampaignActive" class="p-4 rounded-xl border-2 text-center bg-white transition-colors relative" :class="[line.devicePay === '48' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-sm' : 'border-slate-300 text-slate-700 hover:bg-slate-50', isNetCampaignActive ? 'opacity-50 cursor-not-allowed' : '']">
                                                         48回払い<br>
                                                         <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).pay48) }}円</span><br>
                                                         <span class="text-lg font-black text-rose-600 mt-1 block">+{{ formatPrice(getInstallmentPrice(index, line.device, 48)) }}円/月</span>
@@ -618,7 +618,7 @@
                                                 </span>
                                             </div>
                                             <div class="text-xs text-rose-100 font-normal mt-1.5 leading-relaxed">
-                                                ・NET10G/1G(継続割)同時申し込みで、一括購入が<strong class="text-yellow-300 underline font-extrabold text-sm">20,000円引き</strong>！（※一括のみ対応）<br>
+                                                ・NET10G/1G(継続割)同時申し込みで、一括購入が<strong class="text-yellow-300 underline font-extrabold text-sm">20,000円引き</strong>！（※NET併用時は一括のみ対応）<br>
                                                 ・スマホ単体でも、一括購入で<strong class="text-yellow-300 underline font-extrabold text-sm">10,000円引き</strong>／ 割賦購入で<strong class="text-yellow-300 underline font-extrabold text-sm">総額9,600円引き</strong>（24回: -400円/月、48回: -200円/月）！
                                             </div>
                                         </div>
@@ -631,19 +631,22 @@
 
                                             <transition name="fade">
                                                 <div v-if="line.deviceBuy === 'yes'" class="bg-white p-4 sm:p-5 rounded-xl border-2 border-slate-200 space-y-4">
+                                                    <p v-if="isNetCampaignActive" class="text-xs text-rose-600 font-bold bg-rose-50 p-2.5 rounded-lg border border-rose-200">
+                                                        💡 NET10G/1G（継続割）同時申し込み特典適用のため、端末代金は一括払い（最大20,000円引き）のみとなります。
+                                                    </p>
                                                     <select v-model="line.device" class="border-2 border-slate-300 p-4 rounded-xl w-full bg-white font-bold text-base outline-none text-slate-800">
                                                         <option v-for="dev in uiOptions.devices" :key="dev.key" :value="dev.key">{{ dev.name }} (定価: {{ formatPrice(dev.price) }}円)</option>
                                                     </select>
                                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" v-if="deviceInfo(line.device)">
-                                                        <button type="button" @click="line.devicePay = '1'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors relative overflow-hidden" :class="line.devicePay === '1' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-md' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
+                                                        <button type="button" @click="selectDevicePay(line, '1')" class="p-4 rounded-xl border-2 text-center bg-white transition-colors relative overflow-hidden" :class="line.devicePay === '1' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-md' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
                                                             <div class="bg-rose-600 text-white text-[10px] font-bold py-0.5 px-2 absolute top-0 left-0 rounded-br">
-                                                                {{ calc.hasNetCampaign ? 'NET併用 -20,000円' : '単体 -10,000円' }}
+                                                                {{ isNetCampaignActive ? 'NET併用 -20,000円' : '単体 -10,000円' }}
                                                             </div>
                                                             <div class="mt-2">一括払い(買取)</div>
                                                             <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).price) }}円</span><br>
                                                             <span class="text-xl font-black text-rose-600 mt-1 block">{{ formatPrice(getOneTimePrice(index, line.device)) }}円</span>
                                                         </button>
-                                                        <button type="button" @click="line.devicePay = '24'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors relative overflow-hidden" :class="line.devicePay === '24' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-md' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
+                                                        <button type="button" @click="selectDevicePay(line, '24')" :disabled="isNetCampaignActive" class="p-4 rounded-xl border-2 text-center bg-white transition-colors relative overflow-hidden" :class="[line.devicePay === '24' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-md' : 'border-slate-300 text-slate-700 hover:bg-slate-50', isNetCampaignActive ? 'opacity-50 cursor-not-allowed' : '']">
                                                             <div class="bg-orange-500 text-white text-[10px] font-bold py-0.5 px-2 absolute top-0 left-0 rounded-br">
                                                                 総額9,600円引 (-400円/月)
                                                             </div>
@@ -651,7 +654,7 @@
                                                             <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).pay24) }}円</span><br>
                                                             <span class="text-xl font-black text-rose-600 mt-1 block">+{{ formatPrice(getInstallmentPrice(index, line.device, 24)) }}円/月</span>
                                                         </button>
-                                                        <button type="button" @click="line.devicePay = '48'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors relative overflow-hidden" :class="line.devicePay === '48' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-md' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">
+                                                        <button type="button" @click="selectDevicePay(line, '48')" :disabled="isNetCampaignActive" class="p-4 rounded-xl border-2 text-center bg-white transition-colors relative overflow-hidden" :class="[line.devicePay === '48' ? 'border-character font-bold text-characterDark ring-2 ring-character/20 shadow-md' : 'border-slate-300 text-slate-700 hover:bg-slate-50', isNetCampaignActive ? 'opacity-50 cursor-not-allowed' : '']">
                                                             <div class="bg-orange-500 text-white text-[10px] font-bold py-0.5 px-2 absolute top-0 left-0 rounded-br">
                                                                 総額9,600円引 (-200円/月)
                                                             </div>
@@ -1500,6 +1503,9 @@ function initApp() {
                     return '';
                 },
                 currentDateStr() { return new Date().toLocaleDateString('ja-JP'); },
+                isNetCampaignActive() {
+                    return !this.isMansion && ['net10g', 'net1g'].includes(this.net) && this.isKeizokuWari;
+                },
                 statePayload() {
                     return {
                         contractPattern: this.contractPattern,
@@ -1525,6 +1531,15 @@ function initApp() {
                 statePayload: {
                     deep: true,
                     handler() { this.scheduleFetch(); }
+                },
+                isNetCampaignActive(newVal) {
+                    if (newVal) {
+                        this.mobileLines.forEach(l => {
+                            if (l.deviceBuy === 'yes') {
+                                l.devicePay = '1';
+                            }
+                        });
+                    }
                 },
                 net(newVal) {
                     if (newVal === 'none') {
@@ -1589,15 +1604,17 @@ function initApp() {
                         this.calc = data.calculation;
                         this.recommendations = data.recommendations || [];
                     } catch (err) {
-                        console.warn('API接続に失敗したため、ローカル計算処理を実行します。', err);
-                        // API通信失敗時のフォールバック計算
-                        const res = runLocalSimulation(this.statePayload);
-                        if (res.options) this.uiOptions = res.options;
-                        this.calc = res.calculation;
-                        this.recommendations = res.recommendations || [];
+                        console.error('API通信に失敗しました:', err);
+                        this.apiError = '料金計算サーバーとの通信に失敗しました。時間をおいて再接続してください。';
+                        this.calc = null;
+                        this.recommendations = [];
                     } finally {
                         this.isLoading = false;
                     }
+                },
+                selectDevicePay(line, payType) {
+                    if (this.isNetCampaignActive && payType !== '1') return;
+                    line.devicePay = payType;
                 },
                 getNetAddOnPrice(key) {
                     return (this.uiOptions && this.uiOptions.netAddOns && this.uiOptions.netAddOns[key]) || 0;
@@ -1730,7 +1747,8 @@ function initApp() {
                     if (count > others.length) {
                         const addNum = count - others.length;
                         for (let i = 0; i < addNum; i++) {
-                            others.push({ source: 'new', status: null, contractType: 'new', plan: 'voice3', call: 'none', support: 'none', deviceBuy: 'no', device: 'ip16', devicePay: '24' });
+                            const initPay = this.isNetCampaignActive ? '1' : '24';
+                            others.push({ source: 'new', status: null, contractType: 'new', plan: 'voice3', call: 'none', support: 'none', deviceBuy: 'no', device: 'ip16', devicePay: initPay });
                         }
                     } else if (count < others.length) {
                         others = others.slice(0, count);

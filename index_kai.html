@@ -465,41 +465,21 @@
                                         </div>
                                     </div>
 
-                                    <!-- 端末情報資料の内容を反映したカード型選択 -->
                                     <div>
-                                        <div class="text-base font-bold text-slate-800 mb-3">現在の端末購入設定[cite: 1, 2]</div>
+                                        <div class="text-base font-bold text-slate-800 mb-3">現在の端末購入設定</div>
                                         <div class="flex flex-col sm:flex-row gap-3 mb-4">
                                             <button type="button" @click="line.deviceBuy = 'no'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.deviceBuy === 'no' ? 'bg-characterLight font-bold border-character text-characterDark shadow-sm' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">持込 (購入しない)</button>
                                             <button type="button" @click="line.deviceBuy = 'yes'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.deviceBuy === 'yes' ? 'bg-characterLight font-bold border-character text-characterDark shadow-sm' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">端末を購入する</button>
                                         </div>
                                         <transition name="fade">
-                                            <div v-if="line.deviceBuy === 'yes'" class="bg-white p-4 sm:p-5 rounded-xl border-2 border-slate-200 space-y-5 shadow-sm">
-                                                <div class="grid grid-cols-1 gap-4">
-                                                    <button type="button" v-for="dev in uiOptions.devices" :key="dev.key" @click="line.device = dev.key"
-                                                            class="p-4 sm:p-5 rounded-xl border-2 text-left transition-all relative"
-                                                            :class="line.device === dev.key ? 'border-character bg-white shadow-md ring-2 ring-character/20' : 'border-slate-300 bg-white hover:border-slate-400'">
-                                                        <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
-                                                            <span class="font-bold text-lg text-slate-800">{{ dev.name }}[cite: 1]</span>
-                                                            <span class="text-base font-bold text-characterDark bg-characterLight px-4 py-1.5 rounded-full border border-character/20">一括: {{ formatPrice(dev.price) }}円[cite: 1]</span>
-                                                        </div>
-                                                        <div class="text-sm text-slate-700 bg-slate-50 p-4 rounded-lg grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 border border-slate-200" v-if="deviceSpecs[dev.key]">
-                                                            <div v-if="deviceSpecs[dev.key].note" class="col-span-1 sm:col-span-2 text-rose-600 font-bold mb-1">※{{ deviceSpecs[dev.key].note }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">OS:</span> {{ deviceSpecs[dev.key].os }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">画面:</span> {{ deviceSpecs[dev.key].display }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">CPU:</span> {{ deviceSpecs[dev.key].cpu }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">RAM/ROM:</span> {{ deviceSpecs[dev.key].ram }} / {{ deviceSpecs[dev.key].rom }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">カメラ:</span> {{ deviceSpecs[dev.key].camera }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">バッテリー:</span> {{ deviceSpecs[dev.key].battery }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">その他:</span> {{ deviceSpecs[dev.key].other }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">重量:</span> {{ deviceSpecs[dev.key].weight }}[cite: 1]</div>
-                                                        </div>
-                                                    </button>
-                                                </div>
-                                                
+                                            <div v-if="line.deviceBuy === 'yes'" class="bg-characterLight p-4 sm:p-5 rounded-xl border-2 border-character/30 space-y-4">
+                                                <select v-model="line.device" class="border-2 border-slate-300 p-4 rounded-xl w-full bg-white font-bold text-base outline-none text-slate-800">
+                                                    <option v-for="dev in uiOptions.devices" :key="dev.key" :value="dev.key">{{ dev.name }} (一括: {{ formatPrice(dev.price) }}円)</option>
+                                                </select>
                                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" v-if="deviceInfo(line.device)">
-                                                    <button type="button" @click="line.devicePay = '1'" class="p-4 rounded-xl border-2 text-center transition-colors" :class="line.devicePay === '1' ? 'border-character text-characterDark font-bold bg-characterLight shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'">一括払い(買取)[cite: 1]<br><span class="text-lg font-bold mt-2 block text-slate-900">{{ formatPrice(deviceInfo(line.device).price) }}円[cite: 1]</span></button>
-                                                    <button type="button" @click="line.devicePay = '24'" class="p-4 rounded-xl border-2 text-center transition-colors" :class="line.devicePay === '24' ? 'border-character text-characterDark font-bold bg-characterLight shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'">24回払い[cite: 1]<br><span class="text-lg font-bold mt-2 block text-slate-900">+{{ formatPrice(deviceInfo(line.device).pay24) }}円/月[cite: 1]</span></button>
-                                                    <button type="button" @click="line.devicePay = '48'" class="p-4 rounded-xl border-2 text-center transition-colors" :class="line.devicePay === '48' ? 'border-character text-characterDark font-bold bg-characterLight shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'">48回払い[cite: 1]<br><span class="text-lg font-bold mt-2 block text-slate-900">+{{ formatPrice(deviceInfo(line.device).pay48) }}円/月[cite: 1]</span></button>
+                                                    <button type="button" @click="line.devicePay = '1'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '1' ? 'border-character font-bold text-characterDark ring-2 ring-character/20' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">一括払い(買取)<br><span class="text-base font-bold mt-1 block text-slate-900">{{ formatPrice(deviceInfo(line.device).price) }}円</span></button>
+                                                    <button type="button" @click="line.devicePay = '24'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '24' ? 'border-character font-bold text-characterDark ring-2 ring-character/20' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">24回払い<br><span class="text-base font-bold mt-1 block text-slate-900">+{{ formatPrice(deviceInfo(line.device).pay24) }}円/月</span></button>
+                                                    <button type="button" @click="line.devicePay = '48'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '48' ? 'border-character font-bold text-characterDark ring-2 ring-character/20' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">48回払い<br><span class="text-base font-bold mt-1 block text-slate-900">+{{ formatPrice(deviceInfo(line.device).pay48) }}円/月</span></button>
                                                 </div>
                                             </div>
                                         </transition>
@@ -554,41 +534,21 @@
                                         </div>
                                     </div>
 
-                                    <!-- 端末情報資料の内容を反映したカード型選択 -->
                                     <div>
-                                        <div class="text-base font-bold text-slate-800 mb-3">④ 端末購入[cite: 1, 2]</div>
+                                        <div class="text-base font-bold text-slate-800 mb-3">④ 端末購入[cite: 1]</div>
                                         <div class="flex flex-col sm:flex-row gap-3 mb-4">
                                             <button type="button" @click="line.deviceBuy = 'no'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.deviceBuy === 'no' ? 'bg-characterLight font-bold border-character text-characterDark shadow-sm' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">持込 (購入しない)</button>
                                             <button type="button" @click="line.deviceBuy = 'yes'" class="p-4 rounded-xl flex-1 text-center border-2 transition-colors" :class="line.deviceBuy === 'yes' ? 'bg-characterLight font-bold border-character text-characterDark shadow-sm' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'">端末を購入する</button>
                                         </div>
                                         <transition name="fade">
-                                            <div v-if="line.deviceBuy === 'yes'" class="bg-slate-50 p-4 sm:p-5 rounded-xl border-2 border-slate-200 space-y-5 shadow-sm">
-                                                <div class="grid grid-cols-1 gap-4">
-                                                    <button type="button" v-for="dev in uiOptions.devices" :key="dev.key" @click="line.device = dev.key"
-                                                            class="p-4 sm:p-5 rounded-xl border-2 text-left transition-all relative"
-                                                            :class="line.device === dev.key ? 'border-character bg-white shadow-md ring-2 ring-character/20' : 'border-slate-300 bg-white hover:border-slate-400'">
-                                                        <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
-                                                            <span class="font-bold text-lg text-slate-800">{{ dev.name }}[cite: 1]</span>
-                                                            <span class="text-base font-bold text-characterDark bg-characterLight px-4 py-1.5 rounded-full border border-character/20">一括: {{ formatPrice(dev.price) }}円[cite: 1]</span>
-                                                        </div>
-                                                        <div class="text-sm text-slate-700 bg-slate-100 p-4 rounded-lg grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 border border-slate-200" v-if="deviceSpecs[dev.key]">
-                                                            <div v-if="deviceSpecs[dev.key].note" class="col-span-1 sm:col-span-2 text-rose-600 font-bold mb-1">※{{ deviceSpecs[dev.key].note }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">OS:</span> {{ deviceSpecs[dev.key].os }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">画面:</span> {{ deviceSpecs[dev.key].display }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">CPU:</span> {{ deviceSpecs[dev.key].cpu }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">RAM/ROM:</span> {{ deviceSpecs[dev.key].ram }} / {{ deviceSpecs[dev.key].rom }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">カメラ:</span> {{ deviceSpecs[dev.key].camera }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">バッテリー:</span> {{ deviceSpecs[dev.key].battery }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">その他:</span> {{ deviceSpecs[dev.key].other }}[cite: 1]</div>
-                                                            <div><span class="font-bold text-slate-500 mr-1">重量:</span> {{ deviceSpecs[dev.key].weight }}[cite: 1]</div>
-                                                        </div>
-                                                    </button>
-                                                </div>
-                                                
+                                            <div v-if="line.deviceBuy === 'yes'" class="bg-characterLight p-4 sm:p-5 rounded-xl border-2 border-character/30 space-y-4">
+                                                <select v-model="line.device" class="border-2 border-slate-300 p-4 rounded-xl w-full bg-white font-bold text-base outline-none text-slate-800">
+                                                    <option v-for="dev in uiOptions.devices" :key="dev.key" :value="dev.key">{{ dev.name }} (一括: {{ formatPrice(dev.price) }}円)</option>
+                                                </select>
                                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" v-if="deviceInfo(line.device)">
-                                                    <button type="button" @click="line.devicePay = '1'" class="p-4 rounded-xl border-2 text-center transition-colors" :class="line.devicePay === '1' ? 'border-character text-characterDark font-bold bg-characterLight shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'">一括払い(買取)[cite: 1]<br><span class="text-lg font-bold mt-2 block text-slate-900">{{ formatPrice(deviceInfo(line.device).price) }}円[cite: 1]</span></button>
-                                                    <button type="button" @click="line.devicePay = '24'" class="p-4 rounded-xl border-2 text-center transition-colors" :class="line.devicePay === '24' ? 'border-character text-characterDark font-bold bg-characterLight shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'">24回払い[cite: 1]<br><span class="text-lg font-bold mt-2 block text-slate-900">+{{ formatPrice(deviceInfo(line.device).pay24) }}円/月[cite: 1]</span></button>
-                                                    <button type="button" @click="line.devicePay = '48'" class="p-4 rounded-xl border-2 text-center transition-colors" :class="line.devicePay === '48' ? 'border-character text-characterDark font-bold bg-characterLight shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'">48回払い[cite: 1]<br><span class="text-lg font-bold mt-2 block text-slate-900">+{{ formatPrice(deviceInfo(line.device).pay48) }}円/月[cite: 1]</span></button>
+                                                    <button type="button" @click="line.devicePay = '1'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '1' ? 'border-character font-bold text-characterDark ring-2 ring-character/20' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">一括払い(買取)[cite: 1]<br><span class="text-base font-bold mt-1 block text-slate-900">{{ formatPrice(deviceInfo(line.device).price) }}円[cite: 1]</span></button>
+                                                    <button type="button" @click="line.devicePay = '24'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '24' ? 'border-character font-bold text-characterDark ring-2 ring-character/20' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">24回払い[cite: 1]<br><span class="text-base font-bold mt-1 block text-slate-900">+{{ formatPrice(deviceInfo(line.device).pay24) }}円/月[cite: 1]</span></button>
+                                                    <button type="button" @click="line.devicePay = '48'" class="p-4 rounded-xl border-2 text-center bg-white transition-colors" :class="line.devicePay === '48' ? 'border-character font-bold text-characterDark ring-2 ring-character/20' : 'border-slate-300 text-slate-700 hover:bg-slate-50'">48回払い[cite: 1]<br><span class="text-base font-bold mt-1 block text-slate-900">+{{ formatPrice(deviceInfo(line.device).pay48) }}円/月[cite: 1]</span></button>
                                                 </div>
                                             </div>
                                         </transition>
@@ -1237,19 +1197,28 @@ function initApp() {
                 telOps: { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false },
                 isTelOpsUpdating: false,
 
-                // --- 端末情報資料に基づくスペック情報[cite: 1, 2] ---
-                deviceSpecs: {
-                    ip16: { os: 'iOS', display: '6.1インチ Super Retina XDR', cpu: 'A18', ram: '8GB', rom: '128GB~', camera: '48MP+12MP(超広角)', battery: '約3,500mAh', other: '対応(Apple Pay) / IP68', weight: '約170g', note: '未使用品' },
-                    px10a: { os: 'Android 16', display: '6.3インチ OLED (120Hz)', cpu: 'Tensor G4', ram: '8GB', rom: '128GB', camera: '48MP+13MP(超広角)', battery: '5,100mAh', other: '対応 / IP68', weight: '約183g', note: '未使用品' },
-                    aq10: { os: 'Android 16', display: '6.1インチ Pro IGZO OLED (240Hz)', cpu: 'Snapdragon 7s Gen 3', ram: '6GB/8GB', rom: '128GB', camera: '50.3MP+50.3MP(広角)', battery: '5,000mAh', other: '対応 / IPX5/8 IP6X/MIL規格', weight: '約166g', note: '' },
-                    aqw5: { os: 'Android 15', display: '6.6インチ TFT液晶/解像度HD+', cpu: 'MediaTek Dimensity 6300', ram: '4GB', rom: '128GB', camera: '広角/F 1.8', battery: '5,000mAh', other: '対応(FeliCa/NFC) / MIL-STD-810H準拠', weight: '約194g', note: '現品限り (約20台)' },
-                    oppo_a5: { os: 'Android 15', display: '6.7インチ LCD (90Hz/120Hz)', cpu: 'Dimensity 6300', ram: '4GB', rom: '128GB', camera: '50MP+2MP(深度)', battery: '6,000mAh', other: '対応 / IPX5/6X/耐衝撃', weight: '約194g', note: '新品' }
-                },
-
-                // --- API連携用 ---
+                // --- API連携用（資料20260911101515.pdfに基づいた初期端末リスト） ---
                 isLoading: false,
                 apiError: null,
-                uiOptions: { tv: [], net: [], mobilePlans: [], stb: [], devices: [], ott: [], telOptions: {}, netAddOns: {}, mobileCallOptions: {}, mobileSupportOptions: {}, telBase: 0 },
+                uiOptions: {
+                    tv: [],
+                    net: [],
+                    mobilePlans: [],
+                    stb: [],
+                    devices: [
+                        { key: 'ip16', name: 'iPhone 16 (128GB)', price: 132000, pay24: 5720, pay48: 2860 },
+                        { key: 'px10a', name: 'Google Pixel 10a (128GB)', price: 91300, pay24: 3960, pay48: 1980 },
+                        { key: 'aq10', name: 'AQUOS sense10 (128GB)', price: 59400, pay24: 2530, pay48: 1265 },
+                        { key: 'aqw5', name: 'AQUOS wish5 (128GB)', price: 33000, pay24: 1540, pay48: 770 },
+                        { key: 'oppo_a5', name: 'OPPO A5 5G (128GB)', price: 28600, pay24: 1320, pay48: 660 }
+                    ],
+                    ott: [],
+                    telOptions: {},
+                    netAddOns: {},
+                    mobileCallOptions: {},
+                    mobileSupportOptions: {},
+                    telBase: 0
+                },
                 calc: null,
                 recommendations: [],
                 _fetchTimer: null
@@ -1359,7 +1328,7 @@ function initApp() {
                 } catch (err) {
                     this.apiError = '料金計算サーバーとの通信に失敗しました。しばらくしてから再度お試しください。';
                     console.error(err);
-                } finally {
+                } fontally {
                     this.isLoading = false;
                 }
             },

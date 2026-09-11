@@ -688,47 +688,166 @@
                             <div>
                                 <h3 class="font-bold text-slate-800 text-xl">月額料金 内訳サマリー</h3>
                                 <span class="inline-block bg-sky-100 text-sky-900 text-xs px-3 py-1 rounded-full font-bold mt-1">
-                                    契約種別：{{ contractPatternLabel }}
+                                    ご契約種別：{{ contractPatternLabel }}
                                 </span>
                             </div>
                             <button type="button" @click="showSummaryDetail = false" class="text-slate-500 hover:bg-slate-100 p-2 rounded-full transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                         </div>
                         <div class="space-y-4 text-sm">
 
-                            <div class="flex justify-between items-start" v-if="tv !== 'none'">
+                            <!-- 光テレビ -->
+                            <div class="flex justify-between items-start border-b border-slate-100 pb-3" v-if="tv !== 'none'">
                                 <div class="w-2/3">
-                                    <span class="font-bold text-sky-900 border-l-4 border-sky-600 pl-2 text-base">光テレビ</span>
-                                    <div class="text-xs text-slate-600 mt-1 ml-3 space-y-0.5">
-                                        <div class="flex justify-between"><span>基本料</span><span>{{ formatPrice(calc.tv.basePrice) }}円</span></div>
+                                    <span class="font-bold text-sky-900 border-l-4 border-sky-600 pl-2 text-base">
+                                        光テレビ
+                                        <span v-if="calc.tv.statusLabel" class="text-xs text-amber-800 font-normal ml-1">({{ calc.tv.statusLabel }})</span>
+                                    </span>
+                                    <div class="text-xs text-slate-600 mt-1.5 ml-3 space-y-1">
+                                        <div class="flex justify-between"><span>基本料（{{ tvLabel(tv) }}）</span><span>{{ formatPrice(calc.tv.basePrice) }}円</span></div>
+                                        <div class="flex justify-between" v-if="['premium', 'standard'].includes(tv) && calc.tv.stbPrice > 0"><span>STB（{{ stbName(stb) }}）</span><span>+{{ formatPrice(calc.tv.stbPrice) }}円</span></div>
                                         <div class="flex justify-between text-amber-800 font-bold" v-if="calc.tv.stbDiscount < 0"><span>↳ 4K-STB割</span><span>{{ formatPrice(calc.tv.stbDiscount) }}円</span></div>
+                                        <div class="flex justify-between text-sky-800 font-bold" v-if="calc.tv.mansionShatakuWari < 0"><span>↳ 集合住宅割</span><span>{{ formatPrice(calc.tv.mansionShatakuWari) }}円</span></div>
                                     </div>
                                 </div>
-                                <span class="font-extrabold text-slate-800 text-lg">{{ formatPrice(calc.tv.total) }}円</span>
+                                <div class="text-right">
+                                    <span class="text-xs text-slate-500 block">テレビ小計</span>
+                                    <span class="font-extrabold text-slate-800 text-lg">{{ formatPrice(calc.tv.total) }}円</span>
+                                </div>
                             </div>
 
-                            <div class="flex justify-between items-start" v-if="net !== 'none'">
+                            <!-- 光インターネット -->
+                            <div class="flex justify-between items-start border-b border-slate-100 pb-3" v-if="net !== 'none'">
                                 <div class="w-2/3">
-                                    <span class="font-bold text-sky-900 border-l-4 border-sky-600 pl-2 text-base">光インターネット</span>
-                                    <div class="text-xs text-slate-600 mt-1 ml-3 space-y-0.5">
-                                        <div class="flex justify-between"><span>基本料</span><span>{{ formatPrice(calc.net.basePrice) }}円</span></div>
+                                    <span class="font-bold text-sky-900 border-l-4 border-sky-600 pl-2 text-base">
+                                        光インターネット
+                                        <span v-if="calc.net.statusLabel" class="text-xs text-amber-800 font-normal ml-1">({{ calc.net.statusLabel }})</span>
+                                    </span>
+                                    <div class="text-xs text-slate-600 mt-1.5 ml-3 space-y-1">
+                                        <div class="flex justify-between"><span>基本料（{{ netLabel(net) }}）</span><span>{{ formatPrice(calc.net.basePrice) }}円</span></div>
                                         <div class="flex justify-between text-amber-800 font-bold" v-if="calc.net.keizokuActive"><span>↳ 継続割</span><span>{{ formatPrice(calc.net.keizokuDiscount) }}円</span></div>
+                                        <div class="flex justify-between" v-if="router"><span>iCNメッシュWi-Fi</span><span>+{{ formatPrice(calc.net.routerPrice || calc.net.potentialRouterPrice) }}円</span></div>
+                                        <div class="flex justify-between" v-if="netOps.jSafe"><span>J-SAFE (セキュリティ)</span><span>+{{ formatPrice(uiOptions.netAddOns.jSafe) }}円</span></div>
+                                        <div class="flex justify-between" v-if="netOps.spamFilter"><span>迷惑メールフィルタ</span><span>+{{ formatPrice(uiOptions.netAddOns.spamFilter) }}円</span></div>
+                                        <div class="flex justify-between" v-if="netOps.addMail"><span>追加メールアカウント</span><span>+{{ formatPrice(uiOptions.netAddOns.addMail) }}円</span></div>
                                     </div>
                                 </div>
-                                <span class="font-extrabold text-slate-800 text-lg">{{ formatPrice(calc.net.total) }}円</span>
+                                <div class="text-right">
+                                    <span class="text-xs text-slate-500 block">インターネット小計</span>
+                                    <span class="font-extrabold text-slate-800 text-lg">{{ formatPrice(calc.net.total) }}円</span>
+                                </div>
                             </div>
 
-                            <div class="flex justify-between items-start" v-if="tel">
+                            <!-- 光でんわ -->
+                            <div class="flex justify-between items-start border-b border-slate-100 pb-3" v-if="tel && !isMansion">
                                 <div class="w-2/3">
-                                    <span class="font-bold text-sky-900 border-l-4 border-sky-600 pl-2 text-base">光でんわ</span>
+                                    <span class="font-bold text-sky-900 border-l-4 border-sky-600 pl-2 text-base">
+                                        光でんわ
+                                        <span v-if="calc.tel.statusLabel" class="text-xs text-amber-800 font-normal ml-1">({{ calc.tel.statusLabel }})</span>
+                                    </span>
+                                    <div class="text-xs text-slate-600 mt-1.5 ml-3 space-y-1">
+                                        <div class="flex justify-between"><span>ケーブルプラス電話 基本料</span><span>{{ formatPrice(uiOptions.telBase) }}円</span></div>
+                                        <div class="flex justify-between text-amber-800 font-bold" v-if="telOps.pack"><span>オプションお得パック (4点)</span><span>+{{ formatPrice(uiOptions.telOptions.pack.price) }}円</span></div>
+                                        <template v-else>
+                                            <div class="flex justify-between" v-if="telOps.disp"><span>発信番号表示</span><span>+{{ formatPrice(uiOptions.telOptions.disp.price) }}円</span></div>
+                                            <div class="flex justify-between" v-if="telOps.req"><span>番号通知リクエスト</span><span>+{{ formatPrice(uiOptions.telOptions.req.price) }}円</span></div>
+                                            <div class="flex justify-between" v-if="telOps.catchDisp"><span>割込番号表示</span><span>+{{ formatPrice(uiOptions.telOptions.catchDisp.price) }}円</span></div>
+                                            <div class="flex justify-between" v-if="telOps.catchCall"><span>割込通話</span><span>+{{ formatPrice(uiOptions.telOptions.catchCall.price) }}円</span></div>
+                                        </template>
+                                        <div class="flex justify-between" v-if="telOps.transfer"><span>着信転送</span><span>+{{ formatPrice(uiOptions.telOptions.transfer.price) }}円</span></div>
+                                    </div>
                                 </div>
-                                <span class="font-extrabold text-slate-800 text-lg">{{ formatPrice(calc.tel.total) }}円</span>
+                                <div class="text-right">
+                                    <span class="text-xs text-slate-500 block">光でんわ小計</span>
+                                    <span class="font-extrabold text-slate-800 text-lg">{{ formatPrice(calc.tel.total) }}円</span>
+                                </div>
                             </div>
 
-                            <div class="flex justify-between items-start" v-if="mobileLines.length > 0">
+                            <!-- 動画配信サービス -->
+                            <div class="flex justify-between items-start border-b border-slate-100 pb-3" v-if="hasOtt">
                                 <div class="w-2/3">
-                                    <span class="font-bold text-sky-900 border-l-4 border-sky-600 pl-2 text-base">ケーブルスマホ ({{ mobileLines.length }}回線)</span>
+                                    <span class="font-bold text-sky-900 border-l-4 border-sky-600 pl-2 text-base">動画配信サービス</span>
+                                    <div class="text-xs text-slate-600 mt-1.5 ml-3 space-y-1">
+                                        <div class="flex justify-between" v-if="ottHulu"><span>Hulu</span><span>{{ formatPrice(ottOption('hulu').price) }}円</span></div>
+                                        <div class="flex justify-between" v-if="ottFod"><span>FOD</span><span>{{ formatPrice(ottOption('fod').price) }}円</span></div>
+                                        <div class="flex justify-between" v-if="ottUnext"><span>U-NEXT</span><span>{{ formatPrice(ottOption('unext').price) }}円</span></div>
+                                        <div class="flex justify-between text-amber-800 font-bold" v-if="calc.moviePackDiscount < 0"><span>↳ iCN動画パック割</span><span>{{ formatPrice(calc.moviePackDiscount) }}円</span></div>
+                                    </div>
                                 </div>
-                                <span class="font-extrabold text-slate-800 text-lg">{{ formatPrice(calc.mobile.total) }}円</span>
+                                <div class="text-right">
+                                    <span class="text-xs text-slate-500 block">動画配信サービス小計</span>
+                                    <span class="font-extrabold text-slate-800 text-lg">{{ formatPrice(calc.ott.total + (calc.moviePackDiscount || 0)) }}円</span>
+                                </div>
+                            </div>
+
+                            <!-- ケーブルスマホ -->
+                            <div class="flex justify-between items-start border-b border-slate-100 pb-3" v-if="mobileLines.length > 0">
+                                <div class="w-2/3">
+                                    <span class="font-bold text-sky-900 border-l-4 border-sky-600 pl-2 text-base">ケーブルスマホ (計{{ mobileLines.length }}回線)</span>
+                                    <div class="text-xs text-slate-600 mt-1.5 ml-3 space-y-2">
+                                        <div v-for="(line, idx) in mobileLines" :key="idx" class="border-b border-dashed border-slate-200 pb-1.5 last:border-0 last:pb-0">
+                                            <div class="font-bold text-slate-800 flex justify-between">
+                                                <span>回線 {{ idx + 1 }} ({{ lineCalc(idx).contractTypeLabel }})</span>
+                                                <span class="text-slate-700 font-bold">{{ formatPrice(lineCalc(idx).total) }}円</span>
+                                            </div>
+                                            <div class="flex justify-between pl-2"><span>基本料（{{ lineCalc(idx).planLabel }}）</span><span>{{ formatPrice(lineCalc(idx).planPrice) }}円</span></div>
+                                            <div class="flex justify-between pl-2" v-if="line.call === '10min'"><span>10分定額</span><span>+{{ formatPrice(uiOptions.mobileCallOptions['10min']) }}円</span></div>
+                                            <div class="flex justify-between pl-2" v-if="line.call === 'unlimited'"><span>かけ放題</span><span>+{{ formatPrice(uiOptions.mobileCallOptions.unlimited) }}円</span></div>
+                                            <div class="flex justify-between pl-2" v-if="line.support === 'packA'"><span>安心パックA</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packA) }}円</span></div>
+                                            <div class="flex justify-between pl-2" v-if="line.support === 'packB'"><span>安心パックB for a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packB) }}円</span></div>
+                                            <div class="flex justify-between pl-2" v-if="line.support === 'hosho'"><span>端末保証 a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.hosho) }}円</span></div>
+
+                                            <div v-if="line.deviceBuy === 'yes'" class="pl-2 mt-0.5 border-t border-slate-100 pt-0.5">
+                                                <div class="flex justify-between font-bold text-amber-950">
+                                                    <span>端末：{{ lineCalc(idx).deviceName }} ({{ line.devicePay === '1' ? '一括購入' : line.devicePay + '回割賦' }})</span>
+                                                    <span v-if="line.devicePay !== '1'">+{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円/月</span>
+                                                    <span v-else>※一括 {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円 (初回)</span>
+                                                </div>
+                                            </div>
+
+                                            <div v-for="(st, dIdx) in lineCalc(idx).discounts" :key="dIdx" class="flex justify-between pl-2 text-amber-800 font-bold">
+                                                <span>↳ {{ st.label }}</span><span>{{ formatPrice(st.amount) }}円</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs text-slate-500 block">スマホ小計</span>
+                                    <span class="font-extrabold text-slate-800 text-lg">{{ formatPrice(calc.mobile.total) }}円</span>
+                                </div>
+                            </div>
+
+                            <!-- その他セット割引（トリプル割・ダブル割等） -->
+                            <div class="flex justify-between items-start border-b border-slate-100 pb-3" v-if="otherCrossDiscounts.length > 0">
+                                <div class="w-2/3">
+                                    <span class="font-bold text-amber-950 border-l-4 border-amber-500 pl-2 text-base">セット割引（複数サービス適用）</span>
+                                    <div class="text-xs text-slate-600 mt-1.5 ml-3 space-y-1">
+                                        <div v-for="(d, i) in otherCrossDiscounts" :key="i" class="flex justify-between text-amber-800 font-bold">
+                                            <span>{{ d.name }}</span><span>{{ formatPrice(d.amount) }}円</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs text-slate-500 block">セット割引小計</span>
+                                    <span class="font-extrabold text-amber-900 text-lg">{{ formatPrice(otherCrossDiscountsTotal) }}円</span>
+                                </div>
+                            </div>
+
+                            <!-- 適用中の割引一覧 -->
+                            <div class="bg-amber-50/80 p-4 rounded-xl border border-amber-200 mt-4">
+                                <h4 class="font-bold text-amber-950 text-sm mb-2 border-b border-amber-200 pb-1">✨ 適用中の割引一覧</h4>
+                                <div class="space-y-1 text-xs">
+                                    <div v-if="!calc || calc.allDiscounts.length === 0" class="text-slate-500">現在適用中の割引はありません。</div>
+                                    <div v-for="(discount, i) in (calc ? calc.allDiscounts : [])" :key="i" class="flex justify-between items-center text-amber-900 font-bold">
+                                        <span>{{ discount.name }}</span>
+                                        <span class="font-extrabold">{{ formatPrice(discount.amount) }}円</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 端末一括購入案内 -->
+                            <div v-if="calc.mobile.deviceOneTimeTotal > 0" class="bg-sky-50 p-3 rounded-lg border border-sky-200 text-xs font-bold text-sky-950 flex justify-between items-center mt-3">
+                                <span>📱 スマホ端末一括購入代金合計（初回のみ）：</span>
+                                <span class="text-base font-extrabold text-sky-900">{{ formatPrice(calc.mobile.deviceOneTimeTotal) }}円</span>
                             </div>
 
                         </div>
@@ -932,8 +1051,9 @@
                                         <div class="flex justify-between text-slate-700" v-if="ottHulu"><span>Hulu</span><span>+{{ formatPrice(ottOption('hulu').price) }}円</span></div>
                                         <div class="flex justify-between text-slate-700" v-if="ottFod"><span>FOD</span><span>+{{ formatPrice(ottOption('fod').price) }}円</span></div>
                                         <div class="flex justify-between text-slate-700" v-if="ottUnext"><span>U-NEXT</span><span>+{{ formatPrice(ottOption('unext').price) }}円</span></div>
+                                        <div class="flex justify-between text-amber-800 font-bold" v-if="calc.moviePackDiscount < 0"><span>↳ iCN動画パック割</span><span>{{ formatPrice(calc.moviePackDiscount) }}円</span></div>
                                     </td>
-                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.ott.total) }}円</td>
+                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.ott.total + (calc.moviePackDiscount || 0)) }}円</td>
                                 </tr>
 
                                 <!-- ケーブルスマホ -->
@@ -978,14 +1098,14 @@
                                 </tr>
 
                                 <!-- 横断割引・セット割 -->
-                                <tr v-if="calc.otherDiscountsTotal < 0">
+                                <tr v-if="otherCrossDiscounts.length > 0">
                                     <td class="border border-slate-300 p-2 font-bold bg-amber-50 text-amber-950 align-top">複数サービス<br>セット割引</td>
                                     <td class="border border-slate-300 p-2 text-xs bg-amber-50/40">
-                                        <div class="flex justify-between text-amber-900 font-bold mb-0.5" v-for="(d, i) in calc.crossServiceDiscounts" :key="i">
+                                        <div class="flex justify-between text-amber-900 font-bold mb-0.5" v-for="(d, i) in otherCrossDiscounts" :key="i">
                                             <span>{{ d.name }}</span><span>{{ formatPrice(d.amount) }}円</span>
                                         </div>
                                     </td>
-                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-amber-900 text-sm">{{ formatPrice(calc.otherDiscountsTotal) }}円</td>
+                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-amber-900 text-sm">{{ formatPrice(otherCrossDiscountsTotal) }}円</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1112,6 +1232,13 @@ function initApp() {
                 return '';
             },
             currentDateStr() { return new Date().toLocaleDateString('ja-JP'); },
+            otherCrossDiscounts() {
+                if (!this.calc || !this.calc.crossServiceDiscounts) return [];
+                return this.calc.crossServiceDiscounts.filter(d => d.name !== 'iCN動画パック割');
+            },
+            otherCrossDiscountsTotal() {
+                return this.otherCrossDiscounts.reduce((s, d) => s + d.amount, 0);
+            },
             statePayload() {
                 return {
                     contractPattern: this.contractPattern,
@@ -1208,7 +1335,7 @@ function initApp() {
                     this.calc = data.calculation;
                     this.recommendations = data.recommendations || [];
                 } catch (err) {
-                    this.apiError = '料金計算サーバーとの通信に失敗しました。しばらくしてから再度お試しください。';
+                    this.apiError = '料金計算サーバーとの通信に失敗しました。しばらくしてから再度お試しくさい。';
                     console.error(err);
                 } finally {
                     this.isLoading = false;

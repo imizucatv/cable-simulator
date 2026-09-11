@@ -776,12 +776,11 @@
                                         <div class="flex justify-between" v-if="ottHulu"><span>Hulu</span><span>{{ formatPrice(ottOption('hulu').price) }}円</span></div>
                                         <div class="flex justify-between" v-if="ottFod"><span>FOD</span><span>{{ formatPrice(ottOption('fod').price) }}円</span></div>
                                         <div class="flex justify-between" v-if="ottUnext"><span>U-NEXT</span><span>{{ formatPrice(ottOption('unext').price) }}円</span></div>
-                                        <div class="flex justify-between text-amber-800 font-bold" v-if="calc.moviePackDiscount < 0"><span>↳ iCN動画パック割</span><span>{{ formatPrice(calc.moviePackDiscount) }}円</span></div>
                                     </div>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-xs text-slate-500 block">動画配信サービス小計</span>
-                                    <span class="font-extrabold text-slate-800 text-lg">{{ formatPrice(calc.ott.total + (calc.moviePackDiscount || 0)) }}円</span>
+                                    <span class="font-extrabold text-slate-800 text-lg">{{ formatPrice(calc.ott.total) }}円</span>
                                 </div>
                             </div>
 
@@ -808,7 +807,6 @@
                                                     <span v-if="line.devicePay !== '1'">+{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円/月</span>
                                                     <span v-else>※初期費用で清算</span>
                                                 </div>
-                                                <!-- 分割時のみ月額内訳で割引を明記 -->
                                                 <div class="text-[10px] text-amber-900" v-if="line.devicePay !== '1'">
                                                     ↳ 端末割引：-{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引き適用済 (月額分割金に反映)
                                                 </div>
@@ -829,23 +827,23 @@
                                 </div>
                             </div>
 
-                            <!-- その他セット割引（トリプル割・ダブル割等） -->
-                            <div class="flex justify-between items-start border-b border-slate-100 pb-3" v-if="otherCrossDiscounts.length > 0">
+                            <!-- 複数サービス適用によるセット割 (横断割引) -->
+                            <div class="flex justify-between items-start border-b border-slate-100 pb-3" v-if="calc.otherDiscountsTotal < 0">
                                 <div class="w-2/3">
-                                    <span class="font-bold text-amber-950 border-l-4 border-amber-500 pl-2 text-base">セット割引（複数サービス適用）</span>
+                                    <span class="font-bold text-amber-950 border-l-4 border-amber-500 pl-2 text-base">複数サービス適用によるセット割（横断割引）</span>
                                     <div class="text-xs text-slate-600 mt-1.5 ml-3 space-y-1">
-                                        <div v-for="(d, i) in otherCrossDiscounts" :key="i" class="flex justify-between text-amber-800 font-bold">
+                                        <div v-for="(d, i) in calc.crossServiceDiscounts" :key="i" class="flex justify-between text-amber-800 font-bold">
                                             <span>{{ d.name }}</span><span>{{ formatPrice(d.amount) }}円</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <span class="text-xs text-slate-500 block">セット割引小計</span>
-                                    <span class="font-extrabold text-amber-900 text-lg">{{ formatPrice(otherCrossDiscountsTotal) }}円</span>
+                                    <span class="text-xs text-slate-500 block">横断割引小計</span>
+                                    <span class="font-extrabold text-amber-900 text-lg">{{ formatPrice(calc.otherDiscountsTotal) }}円</span>
                                 </div>
                             </div>
 
-                            <!-- 適用中の割引一覧 (毎月の割引合計額を明示) -->
+                            <!-- 適用中の割引一覧 -->
                             <div class="bg-amber-50/80 p-4 rounded-xl border border-amber-200 mt-4">
                                 <div class="flex justify-between items-center border-b border-amber-200 pb-1 mb-2">
                                     <h4 class="font-bold text-amber-950 text-sm">✨ 毎月の月額割引一覧</h4>
@@ -862,7 +860,7 @@
                                 </div>
                             </div>
 
-                            <!-- 初期費用案内（端末一括購入割引を初期費用枠で明確表示） -->
+                            <!-- 初期費用案内 -->
                             <div v-if="calc.mobile.deviceOneTimeTotal > 0" class="bg-sky-50 p-4 rounded-xl border border-sky-200 text-xs text-sky-950 space-y-1.5 mt-3">
                                 <div class="flex justify-between items-center font-bold">
                                     <span>📱 スマホ端末一括購入代金合計（初回費用）：</span>
@@ -1074,9 +1072,8 @@
                                         <div class="flex justify-between text-slate-700" v-if="ottHulu"><span>Hulu</span><span>+{{ formatPrice(ottOption('hulu').price) }}円</span></div>
                                         <div class="flex justify-between text-slate-700" v-if="ottFod"><span>FOD</span><span>+{{ formatPrice(ottOption('fod').price) }}円</span></div>
                                         <div class="flex justify-between text-slate-700" v-if="ottUnext"><span>U-NEXT</span><span>+{{ formatPrice(ottOption('unext').price) }}円</span></div>
-                                        <div class="flex justify-between text-amber-800 font-bold" v-if="calc.moviePackDiscount < 0"><span>↳ iCN動画パック割</span><span>{{ formatPrice(calc.moviePackDiscount) }}円</span></div>
                                     </td>
-                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.ott.total + (calc.moviePackDiscount || 0)) }}円</td>
+                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.ott.total) }}円</td>
                                 </tr>
 
                                 <!-- ケーブルスマホ -->
@@ -1108,11 +1105,11 @@
                                                     端末割引：-{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引き適用済 (月額分割金に反映)
                                                 </div>
                                                 <div class="text-[10px] text-slate-500" v-else>
-                                                    ※端末割引（-{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円）は下記【初期費用】欄に適用
+                                                    ※端末一括割引（-{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円）は下記【初期費用】欄に適用
                                                 </div>
                                             </div>
 
-                                            <div v-for="(st, dIdx) in lineCalc(idx).discounts" :key="dIdx" class="flex justify-between pl-2 text-amber-900 font-bold">
+                                            <div v-for="(st, dIdx) in lineCalc(idx).discounts" :key="dIdx" class="flex justify-between pl-2 text-amber-800 font-bold">
                                                 <span>↳ {{ st.label }}</span><span>{{ formatPrice(st.amount) }}円</span>
                                             </div>
                                         </div>
@@ -1120,15 +1117,15 @@
                                     <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.mobile.total) }}円</td>
                                 </tr>
 
-                                <!-- 横断割引・セット割 -->
-                                <tr v-if="otherCrossDiscounts.length > 0">
-                                    <td class="border border-slate-300 p-2 font-bold bg-amber-50 text-amber-950 align-top">複数サービス<br>セット割引</td>
+                                <!-- 複数サービス適用によるセット割 (横断割引) -->
+                                <tr v-if="calc.otherDiscountsTotal < 0">
+                                    <td class="border border-slate-300 p-2 font-bold bg-amber-50 text-amber-950 align-top">複数サービス適用による<br>セット割 (横断割引)</td>
                                     <td class="border border-slate-300 p-2 text-xs bg-amber-50/40">
-                                        <div class="flex justify-between text-amber-900 font-bold mb-0.5" v-for="(d, i) in otherCrossDiscounts" :key="i">
+                                        <div class="flex justify-between text-amber-900 font-bold mb-0.5" v-for="(d, i) in calc.crossServiceDiscounts" :key="i">
                                             <span>{{ d.name }}</span><span>{{ formatPrice(d.amount) }}円</span>
                                         </div>
                                     </td>
-                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-amber-900 text-sm">{{ formatPrice(otherCrossDiscountsTotal) }}円</td>
+                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-amber-900 text-sm">{{ formatPrice(calc.otherDiscountsTotal) }}円</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1260,13 +1257,6 @@ function initApp() {
                 return '';
             },
             currentDateStr() { return new Date().toLocaleDateString('ja-JP'); },
-            otherCrossDiscounts() {
-                if (!this.calc || !this.calc.crossServiceDiscounts) return [];
-                return this.calc.crossServiceDiscounts.filter(d => d.name !== 'iCN動画パック割');
-            },
-            otherCrossDiscountsTotal() {
-                return this.otherCrossDiscounts.reduce((s, d) => s + d.amount, 0);
-            },
             statePayload() {
                 return {
                     contractPattern: this.contractPattern,
@@ -1301,6 +1291,19 @@ function initApp() {
                             line.devicePay = '1';
                         }
                     });
+                }
+            },
+
+            mobileLines: {
+                deep: true,
+                handler(lines) {
+                    if (this.calc && this.calc.hasNetCampaign) {
+                        lines.forEach(line => {
+                            if (line.deviceBuy === 'yes' && line.devicePay !== '1') {
+                                line.devicePay = '1';
+                            }
+                        });
+                    }
                 }
             },
 

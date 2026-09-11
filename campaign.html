@@ -1335,7 +1335,7 @@ function initApp() {
                     this.calc = data.calculation;
                     this.recommendations = data.recommendations || [];
                 } catch (err) {
-                    this.apiError = '料金計算サーバーとの通信に失敗しました。しばらくしてから再度お試しくさい。';
+                    this.apiError = '料金計算サーバーとの通信に失敗しました。しばらくしてから再度お試しください。';
                     console.error(err);
                 } finally {
                     this.isLoading = false;

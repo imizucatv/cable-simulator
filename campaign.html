@@ -16,7 +16,7 @@
         body { 
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif; 
             background-color: #f8fafc; 
-            font-size: 16px; /* 基本文字サイズを拡大 */
+            font-size: 16px;
             color: #1e293b;
         }
         .fade-enter-active, .fade-leave-active { transition: all 0.2s ease; }
@@ -25,13 +25,58 @@
         .slide-fade-leave-active { transition: all 0.15s cubic-bezier(1.0, 0.5, 0.8, 1.0); }
         .slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(15px); opacity: 0; }
 
+        .print-only {
+            display: none;
+        }
+
+        .print-section {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .print-page-break {
+            break-before: page;
+            page-break-before: always;
+        }
+
         @media print {
-            @page { size: A4 portrait; margin: 8mm; }
-            body { background-color: white !important; color: black !important; font-size: 13px; }
-            .screen-only { display: none !important; }
-            .print-only { display: block !important; }
-            [v-cloak] { display: none !important; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            @page {
+                size: A4 portrait;
+                margin: 8mm;
+            }
+
+            html,
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+                font-size: 11px !important;
+                color: #000 !important;
+            }
+
+            .screen-only {
+                display: none !important;
+            }
+
+            .print-only {
+                display: block !important;
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: 0 !important;
+                color: #000 !important;
+                background: #fff !important;
+            }
+
+            .print-only * {
+                visibility: visible !important;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
     </style>
 </head>
@@ -51,7 +96,7 @@
                 </a>
             </div>
 
-            <!-- ヘッダー：ブランドカラー（シアン/スカイブルー）基調 -->
+            <!-- ヘッダー -->
             <header class="bg-sky-600 text-white p-6 rounded-2xl shadow-md mb-6 relative overflow-hidden border-b-4 border-sky-700">
                 <div class="absolute top-0 right-0 bg-amber-400 text-amber-950 font-extrabold px-4 py-1.5 text-sm rounded-bl-xl shadow-sm">2026年 秋限定</div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-center tracking-wide">料金シミュレーター</h1>
@@ -228,7 +273,7 @@
                     </div>
                 </section>
 
-                <!-- STEP 2: 光インターネット (秋キャンペーン強調) -->
+                <!-- STEP 2: 光インターネット -->
                 <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative">
                     <div class="bg-sky-100/70 border-b border-sky-200 p-4 flex justify-between items-center">
                         <h2 class="text-lg sm:text-xl font-bold text-sky-950 flex items-center">
@@ -274,14 +319,13 @@
                             </div>
                         </transition>
 
-                        <!-- キャンペーン特典パネル (秋色アンバー/オレンジ系) -->
                         <transition name="fade">
                             <div v-if="calc.hasNetPromotion" class="mt-4 p-4 bg-amber-50 border-2 border-amber-400 rounded-xl shadow-sm">
                                 <div class="font-extrabold text-amber-950 text-base mb-2 flex items-center"><span class="mr-2 text-lg">🍂</span> 秋のネット加入キャンペーン特典（{{ isMansion ? 'マンションネット対象' : '光10G/1G継続割対象' }}）</div>
                                 <ul class="text-xs sm:text-sm space-y-2 text-amber-950 font-bold bg-white p-3 rounded-lg border border-amber-200">
-                                    <li class="flex items-center">① デジタルギフト <span class="text-orange-700 text-base mx-1 font-extrabold">{{ isMansion ? '5,000円分' : '10,000円分' }}</span> プレゼント！</li>
-                                    <li class="flex items-center">② 月額利用料が <span class="text-orange-700 text-base mx-1 font-extrabold">工事月＋1ヶ月 無料！</span></li>
-                                    <li class="flex items-center">③ 他社違約金還元 <span class="text-orange-700 text-base mx-1 font-extrabold">{{ isMansion ? '最大50,000円' : '最大100,000円' }}！</span></li>
+                                    <li class="flex items-center">① デジタルギフト <span class="text-amber-800 text-base mx-1 font-extrabold">{{ isMansion ? '5,000円分' : '10,000円分' }}</span> プレゼント！</li>
+                                    <li class="flex items-center">② 月額利用料が <span class="text-amber-800 text-base mx-1 font-extrabold">工事月＋1ヶ月 無料！</span></li>
+                                    <li class="flex items-center">③ 他社違約金還元 <span class="text-amber-800 text-base mx-1 font-extrabold">{{ isMansion ? '最大50,000円' : '最大100,000円' }}！</span></li>
                                 </ul>
                             </div>
                         </transition>
@@ -508,24 +552,24 @@
                                             </select>
                                             <div class="text-xs text-amber-950 leading-relaxed">
                                                 ※端末購入割引は選択した支払方法に応じて適用されます。<br>
-                                                戸建て光10G/1G継続割対象の場合、端末割引が増額されますが<span class="text-amber-900 font-extrabold border-b border-amber-700">お支払いは「一括払い」のみ</span>となります[cite: 3]。
+                                                戸建て光10G/1G継続割対象の場合、端末割引が増額されますが<span class="text-amber-900 font-extrabold border-b border-amber-700">お支払いは「一括払い」のみ</span>となります。
                                             </div>
 
                                             <div class="grid grid-cols-3 gap-2.5 text-xs sm:text-sm" v-if="deviceInfo(line.device)">
                                                 <button type="button" @click="line.devicePay = '1'" class="p-3 rounded-lg border-2 text-center transition-all bg-white" :class="[line.devicePay === '1' ? 'border-amber-500 ring-2 ring-amber-400 font-extrabold shadow-md' : 'border-slate-200']">
-                                                    一括払い(買取)[cite: 3]<br>
+                                                    一括払い（買取）<br>
                                                     <span class="line-through text-slate-400 text-xs">{{ formatPrice(deviceInfo(line.device).price) }}</span><br>
                                                     <span class="text-amber-900 text-base font-black">{{ formatPrice(Math.max(0, deviceInfo(line.device).price - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.total : 0))) }}円</span>
                                                 </button>
                                                 
                                                 <button type="button" @click="(!calc || !calc.hasNetCampaign) ? line.devicePay = '24' : null" :disabled="calc && calc.hasNetCampaign" class="p-3 rounded-lg border-2 text-center transition-all" :class="[(calc && calc.hasNetCampaign) ? 'opacity-50 cursor-not-allowed bg-slate-100 border-slate-200' : (line.devicePay === '24' ? 'border-amber-500 ring-2 ring-amber-400 font-extrabold shadow-md bg-white' : 'border-slate-200 bg-white')]">
-                                                    24回払い[cite: 3]<br>
+                                                    24回払い<br>
                                                     <span class="line-through text-slate-400 text-xs">{{ formatPrice(deviceInfo(line.device).pay24) }}</span><br>
                                                     <span class="text-amber-900 text-base font-black">+{{ formatPrice(Math.max(0, deviceInfo(line.device).pay24 - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.per24 : 0))) }}円/月</span>
                                                 </button>
                                                 
                                                 <button type="button" @click="(!calc || !calc.hasNetCampaign) ? line.devicePay = '48' : null" :disabled="calc && calc.hasNetCampaign" class="p-3 rounded-lg border-2 text-center transition-all" :class="[(calc && calc.hasNetCampaign) ? 'opacity-50 cursor-not-allowed bg-slate-100 border-slate-200' : (line.devicePay === '48' ? 'border-amber-500 ring-2 ring-amber-400 font-extrabold shadow-md bg-white' : 'border-slate-200 bg-white')]">
-                                                    48回払い[cite: 3]<br>
+                                                    48回払い<br>
                                                     <span class="line-through text-slate-400 text-xs">{{ formatPrice(deviceInfo(line.device).pay48) }}</span><br>
                                                     <span class="text-amber-900 text-base font-black">+{{ formatPrice(Math.max(0, deviceInfo(line.device).pay48 - (lineCalc(index).deviceDiscountDetail ? lineCalc(index).deviceDiscountDetail.per48 : 0))) }}円/月</span>
                                                 </button>
@@ -583,7 +627,7 @@
                     </div>
                 </section>
 
-                <!-- おすすめプラン提案エリア (秋色オレンジ) -->
+                <!-- おすすめプラン提案エリア -->
                 <transition name="fade">
                     <section v-if="recommendations.length > 0" class="bg-amber-50/60 rounded-2xl shadow-sm border border-amber-300 overflow-hidden mb-6">
                         <div class="bg-amber-500 text-white p-4 flex justify-between items-center">
@@ -675,7 +719,7 @@
 
                             <div class="flex justify-between items-start" v-if="tel">
                                 <div class="w-2/3">
-                                    <span class="font-bold text-sky-900 border-l-4 border-sky-600 pl-2 text-base">光でnわ</span>
+                                    <span class="font-bold text-sky-900 border-l-4 border-sky-600 pl-2 text-base">光でんわ</span>
                                 </div>
                                 <span class="font-extrabold text-slate-800 text-lg">{{ formatPrice(calc.tel.total) }}円</span>
                             </div>
@@ -693,7 +737,7 @@
             </transition>
 
             <!-- 固定フッターバー -->
-            <div v-if="contractPattern" class="fixed bottom-0 left-0 w-full bg-slate-900 text-white p-4 shadow-2xl z-50 border-t-2 border-sky-500">
+            <div v-if="contractPattern" class="fixed bottom-0 left-0 w-full bg-slate-900 text-white p-3 sm:p-4 shadow-2xl z-50 border-t-2 border-sky-500">
                 <div class="max-w-4xl mx-auto">
                     <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
                         <div class="w-full sm:w-auto text-xs space-y-1 flex-1 hidden sm:block">
@@ -703,17 +747,17 @@
                                 <span v-for="(d, i) in (calc ? calc.allDiscounts : [])" :key="i" class="bg-sky-900 text-sky-200 text-xs px-2.5 py-1 rounded-md font-bold whitespace-nowrap border border-sky-700">{{ d.name }}</span>
                             </div>
                         </div>
-                        <div class="flex justify-between w-full sm:w-auto items-center sm:pl-4">
-                            <button type="button" @click="printPDF" class="hidden sm:flex bg-sky-600 hover:bg-sky-500 text-white text-sm font-bold py-2.5 px-5 rounded-xl shadow items-center mr-4 transition-colors">
-                                控えを保存(PDF/印刷)
+                        <div class="flex justify-between w-full sm:w-auto items-center sm:pl-4 gap-2">
+                            <button type="button" @click="printPDF" :disabled="!calc || isLoading" class="flex bg-sky-600 hover:bg-sky-500 text-white text-xs sm:text-sm font-bold py-2.5 px-3 sm:px-5 rounded-xl shadow items-center transition-colors" :class="{ 'opacity-50 cursor-not-allowed': !calc || isLoading }">
+                                控えを印刷・PDF保存
                             </button>
-                            <button type="button" @click="showSummaryDetail = !showSummaryDetail" class="text-xs sm:text-sm font-bold bg-slate-800 border border-slate-600 px-4 py-2 rounded-lg mr-4 whitespace-nowrap hover:bg-slate-700 transition-colors">
+                            <button type="button" @click="showSummaryDetail = !showSummaryDetail" class="text-xs sm:text-sm font-bold bg-slate-800 border border-slate-600 px-3 sm:px-4 py-2.5 rounded-xl whitespace-nowrap hover:bg-slate-700 transition-colors">
                                 {{ showSummaryDetail ? '内訳を閉じる ▼' : '明細を見る ▲' }}
                             </button>
                             <div class="text-right">
                                 <span class="text-xs sm:text-sm text-slate-300 hidden sm:inline mr-2 font-bold">月額合計(税込)</span>
-                                <span class="text-3xl sm:text-4xl font-black text-white tracking-tight">{{ calc ? formatPrice(calc.finalTotal) : (isLoading ? '...' : '---') }}</span>
-                                <span class="text-sm font-bold text-slate-300 ml-1">円/月</span>
+                                <span class="text-2xl sm:text-4xl font-black text-white tracking-tight">{{ calc ? formatPrice(calc.finalTotal) : (isLoading ? '...' : '---') }}</span>
+                                <span class="text-xs sm:text-sm font-bold text-slate-300 ml-1">円/月</span>
                             </div>
                         </div>
                     </div>
@@ -748,20 +792,263 @@
             </div>
         </div>
 
-        <!-- 印刷レイアウト -->
-        <div class="print-only hidden max-w-3xl mx-auto p-6 font-sans bg-white text-black border-2 border-sky-600 relative">
+        <!-- 印刷レイアウト（完全明細版） -->
+        <div class="print-only">
             <template v-if="calc">
-            <div class="absolute top-0 right-0 bg-sky-600 text-white font-bold text-xs px-4 py-1 rounded-bl-lg">2026年秋の特大キャンペーン適用</div>
-            
-            <div class="text-center border-b-2 border-sky-600 pb-3 mb-4 mt-2">
-                <h1 class="text-xl font-bold tracking-widest text-sky-950">お見積り・お申し込み確認書</h1>
-                <p class="text-xs mt-1 text-sky-800 font-bold">✨ 秋のキャンペーン特別価格適用版 ✨</p>
-            </div>
+                <div class="border-2 border-sky-600 p-5 rounded-lg relative bg-white text-slate-900">
+                    <div class="absolute top-0 right-0 bg-sky-600 text-white font-bold text-xs px-4 py-1 rounded-bl-lg">2026年秋の特大キャンペーン適用</div>
+                    
+                    <!-- ヘッダー -->
+                    <div class="text-center border-b-2 border-sky-600 pb-3 mb-4 mt-1">
+                        <h1 class="text-2xl font-black tracking-widest text-sky-950">お見積り・お申し込み確認書</h1>
+                        <p class="text-xs mt-1 text-sky-800 font-bold">✨ 【秋の特大キャンペーン】特別価格・特典適用版 ✨</p>
+                    </div>
 
-            <div class="bg-slate-100 p-4 rounded-lg text-center mb-6 border border-slate-300">
-                <div class="text-slate-700 font-bold mb-1 text-sm">月額利用料 合計 (税込)</div>
-                <div class="text-3xl font-black text-sky-900">{{ formatPrice(calc.finalTotal) }} <span class="text-base font-normal text-black">円 / 月</span></div>
-            </div>
+                    <!-- 宛名・作成日 -->
+                    <div class="flex justify-between items-end mb-4 text-xs">
+                        <div class="text-sm border-b border-slate-400 w-1/2 pb-1 font-bold">ご契約者名：<span class="inline-block w-3/4"></span> 様</div>
+                        <div class="text-slate-600">作成日： {{ currentDateStr }}</div>
+                    </div>
+
+                    <!-- 月額合計＆ご契約種別 -->
+                    <div class="bg-sky-50 p-4 rounded-xl text-center mb-5 border border-sky-200 print-section">
+                        <div class="flex justify-between items-center px-4">
+                            <div class="text-left">
+                                <span class="text-xs text-sky-900 font-bold block">ご契約の種別</span>
+                                <span class="text-base font-extrabold text-sky-950">{{ contractPatternLabel }}</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-slate-600 font-bold mb-0.5">月額利用料 合計 (税込)</div>
+                                <div class="text-3xl font-black text-sky-900">{{ formatPrice(calc.finalTotal) }} <span class="text-base font-bold text-slate-800">円 / 月</span></div>
+                            </div>
+                        </div>
+                        <div class="text-[10px] text-slate-500 mt-2 border-t border-sky-200 pt-1">※NHK受信料、ユニバーサルサービス料等は含まれておりません。端末一括購入代金等の初期費用は別途発生いたします。</div>
+                    </div>
+
+                    <!-- 月額サービス内訳テーブル -->
+                    <div class="print-section mb-5">
+                        <h3 class="font-extrabold text-sm border-l-4 border-sky-600 pl-2 mb-2 text-sky-950">① 月額サービスご契約内容・内訳</h3>
+                        <table class="w-full text-xs border-collapse border border-slate-300">
+                            <thead>
+                                <tr class="bg-sky-100 text-left border-b-2 border-sky-400">
+                                    <th class="border border-slate-300 p-2 w-1/4 font-bold text-sky-950">サービス種別</th>
+                                    <th class="border border-slate-300 p-2 w-1/2 font-bold text-sky-950">プラン・選択オプション・割引詳細</th>
+                                    <th class="border border-slate-300 p-2 w-1/4 text-right font-bold text-sky-950">月額小計 (税込)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 光テレビ -->
+                                <tr v-if="tv !== 'none'">
+                                    <td class="border border-slate-300 p-2 font-bold bg-slate-50 align-top">
+                                        光テレビ
+                                        <span v-if="calc.tv.statusLabel" class="block text-[10px] text-amber-700">({{ calc.tv.statusLabel }})</span>
+                                    </td>
+                                    <td class="border border-slate-300 p-2 text-xs">
+                                        <div class="flex justify-between font-bold">
+                                            <span>プラン：{{ tvLabel(tv) }} (基本料)</span>
+                                            <span>{{ formatPrice(calc.tv.basePrice) }}円</span>
+                                        </div>
+                                        <div class="flex justify-between text-slate-600" v-if="['premium', 'standard'].includes(tv) && calc.tv.stbPrice > 0">
+                                            <span>STB：{{ stbName(stb) }}</span>
+                                            <span>+{{ formatPrice(calc.tv.stbPrice) }}円</span>
+                                        </div>
+                                        <div class="flex justify-between text-amber-800 font-bold" v-if="calc.tv.stbDiscount < 0">
+                                            <span>↳ 4K-STB割</span>
+                                            <span>{{ formatPrice(calc.tv.stbDiscount) }}円</span>
+                                        </div>
+                                        <div class="flex justify-between text-sky-800 font-bold" v-if="calc.tv.mansionShatakuWari < 0">
+                                            <span>↳ 集合住宅割</span>
+                                            <span>{{ formatPrice(calc.tv.mansionShatakuWari) }}円</span>
+                                        </div>
+                                    </td>
+                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.tv.total) }}円</td>
+                                </tr>
+
+                                <!-- 光インターネット -->
+                                <tr v-if="net !== 'none'">
+                                    <td class="border border-slate-300 p-2 font-bold bg-slate-50 align-top">
+                                        光インターネット
+                                        <span v-if="calc.net.statusLabel" class="block text-[10px] text-amber-700">({{ calc.net.statusLabel }})</span>
+                                    </td>
+                                    <td class="border border-slate-300 p-2 text-xs">
+                                        <div class="flex justify-between font-bold">
+                                            <span>プラン：{{ netLabel(net) }} (基本料)</span>
+                                            <span>{{ formatPrice(calc.net.basePrice) }}円</span>
+                                        </div>
+                                        <div class="flex justify-between text-amber-800 font-bold" v-if="calc.net.keizokuActive">
+                                            <span>↳ 継続利用割引</span>
+                                            <span>{{ formatPrice(calc.net.keizokuDiscount) }}円</span>
+                                        </div>
+                                        <div class="flex justify-between text-slate-600" v-if="router">
+                                            <span>iCNメッシュWi-Fi</span>
+                                            <span>+{{ formatPrice(calc.net.potentialRouterPrice) }}円</span>
+                                        </div>
+                                        <div class="flex justify-between text-slate-600" v-if="netOps.jSafe">
+                                            <span>J-SAFE (セキュリティ)</span>
+                                            <span>+{{ formatPrice(uiOptions.netAddOns.jSafe) }}円</span>
+                                        </div>
+                                        <div class="flex justify-between text-slate-600" v-if="netOps.spamFilter">
+                                            <span>迷惑メールフィルタ</span>
+                                            <span>+{{ formatPrice(uiOptions.netAddOns.spamFilter) }}円</span>
+                                        </div>
+                                        <div class="flex justify-between text-slate-600" v-if="netOps.addMail">
+                                            <span>追加メールアカウント</span>
+                                            <span>+{{ formatPrice(uiOptions.netAddOns.addMail) }}円</span>
+                                        </div>
+                                    </td>
+                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.net.total) }}円</td>
+                                </tr>
+
+                                <!-- 光でんわ -->
+                                <tr v-if="tel && !isMansion">
+                                    <td class="border border-slate-300 p-2 font-bold bg-slate-50 align-top">
+                                        光でんわ
+                                        <span v-if="calc.tel.statusLabel" class="block text-[10px] text-amber-700">({{ calc.tel.statusLabel }})</span>
+                                    </td>
+                                    <td class="border border-slate-300 p-2 text-xs">
+                                        <div class="flex justify-between font-bold">
+                                            <span>ケーブルプラス電話 (基本料)</span>
+                                            <span>{{ formatPrice(uiOptions.telBase) }}円</span>
+                                        </div>
+                                        <div class="flex justify-between text-slate-600" v-if="telOps.pack">
+                                            <span>オプションお得パック (4点)</span>
+                                            <span>+{{ formatPrice(uiOptions.telOptions.pack.price) }}円</span>
+                                        </div>
+                                        <template v-else>
+                                            <div class="flex justify-between text-slate-600" v-if="telOps.disp"><span>発信番号表示</span><span>+{{ formatPrice(uiOptions.telOptions.disp.price) }}円</span></div>
+                                            <div class="flex justify-between text-slate-600" v-if="telOps.req"><span>番号通知リクエスト</span><span>+{{ formatPrice(uiOptions.telOptions.req.price) }}円</span></div>
+                                            <div class="flex justify-between text-slate-600" v-if="telOps.catchDisp"><span>割込番号表示</span><span>+{{ formatPrice(uiOptions.telOptions.catchDisp.price) }}円</span></div>
+                                            <div class="flex justify-between text-slate-600" v-if="telOps.catchCall"><span>割込通話</span><span>+{{ formatPrice(uiOptions.telOptions.catchCall.price) }}円</span></div>
+                                        </template>
+                                        <div class="flex justify-between text-slate-600" v-if="telOps.transfer"><span>着信転送</span><span>+{{ formatPrice(uiOptions.telOptions.transfer.price) }}円</span></div>
+                                    </td>
+                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.tel.total) }}円</td>
+                                </tr>
+
+                                <!-- 動画配信サービス -->
+                                <tr v-if="hasOtt">
+                                    <td class="border border-slate-300 p-2 font-bold bg-slate-50 align-top">動画配信サービス</td>
+                                    <td class="border border-slate-300 p-2 text-xs">
+                                        <div class="flex justify-between text-slate-700" v-if="ottHulu"><span>Hulu</span><span>+{{ formatPrice(ottOption('hulu').price) }}円</span></div>
+                                        <div class="flex justify-between text-slate-700" v-if="ottFod"><span>FOD</span><span>+{{ formatPrice(ottOption('fod').price) }}円</span></div>
+                                        <div class="flex justify-between text-slate-700" v-if="ottUnext"><span>U-NEXT</span><span>+{{ formatPrice(ottOption('unext').price) }}円</span></div>
+                                    </td>
+                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.ott.total) }}円</td>
+                                </tr>
+
+                                <!-- ケーブルスマホ -->
+                                <tr v-if="mobileLines.length > 0">
+                                    <td class="border border-slate-300 p-2 font-bold bg-slate-50 align-top">
+                                        ケーブルスマホ
+                                        <span class="block text-[10px] text-slate-500">({{ mobileLines.length }}回線)</span>
+                                    </td>
+                                    <td class="border border-slate-300 p-2 text-xs">
+                                        <div v-for="(line, idx) in mobileLines" :key="idx" class="border-b border-dashed border-slate-300 pb-2 mb-2 last:border-0 last:mb-0 last:pb-0">
+                                            <div class="font-bold text-slate-800 flex justify-between">
+                                                <span>【回線 {{ idx + 1 }}】 {{ lineCalc(idx).planLabel }}</span>
+                                                <span class="text-sky-900 font-bold">[{{ lineCalc(idx).contractTypeLabel }}]</span>
+                                            </div>
+                                            <div class="flex justify-between pl-2"><span>基本料</span><span>{{ formatPrice(lineCalc(idx).planPrice) }}円</span></div>
+                                            <div class="flex justify-between pl-2 text-slate-600" v-if="line.call === '10min'"><span>10分定額</span><span>+{{ formatPrice(uiOptions.mobileCallOptions['10min']) }}円</span></div>
+                                            <div class="flex justify-between pl-2 text-slate-600" v-if="line.call === 'unlimited'"><span>かけ放題</span><span>+{{ formatPrice(uiOptions.mobileCallOptions.unlimited) }}円</span></div>
+                                            <div class="flex justify-between pl-2 text-slate-600" v-if="line.support === 'packA'"><span>安心パックA</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packA) }}円</span></div>
+                                            <div class="flex justify-between pl-2 text-slate-600" v-if="line.support === 'packB'"><span>安心パックB for a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.packB) }}円</span></div>
+                                            <div class="flex justify-between pl-2 text-slate-600" v-if="line.support === 'hosho'"><span>端末保証 a/i</span><span>+{{ formatPrice(uiOptions.mobileSupportOptions.hosho) }}円</span></div>
+
+                                            <div v-if="line.deviceBuy === 'yes'" class="pl-2 mt-1 border-t border-slate-200 pt-1">
+                                                <div class="flex justify-between font-bold text-amber-950">
+                                                    <span>端末：{{ lineCalc(idx).deviceName }} ({{ line.devicePay === '1' ? '一括購入' : line.devicePay + '回分割' }})</span>
+                                                    <span v-if="line.devicePay !== '1'">+{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円/月</span>
+                                                    <span v-else>※一括 {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円 (初回)</span>
+                                                </div>
+                                                <div class="text-[10px] text-amber-900" v-if="line.devicePay === '1'">
+                                                    定価：{{ formatPrice(deviceInfo(line.device).price) }}円 − 端末割引：{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円 ＝ 支払額 {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円
+                                                </div>
+                                                <div class="text-[10px] text-amber-900" v-else>
+                                                    端末割引：{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引き適用済
+                                                </div>
+                                            </div>
+
+                                            <div v-for="(st, dIdx) in lineCalc(idx).discounts" :key="dIdx" class="flex justify-between pl-2 text-amber-900 font-bold">
+                                                <span>↳ {{ st.label }}</span><span>{{ formatPrice(st.amount) }}円</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-sm">{{ formatPrice(calc.mobile.total) }}円</td>
+                                </tr>
+
+                                <!-- 横断割引・セット割 -->
+                                <tr v-if="calc.otherDiscountsTotal < 0">
+                                    <td class="border border-slate-300 p-2 font-bold bg-amber-50 text-amber-950 align-top">複数サービス<br>セット割引</td>
+                                    <td class="border border-slate-300 p-2 text-xs bg-amber-50/40">
+                                        <div class="flex justify-between text-amber-900 font-bold mb-0.5" v-for="(d, i) in calc.crossServiceDiscounts" :key="i">
+                                            <span>{{ d.name }}</span><span>{{ formatPrice(d.amount) }}円</span>
+                                        </div>
+                                    </td>
+                                    <td class="border border-slate-300 p-2 text-right align-bottom font-bold text-amber-900 text-sm">{{ formatPrice(calc.otherDiscountsTotal) }}円</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 適用割引の要約 -->
+                    <div class="print-section bg-sky-50 p-3 rounded-lg border border-sky-200 mb-5 text-xs">
+                        <h4 class="font-bold text-sky-950 mb-1 border-b border-sky-200 pb-0.5">適用中の割引・特典一覧</h4>
+                        <div class="flex flex-wrap gap-2 mt-1.5">
+                            <span v-if="calc.allDiscounts.length === 0" class="text-slate-500">特になし</span>
+                            <span v-for="(d, i) in calc.allDiscounts" :key="i" class="bg-white border border-sky-300 text-sky-900 font-bold px-2 py-0.5 rounded">
+                                {{ d.name }} ({{ formatPrice(d.amount) }}円)
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 初期費用＆早期解約違約金 -->
+                    <div class="print-section flex justify-between items-start text-xs gap-4 mb-4">
+                        <div class="w-1/2">
+                            <h3 class="font-extrabold border-l-4 border-sky-600 pl-2 mb-1.5 text-sky-950">② 初期費用（初回発生分）</h3>
+                            <div class="border border-slate-300 p-2.5 rounded-lg space-y-1.5 bg-slate-50">
+                                <div class="flex justify-between font-bold">
+                                    <span>標準工事費用（全種別合計）</span>
+                                    <span class="line-through text-slate-400">{{ formatPrice(calc.initCost.normal) }}円</span>
+                                </div>
+                                <div class="flex justify-between font-extrabold text-sky-950 border-t border-slate-200 pt-1">
+                                    <span>{{ calc.initCost.freeMonths }}ヶ月継続利用お約束</span>
+                                    <span class="text-sm">実質 0 円</span>
+                                </div>
+                                <div v-if="calc.mobile.deviceOneTimeTotal > 0" class="mt-2 pt-2 border-t border-slate-300 font-bold text-amber-950 space-y-0.5">
+                                    <div class="flex justify-between">
+                                        <span>スマホ端末一括購入代金 (計)</span>
+                                        <span>{{ formatPrice(calc.mobile.deviceOneTimeTotal) }} 円</span>
+                                    </div>
+                                    <div v-for="(line, idx) in mobileLines.filter(l => l.deviceBuy === 'yes' && l.devicePay === '1')" :key="idx" class="text-[10px] font-normal text-slate-600 pl-2">
+                                        ・回線 {{ mobileLines.indexOf(line) + 1 }}：{{ deviceInfo(line.device).name }} 支払額 {{ formatPrice(lineCalc(mobileLines.indexOf(line)).deviceOneTimePrice) }}円
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="w-1/2">
+                            <h3 class="font-extrabold border-l-4 border-sky-600 pl-2 mb-1.5 text-sky-950">③ 早期解約時の違約金について</h3>
+                            <div class="border border-slate-300 bg-slate-50 p-2.5 rounded-lg text-[10px] leading-relaxed">
+                                <p class="font-bold text-slate-800">{{ calc.initCost.freeMonths }}ヶ月未満でのご解約時の通常違約金月額単価：</p>
+                                <ul class="list-disc pl-4 mt-1 space-y-0.5 text-slate-700">
+                                    <li v-if="tv !== 'none'">光テレビ： {{ formatPrice(calc.initCost.penaltyRates.tv) }}円 × 残月数</li>
+                                    <li v-if="net !== 'none'">光インターネット： {{ formatPrice(calc.initCost.penaltyRates.net) }}円 × 残月数</li>
+                                    <li v-if="!isMansion && tel">光でんわ： {{ formatPrice(calc.initCost.penaltyRates.tel) }}円 × 残月数</li>
+                                </ul>
+                                <div class="mt-1 font-bold text-slate-800">計算式： ({{ calc.initCost.freeMonths }}ヶ月 − ご利用月数) × 上記単価</div>
+                                <p v-if="calc.hasNetPromotion" class="mt-1 text-amber-900 font-bold border-t border-slate-200 pt-1">
+                                    ※特典適用後1年未満でのNET解約時、キャンペーン違約金（特典相当額）が請求される場合があります。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- フッター注記 -->
+                    <div class="text-center text-[9px] text-slate-500 border-t border-slate-300 pt-2">
+                        ※本見積書は概算計算です。工事環境やユニバーサルサービス料、NHK受信料等の変動により実際の請求額と多少異なる場合があります。
+                    </div>
+                </div>
             </template>
         </div>
 
@@ -930,6 +1217,7 @@ function initApp() {
 
             tvLabel(key) { const o = (this.uiOptions.tv || []).find(x => x.key === key); return o ? o.label : ''; },
             netLabel(key) { const o = (this.uiOptions.net || []).find(x => x.key === key); return o ? o.label : ''; },
+            stbName(key) { const o = (this.uiOptions.stb || []).find(x => x.key === key); return o ? o.name : ''; },
             deviceInfo(key) { return (this.uiOptions.devices || []).find(d => d.key === key) || { price: 0, pay24: 0, pay48: 0, name: '' }; },
             ottOption(key) { return (this.uiOptions.ott || []).find(o => o.key === key) || { label: '', price: 0 }; },
             lineCalc(index) {
@@ -956,9 +1244,16 @@ function initApp() {
                 this.recommendations = [];
             },
 
-            printPDF() {
+            async printPDF() {
+                if (!this.calc) {
+                    this.apiError = '計算結果がまだ取得できていないため、印刷できません。';
+                    return;
+                }
                 this.showSummaryDetail = false;
-                setTimeout(() => { window.print(); }, 300);
+                await this.$nextTick();
+                setTimeout(() => {
+                    window.print();
+                }, 100);
             },
 
             formatPrice(val) {

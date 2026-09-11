@@ -798,9 +798,16 @@
 
                                             <div v-if="line.deviceBuy === 'yes'" class="pl-2 mt-0.5 border-t border-slate-100 pt-0.5">
                                                 <div class="flex justify-between font-bold text-amber-950">
-                                                    <span>端末：{{ lineCalc(idx).deviceName }} ({{ line.devicePay === '1' ? '一括購入' : line.devicePay + '回割賦' }})</span>
+                                                    <span>端末：{{ lineCalc(idx).deviceName }} ({{ line.devicePay === '1' ? '一括購入(初期費用)' : line.devicePay + '回割賦(月額)' }})</span>
                                                     <span v-if="line.devicePay !== '1'">+{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円/月</span>
-                                                    <span v-else>※一括 {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円 (初回)</span>
+                                                    <span v-else>※一括 {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円 (初回費用)</span>
+                                                </div>
+                                                <!-- 端末割引の明記 -->
+                                                <div class="text-[10px] text-amber-900" v-if="line.devicePay === '1'">
+                                                    ↳ 定価：{{ formatPrice(deviceInfo(line.device).price) }}円 − 端末割引：-{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円 ＝ 初期費用支払額 {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円
+                                                </div>
+                                                <div class="text-[10px] text-amber-900" v-else>
+                                                    ↳ 端末割引：-{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引き適用済 (月額費用に反映)
                                                 </div>
                                             </div>
 
@@ -832,9 +839,14 @@
                                 </div>
                             </div>
 
-                            <!-- 適用中の割引一覧 -->
+                            <!-- 適用中の割引一覧 (割引合計額の表示を追加) -->
                             <div class="bg-amber-50/80 p-4 rounded-xl border border-amber-200 mt-4">
-                                <h4 class="font-bold text-amber-950 text-sm mb-2 border-b border-amber-200 pb-1">✨ 適用中の割引一覧</h4>
+                                <div class="flex justify-between items-center border-b border-amber-200 pb-1 mb-2">
+                                    <h4 class="font-bold text-amber-950 text-sm">✨ 適用中の割引一覧</h4>
+                                    <span v-if="calc && calc.grandTotalDiscounts < 0" class="font-black text-amber-900 text-sm">
+                                        毎月の割引合計：{{ formatPrice(calc.grandTotalDiscounts) }}円/月
+                                    </span>
+                                </div>
                                 <div class="space-y-1 text-xs">
                                     <div v-if="!calc || calc.allDiscounts.length === 0" class="text-slate-500">現在適用中の割引はありません。</div>
                                     <div v-for="(discount, i) in (calc ? calc.allDiscounts : [])" :key="i" class="flex justify-between items-center text-amber-900 font-bold">
@@ -1077,15 +1089,15 @@
 
                                             <div v-if="line.deviceBuy === 'yes'" class="pl-2 mt-1 border-t border-slate-200 pt-1">
                                                 <div class="flex justify-between font-bold text-amber-950">
-                                                    <span>端末：{{ lineCalc(idx).deviceName }} ({{ line.devicePay === '1' ? '一括購入' : line.devicePay + '回分割' }})</span>
+                                                    <span>端末：{{ lineCalc(idx).deviceName }} ({{ line.devicePay === '1' ? '一括購入(初期費用)' : line.devicePay + '回割賦(月額)' }})</span>
                                                     <span v-if="line.devicePay !== '1'">+{{ formatPrice(lineCalc(idx).devicePriceRaw) }}円/月</span>
-                                                    <span v-else>※一括 {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円 (初回)</span>
+                                                    <span v-else>※一括 {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円 (初回費用)</span>
                                                 </div>
                                                 <div class="text-[10px] text-amber-900" v-if="line.devicePay === '1'">
-                                                    定価：{{ formatPrice(deviceInfo(line.device).price) }}円 − 端末割引：{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円 ＝ 支払額 {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円
+                                                    定価：{{ formatPrice(deviceInfo(line.device).price) }}円 − 端末割引：-{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円 ＝ 初期費用支払額 {{ formatPrice(lineCalc(idx).deviceOneTimePrice) }}円
                                                 </div>
                                                 <div class="text-[10px] text-amber-900" v-else>
-                                                    端末割引：{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引き適用済
+                                                    端末割引：-{{ formatPrice(lineCalc(idx).appliedDiscountTotal) }}円引き適用済 (月額費用に反映)
                                                 </div>
                                             </div>
 
@@ -1113,7 +1125,12 @@
 
                     <!-- 適用割引の要約 -->
                     <div class="print-section bg-sky-50 p-3 rounded-lg border border-sky-200 mb-5 text-xs">
-                        <h4 class="font-bold text-sky-950 mb-1 border-b border-sky-200 pb-0.5">適用中の割引・特典一覧</h4>
+                        <div class="flex justify-between items-center border-b border-sky-200 pb-0.5 mb-1">
+                            <h4 class="font-bold text-sky-950">適用中の割引・特典一覧</h4>
+                            <span v-if="calc.grandTotalDiscounts < 0" class="font-black text-sky-950">
+                                割引合計：{{ formatPrice(calc.grandTotalDiscounts) }}円/月
+                            </span>
+                        </div>
                         <div class="flex flex-wrap gap-2 mt-1.5">
                             <span v-if="calc.allDiscounts.length === 0" class="text-slate-500">特になし</span>
                             <span v-for="(d, i) in calc.allDiscounts" :key="i" class="bg-white border border-sky-300 text-sky-900 font-bold px-2 py-0.5 rounded">

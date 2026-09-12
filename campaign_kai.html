@@ -1524,7 +1524,7 @@ function initApp() {
                 } catch (err) {
                     this.apiError = '料金計算サーバーとの通信に失敗しました。しばらくしてから再度お試しください。';
                     console.error(err);
-                } fontally {
+                } finally {
                     this.isLoading = false;
                 }
             },

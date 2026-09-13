@@ -1446,29 +1446,35 @@ function initApp() {
                                 const lineInput = this.mobileLines[idx];
                                 if (!lineInput) return;
 
-                                if (lineInput.source !== 'existing' && lineInput.deviceBuy === 'yes') {
+                                const isVoice = lineInput.plan && lineInput.plan.startsWith('voice');
+
+                                // 音声プランであれば常に全支払い方法の割引額(一括: 10,000円, 24回: 400円/月, 48回: 200円/月)を維持
+                                if (lineInput.source !== 'existing' && isVoice) {
                                     const dev = this.deviceInfo(lineInput.device);
-                                    if (lineInput.devicePay === '1') {
-                                        const singleDiscount = 10000;
-                                        lineRes.appliedDiscountTotal = singleDiscount;
-                                        lineRes.deviceDiscountDetail = { total: singleDiscount, per24: 0, per48: 0 };
-                                        lineRes.deviceOneTimePrice = Math.max(0, dev.price - singleDiscount);
-                                        totalOneTimeDeviceDiscount += singleDiscount;
-                                        totalDeviceDiscount += singleDiscount;
-                                    } else if (lineInput.devicePay === '24') {
-                                        const totalDisc = 9600;
-                                        const per24 = 400;
-                                        lineRes.appliedDiscountTotal = totalDisc;
-                                        lineRes.deviceDiscountDetail = { total: totalDisc, per24: per24, per48: 0 };
-                                        lineRes.devicePriceRaw = Math.max(0, dev.pay24 - per24);
-                                        totalDeviceDiscount += totalDisc;
-                                    } else if (lineInput.devicePay === '48') {
-                                        const totalDisc = 9600;
-                                        const per48 = 200;
-                                        lineRes.appliedDiscountTotal = totalDisc;
-                                        lineRes.deviceDiscountDetail = { total: totalDisc, per24: 0, per48: per48 };
-                                        lineRes.devicePriceRaw = Math.max(0, dev.pay48 - per48);
-                                        totalDeviceDiscount += totalDisc;
+                                    const singleDiscount = 10000;
+                                    const totalDisc = 9600;
+                                    const per24 = 400;
+                                    const per48 = 200;
+
+                                    lineRes.deviceDiscountDetail = { total: singleDiscount, per24: per24, per48: per48 };
+
+                                    if (lineInput.deviceBuy === 'yes') {
+                                        if (lineInput.devicePay === '1') {
+                                            lineRes.appliedDiscountTotal = singleDiscount;
+                                            lineRes.deviceOneTimePrice = Math.max(0, dev.price - singleDiscount);
+                                            totalOneTimeDeviceDiscount += singleDiscount;
+                                            totalDeviceDiscount += singleDiscount;
+                                        } else if (lineInput.devicePay === '24') {
+                                            lineRes.appliedDiscountTotal = totalDisc;
+                                            lineRes.devicePriceRaw = Math.max(0, dev.pay24 - per24);
+                                            totalDeviceDiscount += totalDisc;
+                                        } else if (lineInput.devicePay === '48') {
+                                            lineRes.appliedDiscountTotal = totalDisc;
+                                            lineRes.devicePriceRaw = Math.max(0, dev.pay48 - per48);
+                                            totalDeviceDiscount += totalDisc;
+                                        }
+                                    } else {
+                                        lineRes.appliedDiscountTotal = 0;
                                     }
                                 } else {
                                     lineRes.appliedDiscountTotal = 0;

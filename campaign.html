@@ -1580,13 +1580,19 @@ function initApp() {
                     if (!printEl) return;
 
                     const originalStyle = printEl.style.cssText;
-                    printEl.style.cssText = 'display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: #ffffff; z-index: 9999;';
+                    // キャプチャ用に画面最上部（fixed）に配置し背景色を固定
+                    printEl.style.cssText = 'display: block !important; position: fixed; left: 0; top: 0; width: 100%; max-width: 800px; background: #ffffff; z-index: 99999;';
 
                     const opt = {
                         margin:       5,
                         filename:     '料金試算結果.pdf',
                         image:        { type: 'jpeg', quality: 0.98 },
-                        html2canvas:  { scale: 2, useCORS: true },
+                        html2canvas:  { 
+                            scale: 2, 
+                            useCORS: true,
+                            scrollY: 0, // ★画面ズレによる真っ白化を防ぐ必須設定
+                            scrollX: 0
+                        },
                         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     };
 

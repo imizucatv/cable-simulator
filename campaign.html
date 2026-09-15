@@ -1566,54 +1566,49 @@ function initApp() {
                 this.recommendations = [];
             },
 
-async printPDF() {
-    if (!this.calc) {
-        this.apiError = '計算結果がまだ取得できていないため、印刷できません。';
-        return;
-    }
-    this.showSummaryDetail = false;
-    await this.$nextTick();
+            async printPDF() {
+                if (!this.calc) {
+                    this.apiError = '計算結果がまだ取得できていないため、印刷できません。';
+                    return;
+                }
+                this.showSummaryDetail = false;
+                await this.$nextTick();
 
-    // iframe（ポップアップモーダル）内で動いている場合
-    if (window.self !== window.top) {
-        const printEl = document.querySelector('.print-only');
-        if (!printEl) return;
+                // iframe（ポップアップ）内で動いている場合
+                if (window.self !== window.top) {
+                    const printEl = document.querySelector('.print-only');
+                    if (!printEl) return;
 
-        // html2pdf が描画できるよう、一時的に非表示（display:none）を解除
-        const originalStyle = printEl.style.cssText;
-        printEl.style.cssText = 'display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: #ffffff; z-index: 9999;';
+                    const originalStyle = printEl.style.cssText;
+                    printEl.style.cssText = 'display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: #ffffff; z-index: 9999;';
 
-        const opt = {
-            margin:       5,
-            filename:     '料金試算結果.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
+                    const opt = {
+                        margin:       5,
+                        filename:     '料金試算結果.pdf',
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { scale: 2, useCORS: true },
+                        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    };
 
-        try {
-            // 背景でPDF（Blobデータ）を作成
-            const pdfBlob = await html2pdf().set(opt).from(printEl).output('blob');
-
-            // 親ページ（index_2.html）にPDFデータを送信
-            window.parent.postMessage({
-                type: 'ATTACH_SIMULATOR_PDF',
-                blob: pdfBlob
-            }, '*');
-        } catch (err) {
-            console.error('PDF自動作成エラー:', err);
-            alert('PDFの作成に失敗しました。');
-        } finally {
-            // PDF化が完了したら表示状態を元に戻す
-            printEl.style.cssText = originalStyle;
-        }
-    } else {
-        // 単体アクセスの場合は通常の紙印刷画面を開く
-        setTimeout(() => {
-            window.print();
-        }, 100);
-    }
-},
+                    try {
+                        const pdfBlob = await html2pdf().set(opt).from(printEl).output('blob');
+                        window.parent.postMessage({
+                            type: 'ATTACH_SIMULATOR_PDF',
+                            blob: pdfBlob
+                        }, '*');
+                    } catch (err) {
+                        console.error('PDF自動作成エラー:', err);
+                        alert('PDFの作成に失敗しました。');
+                    } finally {
+                        printEl.style.cssText = originalStyle;
+                    }
+                } else {
+                    setTimeout(() => {
+                        window.print();
+                    }, 100);
+                }
+            },
+            
             formatPrice(val) {
                 if (val == null || isNaN(val) || !isFinite(val)) return '0';
                 return Number(val).toLocaleString('ja-JP');

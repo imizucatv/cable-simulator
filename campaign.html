@@ -1566,7 +1566,7 @@ function initApp() {
                 this.recommendations = [];
             },
 
-            async printPDF() {
+　　　　　　　　async printPDF() {
                 if (!this.calc) {
                     this.apiError = '計算結果がまだ取得できていないため、印刷できません。';
                     return;
@@ -1579,25 +1579,35 @@ function initApp() {
                     const printEl = document.querySelector('.print-only');
                     if (!printEl) return;
 
-                    const originalStyle = printEl.style.cssText;
-                    // キャプチャ用に画面最上部（fixed）に配置し背景色を固定
-                    printEl.style.cssText = 'display: block !important; position: fixed; left: 0; top: 0; width: 100%; max-width: 800px; background: #ffffff; z-index: 99999;';
+                    // 1. 元のスタイルを保存し、非表示を解除 (fixed は白紙の原因になるため relative を使用)
+                    const originalCss = printEl.style.cssText;
+                    printEl.style.cssText = 'display: block !important; position: relative !important; width: 100% !important; background: #ffffff !important; z-index: 9999;';
+
+                    // 2. ブラウザが画面を描画し切るまで 300ms 待つ（白紙化防止の最重要ポイント）
+                    await new Promise(resolve => setTimeout(resolve, 300));
 
                     const opt = {
-                        margin:       5,
+                        margin:       [5, 5, 5, 5],
                         filename:     '料金試算結果.pdf',
                         image:        { type: 'jpeg', quality: 0.98 },
                         html2canvas:  { 
                             scale: 2, 
                             useCORS: true,
-                            scrollY: 0, // ★画面ズレによる真っ白化を防ぐ必須設定
+                            logging: false,
+                            scrollY: 0,
                             scrollX: 0
                         },
                         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     };
 
                     try {
+                        // 3. 背景でPDFを作成
                         const pdfBlob = await html2pdf().set(opt).from(printEl).output('blob');
+                        
+                        // ★デバッグ用：コンソールに生成されたファイルサイズを出力
+                        console.log('生成されたPDFのサイズ(bytes):', pdfBlob.size);
+
+                        // 4. 親ページ（index_2.html）へデータ送信
                         window.parent.postMessage({
                             type: 'ATTACH_SIMULATOR_PDF',
                             blob: pdfBlob
@@ -1606,7 +1616,8 @@ function initApp() {
                         console.error('PDF自動作成エラー:', err);
                         alert('PDFの作成に失敗しました。');
                     } finally {
-                        printEl.style.cssText = originalStyle;
+                        // 5. 元の表示状態に戻す
+                        printEl.style.cssText = originalCss;
                     }
                 } else {
                     setTimeout(() => {

@@ -1584,8 +1584,16 @@ function initApp() {
                 this.recommendations = [];
             },
 
-　　　　　　　　async printPDF() {
-                if (!this.calc) {
+　　　　 async printPDF() {
+				// ▼ GA4イベント送信コードを追加
+				if (typeof window.gtag === 'function') {
+					window.gtag('event', 'click_print_pdf', {
+						'event_category': 'button',
+						'event_label': '控えを印刷・PDF保存'
+					});
+				}
+
+				if (!this.calc) {
                     this.apiError = '計算結果がまだ取得できていないため、印刷できません。';
                     return;
                 }

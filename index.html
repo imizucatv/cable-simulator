@@ -1405,6 +1405,14 @@ function initApp() {
             },
 
             printPDF() {
+                // ▼ GA4イベント送信コードを追加
+                if (typeof window.gtag === 'function') {
+                    window.gtag('event', 'click_print_pdf', {
+                        'event_category': 'button',
+                        'event_label': '控えを印刷・PDF保存'
+                    });
+                }
+
                 this.showSummaryDetail = false;
                 setTimeout(() => { window.print(); }, 300);
             },

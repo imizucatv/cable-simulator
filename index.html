@@ -1331,6 +1331,51 @@ function initApp() {
             'existingNet.plan'(v) { if (this.existingNet.has && this.existingNet.action === 'keep') this.net = v; },
 
             'existingTel.has'(v) { this.tel = v; }
+
+            // 1. 契約種別（STEP0）が選択・変更されたとき
+            contractPattern(newVal) {
+                if (newVal && typeof window.gtag === 'function') {
+                    window.gtag('event', 'select_plan', {
+                        'category': '契約種別',
+                        'plan_name': newVal
+                    });
+                }
+            },
+
+            // 2. 光テレビのプラン（STEP1）が選択・変更されたとき
+            tv(newVal) {
+                // 'none'（未選択）に戻した場合は計測しない
+                if (newVal !== 'none' && typeof window.gtag === 'function') {
+                    window.gtag('event', 'select_plan', {
+                        'category': '光テレビ',
+                        'plan_name': newVal // premium, standard などが記録されます
+                    });
+                }
+                
+                // (既存の処理) 選択解除時にSTBをデフォルトに戻す
+                if (newVal === 'none') this.stb = 'ls500b'; 
+            },
+
+            // 3. 光インターネットのプラン（STEP2）が選択・変更されたとき
+            net(newVal) {
+                if (newVal !== 'none' && typeof window.gtag === 'function') {
+                    window.gtag('event', 'select_plan', {
+                        'category': '光インターネット',
+                        'plan_name': newVal // net10g, net1g などが記録されます
+                    });
+                }
+
+                // (既存の処理) ネットのオプション・継続割のリセット処理
+                if (newVal === 'none') {
+                    this.router = false;
+                    this.netOps = { jSafe: false, spamFilter: false, addMail: false };
+                    this.isKeizokuWari = false;
+                } else if (['net10g', 'net1g', 'net300m'].includes(newVal)) {
+                    this.isKeizokuWari = true;
+                } else {
+                    this.isKeizokuWari = false;
+                }
+            }
         },
         methods: {
             scheduleFetch() {

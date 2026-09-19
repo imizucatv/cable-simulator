@@ -1290,18 +1290,7 @@ function initApp() {
                 deep: true,
                 handler() { this.scheduleFetch(); }
             },
-            net(newVal) {
-                if (newVal === 'none') {
-                    this.router = false;
-                    this.netOps = { jSafe: false, spamFilter: false, addMail: false };
-                    this.isKeizokuWari = false;
-                } else if (['net10g', 'net1g', 'net300m'].includes(newVal)) {
-                    this.isKeizokuWari = true;
-                } else {
-                    this.isKeizokuWari = false;
-                }
-            },
-            tv(newVal) { if (newVal === 'none') this.stb = 'ls500b'; },
+         
             tel(newVal) { if (!newVal) this.telOps = { pack: false, disp: false, req: false, catchDisp: false, catchCall: false, transfer: false }; },
 
             'telOps.pack'(newVal) {

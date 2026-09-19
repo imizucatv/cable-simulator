@@ -1414,7 +1414,7 @@ function initApp() {
             'existingNet.action'(v) { if (v === 'keep') this.net = this.existingNet.plan; },
             'existingNet.plan'(v) { if (this.existingNet.has && this.existingNet.action === 'keep') this.net = v; },
 
-            'existingTel.has'(v) { this.tel = v; }
+            'existingTel.has'(v) { this.tel = v; },
 
             // 1. 契約種別（STEP0）が選択・変更されたとき
             contractPattern(newVal) {

@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-　　<!-- Google tag (gtag.js) -->
-　　<script async src="https://www.googletagmanager.com/gtag/js?id=G-4K619WYCQX"></script>
-　　<script>
-　　  window.dataLayer = window.dataLayer || [];
- 　　 function gtag(){dataLayer.push(arguments);}
- 　　 gtag('js', new Date());
-　　  gtag('config', 'G-4K619WYCQX');
-　　</script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4K619WYCQX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-4K619WYCQX');
+  </script>
     <meta charset="UTF-8">
     <meta name="robots" content="noindex, nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -546,7 +546,7 @@
                                     </div>
                                     <div class="flex gap-3 mb-4 text-sm">
                                         <button type="button" @click="line.deviceBuy = 'no'" class="p-3.5 rounded-xl flex-1 text-center border-2 bg-white transition-all font-bold" :class="line.deviceBuy === 'no' ? 'border-rose-500 text-rose-950 ring-1 ring-rose-400' : 'border-slate-300 text-slate-600'">持込 (購入しない)</button>
-                                        <button type="button" @click="line.deviceBuy = 'yes'; if (calc && calc.hasNetCampaign) line.devicePay = '1';" class="p-3.5 rounded-xl flex-1 text-center border-2 bg-white transition-all font-bold" :class="line.deviceBuy === 'yes' ? 'border-rose-500 text-rose-950 ring-1 ring-rose-400 shadow-sm' : 'border-slate-300 text-slate-600'">端末を新規購入する</button>
+                                        <button type="button" @click="line.deviceBuy = 'yes'; if (is20kDiscount(index)) line.devicePay = '1';" class="p-3.5 rounded-xl flex-1 text-center border-2 bg-white transition-all font-bold" :class="line.deviceBuy === 'yes' ? 'border-rose-500 text-rose-950 ring-1 ring-rose-400 shadow-sm' : 'border-slate-300 text-slate-600'">端末を新規購入する</button>
                                     </div>
 
                                     <transition name="fade">
@@ -557,7 +557,7 @@
                                             <div class="text-xs text-rose-950 leading-relaxed font-medium">
                                                 ※端末購入割引は選択した支払方法および加入状況に応じて適用されます。<br>
                                                 ・【スマホ新規加入特典】一括10,000円引き / 割賦総額9,600円引き（ネット既設者様も対象）<br>
-                                                ・【NET新規(10G/1G)同時申込み特典】一括割引が増額（最大20,000円引き）されますが<span class="text-rose-900 font-extrabold border-b border-rose-700">お支払いは「一括払い（初期費用で清算）」のみ</span>となります。（※ネット既設者様はNET加入側10,000円分は対象外）
+                                                ・【NET新規(10G/1G)同時申込み特典】1台目のみ一括割引が増額（最大20,000円引き）されますが<span class="text-rose-900 font-extrabold border-b border-rose-700">お支払いは「一括払い（初期費用で清算）」のみ</span>となります。（※2台目以降およびネット既設者様はNET加入側10,000円分は対象外）
                                             </div>
 
                                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs sm:text-sm" v-if="deviceInfo(line.device)">
@@ -575,7 +575,7 @@
                                                 </button>
                                                 
                                                 <!-- 24回払い -->
-                                                <button type="button" @click="(!calc || !calc.hasNetCampaign) ? line.devicePay = '24' : null" :disabled="calc && calc.hasNetCampaign" class="p-3.5 rounded-xl border-2 text-center transition-all" :class="[(calc && calc.hasNetCampaign) ? 'opacity-50 cursor-not-allowed bg-slate-100 border-slate-300' : (line.devicePay === '24' ? 'border-rose-500 ring-2 ring-rose-400 font-extrabold shadow-md bg-white' : 'border-slate-300 bg-white')]">
+                                                <button type="button" @click="!is20kDiscount(index) ? line.devicePay = '24' : null" :disabled="is20kDiscount(index)" class="p-3.5 rounded-xl border-2 text-center transition-all" :class="[is20kDiscount(index) ? 'opacity-50 cursor-not-allowed bg-slate-100 border-slate-300' : (line.devicePay === '24' ? 'border-rose-500 ring-2 ring-rose-400 font-extrabold shadow-md bg-white' : 'border-slate-300 bg-white')]">
                                                     24回払い<br>
                                                     <template v-if="lineCalc(index).deviceDiscountDetail && lineCalc(index).deviceDiscountDetail.per24 > 0">
                                                         <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).pay24) }}円</span><br>
@@ -588,7 +588,7 @@
                                                 </button>
                                                 
                                                 <!-- 48回払い -->
-                                                <button type="button" @click="(!calc || !calc.hasNetCampaign) ? line.devicePay = '48' : null" :disabled="calc && calc.hasNetCampaign" class="p-3.5 rounded-xl border-2 text-center transition-all" :class="[(calc && calc.hasNetCampaign) ? 'opacity-50 cursor-not-allowed bg-slate-100 border-slate-300' : (line.devicePay === '48' ? 'border-rose-500 ring-2 ring-rose-400 font-extrabold shadow-md bg-white' : 'border-slate-300 bg-white')]">
+                                                <button type="button" @click="!is20kDiscount(index) ? line.devicePay = '48' : null" :disabled="is20kDiscount(index)" class="p-3.5 rounded-xl border-2 text-center transition-all" :class="[is20kDiscount(index) ? 'opacity-50 cursor-not-allowed bg-slate-100 border-slate-300' : (line.devicePay === '48' ? 'border-rose-500 ring-2 ring-rose-400 font-extrabold shadow-md bg-white' : 'border-slate-300 bg-white')]">
                                                     48回払い<br>
                                                     <template v-if="lineCalc(index).deviceDiscountDetail && lineCalc(index).deviceDiscountDetail.per48 > 0">
                                                         <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).pay48) }}円</span><br>
@@ -1000,7 +1000,7 @@
                                         <span class="text-orange-800 font-extrabold">📱 スマホ端末購入特典：</span><br>
                                         ・端末購入代金 <span class="text-red-600 font-black text-sm">最大 {{ formatPrice(calc.mobile.totalDeviceDiscountAmount) }}円引き</span> 適用済！<br>
                                         <span class="text-[10px] text-gray-600 font-normal">
-                                            ({{ calc.hasNetCampaign ? 'NET新規併用特典：1台あたり一括20,000円引き' : 'スマホ特典：一括10,000円引き／割賦総額9,600円引き（-400円/月×24回, -200円/月×48回）' }})
+                                            ({{ calc.hasNetCampaign ? 'NET新規併用特典：1台目一括20,000円引き（2台目以降は一括10,000円引き／割賦総額9,600円引き）' : 'スマホ特典：一括10,000円引き／割賦総額9,600円引き（-400円/月×24回, -200円/月×48回）' }})
                                         </span>
                                     </li>
                                     <li v-if="hasBakuwariTarget()" class="bg-rose-50 p-1.5 rounded border border-rose-200">
@@ -1280,7 +1280,7 @@ function initApp() {
         const errDiv = document.getElementById('cdn-error');
         if (errDiv) {
             errDiv.style.display = 'block';
-            errDiv.textContent = '⚠️ Vue 3 (CDN) の読み込みに失敗したため、シミュレーターを起動できません。ネットワーク接続をご確認ください。';
+            errDiv.textContent = '⚠️ 必要なスクリプトの読み込みに失敗したため、シミュレーターを起動できません。ネットワーク接続をご確認ください。';
         }
         return;
     }
@@ -1320,7 +1320,7 @@ function initApp() {
             };
         },
         computed: {
-        // モーダル表示(iframe内)かどうかを自動判定
+            // モーダル表示(iframe内)かどうかを自動判定
             isIframe() {
                 try {
                     return window.self !== window.top;
@@ -1367,11 +1367,17 @@ function initApp() {
                 handler() { this.scheduleFetch(); }
             },
 
+            // 修正：2万円割引対象となる最初の1台目のみを一括購入（'1'）に固定する
             'calc.hasNetCampaign'(newVal) {
                 if (newVal) {
+                    let hasApplied = false;
                     this.mobileLines.forEach(line => {
-                        if (line.deviceBuy === 'yes' && line.devicePay !== '1') {
-                            line.devicePay = '1';
+                        const isVoice = line.plan && line.plan.startsWith('voice');
+                        if (line.deviceBuy === 'yes' && isVoice) {
+                            if (!hasApplied) {
+                                line.devicePay = '1';
+                                hasApplied = true;
+                            }
                         }
                     });
                 }
@@ -1381,9 +1387,14 @@ function initApp() {
                 deep: true,
                 handler(lines) {
                     if (this.calc && this.calc.hasNetCampaign) {
+                        let hasApplied = false;
                         lines.forEach(line => {
-                            if (line.deviceBuy === 'yes' && line.devicePay !== '1') {
-                                line.devicePay = '1';
+                            const isVoice = line.plan && line.plan.startsWith('voice');
+                            if (line.deviceBuy === 'yes' && isVoice) {
+                                if (!hasApplied) {
+                                    line.devicePay = '1';
+                                    hasApplied = true;
+                                }
                             }
                         });
                     }
@@ -1428,15 +1439,12 @@ function initApp() {
 
             // 2. 光テレビのプラン（STEP1）が選択・変更されたとき
             tv(newVal) {
-                // 'none'（未選択）に戻した場合は計測しない
                 if (newVal !== 'none' && typeof window.gtag === 'function') {
                     window.gtag('event', 'select_plan', {
                         'category': '光テレビ',
-                        'plan_name': newVal // premium, standard などが記録されます
+                        'plan_name': newVal
                     });
                 }
-                
-                // (既存の処理) 選択解除時にSTBをデフォルトに戻す
                 if (newVal === 'none') this.stb = 'ls500b'; 
             },
 
@@ -1445,11 +1453,10 @@ function initApp() {
                 if (newVal !== 'none' && typeof window.gtag === 'function') {
                     window.gtag('event', 'select_plan', {
                         'category': '光インターネット',
-                        'plan_name': newVal // net10g, net1g などが記録されます
+                        'plan_name': newVal
                     });
                 }
 
-                // (既存の処理) ネットのオプション・継続割のリセット処理
                 if (newVal === 'none') {
                     this.router = false;
                     this.netOps = { jSafe: false, spamFilter: false, addMail: false };
@@ -1462,6 +1469,11 @@ function initApp() {
             }	
 		},
         methods: {
+            // 追加：回線ごとに2万円割引が適用されているかを判定するヘルパーメソッド
+            is20kDiscount(index) {
+                const lc = this.lineCalc(index);
+                return !!(lc && lc.deviceDiscountDetail && lc.deviceDiscountDetail.total === 20000);
+            },
             hasBakuwariTarget() {
                 return this.mobileLines.some((l, idx) => this.lineCalc(idx).isBakuwariTarget);
             },
@@ -1485,7 +1497,7 @@ function initApp() {
                     this.calc = data.calculation;
                     this.recommendations = data.recommendations || [];
 
-                    // ネット既契約（「戸建て追加契約」で既にネット契約がある場合）のNET新規特典の適用外補正ロジック
+                    // ネット既契約（「戸建て追加契約」で既にネット契約がある場合）の補正ロジック
                     if (this.isAdd && this.existingNet.has && this.calc) {
                         this.calc.hasNetPromotion = false;
                         this.calc.hasNetCampaign = false;
@@ -1500,7 +1512,7 @@ function initApp() {
 
                                 const isVoice = lineInput.plan && lineInput.plan.startsWith('voice');
 
-                                // 音声プランであれば常に全支払い方法の割引額(一括: 10,000円, 24回: 400円/月, 48回: 200円/月)を維持
+                                // 音声プランであれば10,000円引き（一括）/ 9,600円引き（割賦）
                                 if (lineInput.source !== 'existing' && isVoice) {
                                     const dev = this.deviceInfo(lineInput.device);
                                     const singleDiscount = 10000;
@@ -1617,8 +1629,7 @@ function initApp() {
                 this.recommendations = [];
             },
 
-　　　　 async printPDF() {
-				// ▼ GA4イベント送信コードを追加
+            async printPDF() {
 				if (typeof window.gtag === 'function') {
 					window.gtag('event', 'click_print_pdf', {
 						'event_category': 'button',
@@ -1638,11 +1649,9 @@ function initApp() {
                     const printEl = document.querySelector('.print-only');
                     if (!printEl) return;
 
-                    // 1. 元のスタイルを保存し、非表示を解除 (fixed は白紙の原因になるため relative を使用)
                     const originalCss = printEl.style.cssText;
                     printEl.style.cssText = 'display: block !important; position: relative !important; width: 100% !important; background: #ffffff !important; z-index: 9999;';
 
-                    // 2. ブラウザが画面を描画し切るまで 300ms 待つ（白紙化防止の最重要ポイント）
                     await new Promise(resolve => setTimeout(resolve, 300));
 
                     const opt = {
@@ -1660,13 +1669,9 @@ function initApp() {
                     };
 
                     try {
-                        // 3. 背景でPDFを作成
                         const pdfBlob = await html2pdf().set(opt).from(printEl).output('blob');
-                        
-                        // ★デバッグ用：コンソールに生成されたファイルサイズを出力
                         console.log('生成されたPDFのサイズ(bytes):', pdfBlob.size);
 
-                        // 4. 親ページ（index_2.html）へデータ送信
                         window.parent.postMessage({
                             type: 'ATTACH_SIMULATOR_PDF',
                             blob: pdfBlob
@@ -1675,7 +1680,6 @@ function initApp() {
                         console.error('PDF自動作成エラー:', err);
                         alert('PDFの作成に失敗しました。');
                     } finally {
-                        // 5. 元の表示状態に戻す
                         printEl.style.cssText = originalCss;
                     }
                 } else {

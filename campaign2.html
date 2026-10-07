@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <!-- Google tag (gtag.js) -->
- _script async src="https://www.googletagmanager.com/gtag/js?id=G-4K619WYCQX"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4K619WYCQX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
@@ -546,7 +546,7 @@
                                     </div>
                                     <div class="flex gap-3 mb-4 text-sm">
                                         <button type="button" @click="line.deviceBuy = 'no'" class="p-3.5 rounded-xl flex-1 text-center border-2 bg-white transition-all font-bold" :class="line.deviceBuy === 'no' ? 'border-rose-500 text-rose-950 ring-1 ring-rose-400' : 'border-slate-300 text-slate-600'">持込 (購入しない)</button>
-                                        <button type="button" @click="line.deviceBuy = 'yes'; if (calc && calc.hasNetCampaign) line.devicePay = '1';" class="p-3.5 rounded-xl flex-1 text-center border-2 bg-white transition-all font-bold" :class="line.deviceBuy === 'yes' ? 'border-rose-500 text-rose-950 ring-1 ring-rose-400 shadow-sm' : 'border-slate-300 text-slate-600'">端末を新規購入する</button>
+                                        <button type="button" @click="line.deviceBuy = 'yes'; if (is20kDiscount(index)) line.devicePay = '1';" class="p-3.5 rounded-xl flex-1 text-center border-2 bg-white transition-all font-bold" :class="line.deviceBuy === 'yes' ? 'border-rose-500 text-rose-950 ring-1 ring-rose-400 shadow-sm' : 'border-slate-300 text-slate-600'">端末を新規購入する</button>
                                     </div>
 
                                     <transition name="fade">
@@ -575,7 +575,7 @@
                                                 </button>
                                                 
                                                 <!-- 24回払い -->
-                                                <button type="button" @click="(!calc || !calc.hasNetCampaign) ? line.devicePay = '24' : null" :disabled="calc && calc.hasNetCampaign" class="p-3.5 rounded-xl border-2 text-center transition-all" :class="[(calc && calc.hasNetCampaign) ? 'opacity-50 cursor-not-allowed bg-slate-100 border-slate-300' : (line.devicePay === '24' ? 'border-rose-500 ring-2 ring-rose-400 font-extrabold shadow-md bg-white' : 'border-slate-300 bg-white')]">
+                                                <button type="button" @click="!is20kDiscount(index) ? line.devicePay = '24' : null" :disabled="is20kDiscount(index)" class="p-3.5 rounded-xl border-2 text-center transition-all" :class="[is20kDiscount(index) ? 'opacity-50 cursor-not-allowed bg-slate-100 border-slate-300' : (line.devicePay === '24' ? 'border-rose-500 ring-2 ring-rose-400 font-extrabold shadow-md bg-white' : 'border-slate-300 bg-white')]">
                                                     24回払い<br>
                                                     <template v-if="lineCalc(index).deviceDiscountDetail && lineCalc(index).deviceDiscountDetail.per24 > 0">
                                                         <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).pay24) }}円</span><br>
@@ -588,7 +588,7 @@
                                                 </button>
                                                 
                                                 <!-- 48回払い -->
-                                                <button type="button" @click="(!calc || !calc.hasNetCampaign) ? line.devicePay = '48' : null" :disabled="calc && calc.hasNetCampaign" class="p-3.5 rounded-xl border-2 text-center transition-all" :class="[(calc && calc.hasNetCampaign) ? 'opacity-50 cursor-not-allowed bg-slate-100 border-slate-300' : (line.devicePay === '48' ? 'border-rose-500 ring-2 ring-rose-400 font-extrabold shadow-md bg-white' : 'border-slate-300 bg-white')]">
+                                                <button type="button" @click="!is20kDiscount(index) ? line.devicePay = '48' : null" :disabled="is20kDiscount(index)" class="p-3.5 rounded-xl border-2 text-center transition-all" :class="[is20kDiscount(index) ? 'opacity-50 cursor-not-allowed bg-slate-100 border-slate-300' : (line.devicePay === '48' ? 'border-rose-500 ring-2 ring-rose-400 font-extrabold shadow-md bg-white' : 'border-slate-300 bg-white')]">
                                                     48回払い<br>
                                                     <template v-if="lineCalc(index).deviceDiscountDetail && lineCalc(index).deviceDiscountDetail.per48 > 0">
                                                         <span class="line-through text-slate-400 text-xs font-normal">{{ formatPrice(deviceInfo(line.device).pay48) }}円</span><br>
@@ -1280,7 +1280,7 @@ function initApp() {
         const errDiv = document.getElementById('cdn-error');
         if (errDiv) {
             errDiv.style.display = 'block';
-            errDiv.textContent = '⚠️ Vue 3 (CDN) の読み込みに失敗したため、シミュレーターを起動できません。ネットワーク接続をご確認ください。';
+            errDiv.textContent = '⚠️ 必要なスクリプトの読み込みに失敗したため、シミュレーターを起動できません。ネットワーク接続をご確認ください。';
         }
         return;
     }
@@ -1367,11 +1367,17 @@ function initApp() {
                 handler() { this.scheduleFetch(); }
             },
 
+            // 修正：2万円割引対象となる最初の1台目のみを一括購入（'1'）に固定する
             'calc.hasNetCampaign'(newVal) {
                 if (newVal) {
+                    let hasApplied = false;
                     this.mobileLines.forEach(line => {
-                        if (line.deviceBuy === 'yes' && line.devicePay !== '1') {
-                            line.devicePay = '1';
+                        const isVoice = line.plan && line.plan.startsWith('voice');
+                        if (line.deviceBuy === 'yes' && isVoice) {
+                            if (!hasApplied) {
+                                line.devicePay = '1';
+                                hasApplied = true;
+                            }
                         }
                     });
                 }
@@ -1381,9 +1387,14 @@ function initApp() {
                 deep: true,
                 handler(lines) {
                     if (this.calc && this.calc.hasNetCampaign) {
+                        let hasApplied = false;
                         lines.forEach(line => {
-                            if (line.deviceBuy === 'yes' && line.devicePay !== '1') {
-                                line.devicePay = '1';
+                            const isVoice = line.plan && line.plan.startsWith('voice');
+                            if (line.deviceBuy === 'yes' && isVoice) {
+                                if (!hasApplied) {
+                                    line.devicePay = '1';
+                                    hasApplied = true;
+                                }
                             }
                         });
                     }
@@ -1458,6 +1469,11 @@ function initApp() {
             }	
 		},
         methods: {
+            // 追加：回線ごとに2万円割引が適用されているかを判定するヘルパーメソッド
+            is20kDiscount(index) {
+                const lc = this.lineCalc(index);
+                return !!(lc && lc.deviceDiscountDetail && lc.deviceDiscountDetail.total === 20000);
+            },
             hasBakuwariTarget() {
                 return this.mobileLines.some((l, idx) => this.lineCalc(idx).isBakuwariTarget);
             },
